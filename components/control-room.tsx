@@ -1,5 +1,6 @@
 'use client'
 
+import { Shield } from 'lucide-react'
 import { FormEvent, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
@@ -26,6 +27,7 @@ type Fighter = {
 
 type Operations = {
   operator: { name: string; email: string; isMm: boolean }
+  activeAttack: { expiresAt: string; reportCount: number; sources: Array<{ id: string; name: string }> } | null
   fighters: Fighter[]
   stops: { stopRuach?: boolean; stopXena?: boolean; stopSuperbot?: boolean; stopAll?: boolean; updatedAt?: string | null }
   commands: Array<{ id: string; fighterId: string; fighterName: string; strategy: string; formation: string; threatType: string; status: string; createdAt: string }>
@@ -47,9 +49,9 @@ const fetcher = async (url: string) => {
 }
 
 const strikeLabels: Record<FighterId, string> = {
-  ruach: 'Strike · scraper',
-  xena: 'Strike · traffic surge',
-  superbot: 'Strike · credential probe',
+  ruach: 'Defend · scraper',
+  xena: 'Defend · traffic surge',
+  superbot: 'Defend · credential probe',
 }
 
 const stopTargets: Array<{ id: StopTarget; label: string; flag: keyof NonNullable<Operations['stops']> }> = [
@@ -69,6 +71,7 @@ const formationNames: Record<Formation, string> = {
   ruach_only: 'Ruach alone',
   xena_only: 'Xena alone',
   superbot_only: 'SuperBot alone',
+  all_three: 'All 3 · active attack only',
 }
 
 function formatAge(date: string | null) {
@@ -86,7 +89,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
   const { data, error, mutate } = useSWR<Operations>('/api/operations', fetcher, { refreshInterval: 5000, revalidateOnFocus: true })
   const magic = useSWR<MagicInsights>('/api/magic-dragons', fetcher, { refreshInterval: 30000, revalidateOnFocus: true })
   const [strategy, setStrategy] = useState<Strategy>('inspect_verify')
-  const [formation, setFormation] = useState<Formation>('ruach_only')
+  const [formation, setFormation] = useState<Formation>('all_three')
   const [feedback, setFeedback] = useState('')
   const [isPending, startTransition] = useTransition()
   const [strikeToast, setStrikeToast] = useState<{ key: number; fighterId: string; side: 'left' | 'right' } | null>(null)
@@ -118,7 +121,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
         setFeedback(`Combo queued for ${fighterId} on ${result.siteScope} only; awaiting its completion report.`)
         await mutate()
       } catch {
-        setFeedback('Combo not queued. Check MM access and this fighter’s stop state.')
+        setFeedback('Directive not queued. Check the active attack report, MM access, and this fighter’s stop state.')
       }
     })
   }
@@ -157,16 +160,16 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
           <div className="fighter-list">
             {guards.map((fighter) => (
               <article className={`fighter-card fighter-${fighter.id}`} key={fighter.id}>
-                <div className="fighter-topline"><div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? 'X' : 'S'}</div><div className="fighter-heading"><h3>{fighter.name}</h3><StatusDot stopped={fighter.stopped} listenerStatus={fighter.listenerStatus} /></div></div>
+                <div className="fighter-topline"><div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? <Shield className="xena-shield-icon" aria-hidden="true" /> : 'S'}</div><div className="fighter-heading"><h3>{fighter.name}</h3><StatusDot stopped={fighter.stopped} listenerStatus={fighter.listenerStatus} /></div></div>
                 <p className="fighter-role">{fighter.role}</p>
                 {fighter.health === null ? <p className="health-reading">Awaiting a signed report</p> : <p className="health-reading"><span>{fighter.health}%</span> health · {fighter.hitsTaken}/{fighter.hitCapacity} hits</p>}
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
                 <p className="signal-age">Report {formatAge(fighter.lastSeen)} · inbox poll {formatAge(fighter.lastInboxPoll)}</p>
                 <div className="fighter-strike-row">
-                  <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped} aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} on montemader.com`}>
-                    {isPending ? 'Queuing…' : strikeLabels[fighter.id as FighterId]}
+                  <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped || !data?.activeAttack} aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} on montemader.com only when an active attack report is available`}>
+                    {isPending ? 'Queuing…' : !data?.activeAttack ? 'Waiting for attack report' : strikeLabels[fighter.id as FighterId]}
                   </button>
-                  {strikeToast?.fighterId === fighter.id && <span key={strikeToast.key} className={`strike-ack strike-ack-${strikeToast.side}`} role="status" aria-live="polite" onAnimationEnd={() => setStrikeToast(null)}>Anger is a gift.</span>}
+                  {strikeToast?.fighterId === fighter.id && <span key={strikeToast.key} className={`strike-ack strike-ack-${strikeToast.side}`} role="status" aria-live="polite" onAnimationEnd={() => setStrikeToast(null)}>Defensive directive queued.</span>}
                 </div>
               </article>
             ))}
@@ -185,16 +188,16 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
             <select id="formation" value={formation} onChange={(event) => setFormation(event.target.value as Formation)} disabled={!operator.isMm || isPending}>
               {(Object.entries(formationNames) as [Formation, string][]).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
-            <button className="button button-primary issue-button" type="submit" disabled={!operator.isMm || isPending || stoppedAll}>{isPending ? 'Updating…' : stoppedAll ? 'All fighters stopped' : 'Queue defensive response'}</button>
+            <button className="button button-primary issue-button" type="submit" disabled={!operator.isMm || isPending || stoppedAll || (formation === 'all_three' && !data?.activeAttack)}>{isPending ? 'Updating…' : stoppedAll ? 'All fighters stopped' : formation === 'all_three' && !data?.activeAttack ? 'Waiting for active attack report' : 'Queue defensive response'}</button>
           </form>
-          <p className="directive-note">Independent assignment avoids duplicate responses. Ruach may defend alone; Xena and SuperBot are allies, never enemies.</p>
+          <p className="directive-note">The default assignment uses all 3 defenders. Every defensive directive requires a fresh authenticated attack report and stops are respected. Directives queue to the authenticated bot inboxes; they do not block traffic or terminate an invasion by themselves.</p>
           <div className="stop-block"><div className="stop-heading"><p className="section-kicker">MM · EMERGENCY OVERRIDE</p><span>{stoppedAll ? 'GLOBAL STOP ACTIVE' : 'Four stop controls'}</span></div><div className="stop-grid">
             {stopTargets.map(({ id, label, flag }) => {
               const stopped = Boolean(data?.stops[flag])
               return <button key={id} className={`stop-button stop-${id}${stopped ? ' stop-active' : ''}`} type="button" onClick={() => onStop(id, !stopped)} disabled={!operator.isMm || isPending} aria-pressed={stopped}>{stopped ? `Release ${id === 'all' ? 'all' : id === 'xena' ? 'Xena' : id === 'superbot' ? 'SuperBot' : 'Ruach'}` : label}</button>
             })}
           </div></div>
-          <p className="stop-caveat">A stop blocks new queued actions only. The fighter must keep polling MM while stopped; a disconnected process cannot be stopped remotely.</p>
+          <p className="stop-caveat">A stop blocks new queued actions only; it does not terminate a running process or stop an offline bot. Keep polling MM while stopped. Defensive controls never authorize retaliation against third-party systems.</p>
           {feedback && <p className="action-feedback" role="status">{feedback}</p>}
         </section>
 

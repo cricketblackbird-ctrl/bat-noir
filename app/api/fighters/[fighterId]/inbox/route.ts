@@ -1,6 +1,7 @@
 import { and, asc, eq, gt } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { authorizeFighter, fighterStorageId, normalizeFighterId } from '@/lib/bot-auth'
+import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonEmergencyStop } from '@/lib/db/schema'
 import { readJsonBody } from '@/lib/read-json-body'
@@ -47,6 +48,7 @@ export async function GET(request: Request, { params }: Context) {
   if (authorizeFighter(request, rawId) !== fighterId) return inboxJson({ error: 'Unauthorized' }, 401)
 
   const storageId = fighterStorageId(fighterId)
+  const activeAttack = await getActiveAttack()
   return db.transaction(async (tx) => {
     await tx.insert(dragonEmergencyStop).values({ singleton: true }).onConflictDoNothing()
     const [stops] = await tx.select().from(dragonEmergencyStop)
@@ -54,13 +56,13 @@ export async function GET(request: Request, { params }: Context) {
     if (!stops) return inboxJson({ error: 'Stop state unavailable' }, 503)
 
     if (isStopped(fighterId, stops)) {
-      return inboxJson({ fighterId, stopped: true, stopAll: stops.stopAll, commands: [], ...listeningContract, telemetryContract })
+      return inboxJson({ fighterId, stopped: true, stopAll: stops.stopAll, commands: [], securityPacket: activeAttack, ...listeningContract, telemetryContract })
     }
 
     const [command] = await tx.select().from(dragonCommandQueue)
       .where(and(eq(dragonCommandQueue.fighterId, storageId), eq(dragonCommandQueue.status, 'queued'), gt(dragonCommandQueue.createdAt, stops.updatedAt)))
       .orderBy(asc(dragonCommandQueue.createdAt)).limit(1).for('update', { skipLocked: true })
-    if (!command) return inboxJson({ fighterId, stopped: false, commands: [], ...listeningContract, telemetryContract })
+    if (!command) return inboxJson({ fighterId, stopped: false, commands: [], securityPacket: activeAttack, ...listeningContract, telemetryContract })
 
     const [acknowledged] = await tx.update(dragonCommandQueue)
       .set({ status: 'acknowledged', consumedAt: new Date() })
@@ -81,6 +83,7 @@ export async function GET(request: Request, { params }: Context) {
         createdAt: acknowledged.createdAt,
       } : null,
       commands: [],
+      securityPacket: activeAttack,
       ...listeningContract,
       telemetryContract,
     })

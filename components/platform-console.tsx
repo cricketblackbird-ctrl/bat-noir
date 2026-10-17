@@ -5,9 +5,23 @@ import useSWR from 'swr'
 
 type StreamTopic = 'all' | 'health' | 'safety' | 'security' | 'clarity'
 
+type ActiveAttack = {
+  state: 'active'
+  evidence: string
+  confidence: string
+  detectedAt: string
+  expiresAt: string
+  correlated: boolean
+  reportCount: number
+  sourceCount: number
+  sources: Array<{ id: string; name: string }>
+  reports: Array<{ fighterId: string; fighterName: string; receivedAt: string; category: string | null; vector: string | null; signature: string | null }>
+}
+
 type ConsoleSnapshot = {
   domain: string
   observedAt: string
+  activeAttack: ActiveAttack | null
   systemHealth: string
   wafStatus: string
   telemetryCount24h: number
@@ -48,7 +62,7 @@ const topicDescriptions: Record<StreamTopic, string> = {
   all: 'Capture current authenticated status, listener heartbeats, signal interpretations, and the directive queue.',
   health: 'Capture reported health, hit counts, and MM inbox-listener PASS/FAIL for each fighter.',
   safety: 'Capture emergency stop states and the mandatory MM-listening PASS/FAIL rule. Stops never authorize a bot to stop listening.',
-  security: 'Capture authenticated signal interpretations and credential boundaries. WAF status remains unverified unless a real integration reports it.',
+  security: 'Capture authenticated signal interpretations, active-attack correlation, and credential boundaries. Website request data is not ingested; WAF status remains unverified.',
   clarity: 'Capture observation time, report count, freshness, and whether a signal is reported or heuristic.',
 }
 
@@ -59,6 +73,12 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
     `Observed: ${new Date(snapshot.observedAt).toISOString()}`,
     `System health (listener contract): ${snapshot.systemHealth}`,
     `Authenticated telemetry reports in the last 24 hours: ${snapshot.telemetryCount24h}`,
+    '',
+    '[ATTACK-GATED INBOX ROUTING]',
+    snapshot.activeAttack
+      ? `Active attack report until ${new Date(snapshot.activeAttack.expiresAt).toISOString()}; ${snapshot.activeAttack.reportCount} correlated report(s) from ${snapshot.activeAttack.sources.map((source) => source.name).join(', ')}.`
+      : 'No fresh authenticated hit report; no attack packet is available in fighter inboxes.',
+    'Only authenticated bot hit reports activate this 60-second window. This app inbox is not a network tunnel, does not proxy website traffic, and does not hide the hosting origin.',
   ]
 
   if (topic === 'all' || topic === 'health') {
@@ -154,6 +174,11 @@ export function PlatformConsole() {
             </button>
           </div>
           <p className="console-description">{topicDescriptions[topic]} Text records stay in this page session only; they are not saved to a database or browser storage.</p>
+          <p className={`attack-route-status${data?.activeAttack ? ' is-active' : ''}`} role="status" aria-live="polite">
+            {data?.activeAttack
+              ? `Attack report active · inbox packet expires ${new Date(data.activeAttack.expiresAt).toLocaleTimeString()}`
+              : 'No active attack report · no packet routed'}
+          </p>
           <div className="console-record-actions">
             <span className="console-stream-state" role="status">{error ? 'Live reports unavailable' : isRecording ? 'Live recording active' : isLoading ? 'Connecting to live reports…' : 'Live reports connected'}</span>
             <button className="text-button console-clear" type="button" onClick={clearRecords} disabled={records.length === 0}>Clear text</button>
@@ -172,7 +197,7 @@ export function PlatformConsole() {
           </div>
           <div className="guide-block">
             <h4>Protect the site</h4>
-            <p>Use the site&apos;s Vercel or edge WAF controls to block traffic; this console cannot apply firewall rules. An emergency stop blocks new execution but must never stop MM inbox polling.</p>
+            <p>Attack reports are exposed only through each fighter&apos;s separate authenticated inbox during the 60-second active-report window. This app does not ingest website requests, proxy traffic, hide the origin, or apply WAF rules; configure those at your hosting or edge provider.</p>
           </div>
           <p className="listener-contract"><strong>Listener rule:</strong> PASS requires a fresh authenticated heartbeat. FAIL if it is missing or older than 15 seconds—even during an execution stop. This status is agent-reported, not proof of future polling.</p>
         </aside>

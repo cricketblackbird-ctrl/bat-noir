@@ -2,6 +2,7 @@
 
 import { and, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonEmergencyStop } from '@/lib/db/schema'
 import { requireMm } from '@/lib/operator'
@@ -19,6 +20,7 @@ const formations = [
   'ruach_only',
   'xena_only',
   'superbot_only',
+  'all_three',
 ] as const
 
 export type Strategy = (typeof strategies)[number]
@@ -29,6 +31,7 @@ const formationFighters: Record<Formation, string[]> = {
   ruach_only: ['ruach'],
   xena_only: ['zena'],
   superbot_only: ['superbot'],
+  all_three: ['ruach', 'zena', 'superbot'],
 }
 
 function stopAppliesTo(fighter: string, state: typeof dragonEmergencyStop.$inferSelect) {
@@ -47,6 +50,9 @@ export async function issueDefenseRunbook(input: { strategy: string; formation: 
   const strategy = input.strategy as Strategy
   const formation = input.formation as Formation
   const fighters = formationFighters[formation]
+  if (formation === 'all_three' && !await getActiveAttack()) {
+    throw new Error('The coordinated response is only available while a recent authenticated attack report is active.')
+  }
 
   const rows = await db.transaction(async (tx) => {
     await tx.insert(dragonEmergencyStop).values({ singleton: true }).onConflictDoNothing()
@@ -74,6 +80,9 @@ export async function issueStrike(input: { fighterId: string }) {
   if (!fighters.includes(input.fighterId as FighterId)) throw new Error('Choose one assigned fighter.')
 
   const fighterId = input.fighterId as FighterId
+  const activeAttack = await getActiveAttack()
+  if (!activeAttack) throw new Error('Defensive directives are only available while a recent authenticated attack report is active.')
+
   const fighterKey = fighterId === 'xena' ? 'zena' : fighterId
   const preset = strikePresets[fighterId]
 

@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { getFighterCredentialStatus, type FighterId } from '@/lib/bot-auth'
+import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonControlState, dragonEmergencyStop, dragonTelemetryRecords } from '@/lib/db/schema'
 import { claimOrReadMmAuthority } from '@/lib/operator'
@@ -42,7 +43,7 @@ export async function GET() {
 
   const isMm = await claimOrReadMmAuthority(session.user.id)
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  const [events, heartbeats, commands, controls, stops, telemetryTotals] = await Promise.all([
+  const [events, heartbeats, commands, controls, stops, telemetryTotals, activeAttack] = await Promise.all([
     db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
       .where(gte(dragonTelemetryRecords.receivedAt, cutoff))
       .orderBy(dragonTelemetryRecords.dragonId, desc(dragonTelemetryRecords.receivedAt)),
@@ -55,6 +56,7 @@ export async function GET() {
     db.select().from(dragonEmergencyStop).where(eq(dragonEmergencyStop.singleton, true)).limit(1),
     db.select({ total: count() }).from(dragonTelemetryRecords)
       .where(gte(dragonTelemetryRecords.receivedAt, cutoff)),
+    getActiveAttack(),
   ])
 
   const observedAt = new Date()
@@ -110,6 +112,7 @@ export async function GET() {
     domain: 'montemader.com',
     timestamp: observedAt.toISOString(),
     systemHealth,
+    activeAttack,
     wafStatus: 'UNVERIFIED · no WAF integration is connected to this console',
     nodes,
     fighters: fighterRows,
