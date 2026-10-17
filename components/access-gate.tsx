@@ -43,22 +43,19 @@ export function AccessGate({ allowInitialSignup }: { allowInitialSignup: boolean
         </button>
       ) : (
         <section className="auth-card" aria-labelledby="auth-title">
-          <p className="eyebrow">MONTEMADER · PRIVATE CONTROL</p>
-          <h1 id="auth-title">A quieter kind of strength.</h1>
-          <p className="auth-copy">Sign in to view verified telemetry and coordinate defensive responses.</p>
+          <h1 id="auth-title">{mode === 'sign-in' ? 'Sign in' : 'Create account'}</h1>
           <form className="auth-form" onSubmit={submit}>
-            {mode === 'sign-up' && allowInitialSignup && <label>Operator name<input name="name" autoComplete="name" required maxLength={80} /></label>}
+            {mode === 'sign-up' && allowInitialSignup && <label>Name<input name="name" autoComplete="name" required maxLength={80} /></label>}
             <label>Email<input type="email" name="email" autoComplete="email" required maxLength={254} /></label>
             <label>Password<input type="password" name="password" autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'} required minLength={8} maxLength={128} /></label>
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button-primary" type="submit" disabled={busy}>
-              {busy ? 'Securing session…' : mode === 'sign-in' ? 'Enter command room' : 'Create operator account'}
+              {busy ? 'Please wait…' : mode === 'sign-in' ? 'Sign in' : 'Create account'}
             </button>
           </form>
           {allowInitialSignup && <button className="text-button" type="button" onClick={() => { setError(''); setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in') }}>
-            {mode === 'sign-in' ? 'First visit? Create the initial MM account' : 'Already registered? Sign in'}
+            {mode === 'sign-in' ? 'Create account' : 'Sign in'}
           </button>}
-          <p className="auth-note">{allowInitialSignup ? 'The first registered operator claims MM authority. All later control changes are server-verified.' : 'Initial MM registration is complete. New account registration is closed.'}</p>
         </section>
       )}
     </main>

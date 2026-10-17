@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte } from 'drizzle-orm'
+import { and, count, desc, eq, gte, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -7,6 +7,7 @@ import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonControlState, dragonEmergencyStop, dragonTelemetryRecords } from '@/lib/db/schema'
 import { claimOrReadMmAuthority } from '@/lib/operator'
+import { SITE_SCOPE } from '@/lib/site-scope'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -45,17 +46,27 @@ export async function GET() {
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
   const [events, heartbeats, commands, controls, stops, telemetryTotals, activeAttack] = await Promise.all([
     db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
-      .where(gte(dragonTelemetryRecords.receivedAt, cutoff))
+      .where(and(
+        gte(dragonTelemetryRecords.receivedAt, cutoff),
+        sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
+      ))
       .orderBy(dragonTelemetryRecords.dragonId, desc(dragonTelemetryRecords.receivedAt)),
     db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
-      .where(and(gte(dragonTelemetryRecords.receivedAt, cutoff), eq(dragonTelemetryRecords.eventType, 'listener_heartbeat')))
+      .where(and(
+        gte(dragonTelemetryRecords.receivedAt, cutoff),
+        eq(dragonTelemetryRecords.eventType, 'listener_heartbeat'),
+        sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
+      ))
       .orderBy(dragonTelemetryRecords.dragonId, desc(dragonTelemetryRecords.receivedAt)),
     db.select({ id: dragonCommandQueue.id, fighterId: dragonCommandQueue.fighterId, strategy: dragonCommandQueue.strategy, formation: dragonCommandQueue.formation, threatType: dragonCommandQueue.threatType, status: dragonCommandQueue.status, createdAt: dragonCommandQueue.createdAt })
       .from(dragonCommandQueue).orderBy(desc(dragonCommandQueue.createdAt)).limit(6),
     db.select().from(dragonControlState),
     db.select().from(dragonEmergencyStop).where(eq(dragonEmergencyStop.singleton, true)).limit(1),
     db.select({ total: count() }).from(dragonTelemetryRecords)
-      .where(gte(dragonTelemetryRecords.receivedAt, cutoff)),
+      .where(and(
+        gte(dragonTelemetryRecords.receivedAt, cutoff),
+        sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
+      )),
     getActiveAttack(),
   ])
 
@@ -109,7 +120,7 @@ export async function GET() {
 
   return NextResponse.json({
     operator: { name: session.user.name, email: session.user.email, isMm },
-    domain: 'montemader.com',
+    domain: SITE_SCOPE,
     timestamp: observedAt.toISOString(),
     systemHealth,
     activeAttack,

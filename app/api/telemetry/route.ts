@@ -4,6 +4,7 @@ import { authorizeFighter, fighterStorageId, normalizeFighterId } from '@/lib/bo
 import { db } from '@/lib/db'
 import { dragonTelemetryRecords } from '@/lib/db/schema'
 import { readJsonBody } from '@/lib/read-json-body'
+import { SITE_SCOPE } from '@/lib/site-scope'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
   const fighterId = normalizeFighterId(rawDragonId)
   if (!fighterId) return telemetryJson({ error: 'Unknown fighter' }, 400)
   if (authorizeFighter(request, rawDragonId) !== fighterId) return telemetryJson({ error: 'Unauthorized' }, 401)
+  if (value.siteScope !== SITE_SCOPE) return telemetryJson({ error: `Telemetry must be scoped to ${SITE_SCOPE}` }, 403)
 
   const eventType = value.eventType
   const health = value.healthPercent
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
       .map((skill) => skill.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 40))
     : []
   const allowedPayloadKeys = ['signature', 'vector', 'category']
-  const payload: Record<string, string> = {}
+  const payload: Record<string, string> = { siteScope: SITE_SCOPE }
   if (value.payload && typeof value.payload === 'object' && !Array.isArray(value.payload)) {
     for (const key of allowedPayloadKeys) {
       const field = (value.payload as Record<string, unknown>)[key]
@@ -74,5 +76,5 @@ export async function POST(request: Request) {
     payload,
   }).returning({ id: dragonTelemetryRecords.id, receivedAt: dragonTelemetryRecords.receivedAt })
 
-  return telemetryJson({ accepted: true, id: String(created.id), receivedAt: created.receivedAt }, 201)
+  return telemetryJson({ accepted: true, id: String(created.id), receivedAt: created.receivedAt, siteScope: SITE_SCOPE }, 201)
 }

@@ -1,8 +1,9 @@
-import { and, desc, eq, gte } from 'drizzle-orm'
+import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { fighterStorageId } from '@/lib/bot-auth'
 import type { FighterId } from '@/lib/bot-auth'
 import { db } from '@/lib/db'
 import { dragonTelemetryRecords } from '@/lib/db/schema'
+import { SITE_SCOPE } from '@/lib/site-scope'
 
 export const ACTIVE_ATTACK_WINDOW_MS = 60_000
 
@@ -36,6 +37,7 @@ export async function getActiveAttack(now = new Date()) {
     .where(and(
       eq(dragonTelemetryRecords.eventType, 'hit'),
       gte(dragonTelemetryRecords.receivedAt, cutoff),
+      sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
     ))
     .orderBy(desc(dragonTelemetryRecords.receivedAt))
     .limit(20)
@@ -52,6 +54,7 @@ export async function getActiveAttack(now = new Date()) {
   const expiresAt = new Date(latest.receivedAt.getTime() + ACTIVE_ATTACK_WINDOW_MS)
 
   return {
+    siteScope: SITE_SCOPE,
     state: 'active' as const,
     evidence: 'authenticated_bot_hit_report' as const,
     confidence: 'reported_not_independently_confirmed' as const,

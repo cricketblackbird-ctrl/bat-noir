@@ -6,6 +6,7 @@ import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonEmergencyStop } from '@/lib/db/schema'
 import { requireMm } from '@/lib/operator'
+import { SITE_SCOPE } from '@/lib/site-scope'
 
 const strategies = ['inspect_verify', 'shield_restore', 'isolate_recover'] as const
 const fighters = ['ruach', 'xena', 'superbot'] as const
@@ -104,7 +105,7 @@ export async function issueStrike(input: { fighterId: string }) {
   })
 
   revalidatePath('/')
-  return { queued: String(queued.id), fighterId, siteScope: 'montemader.com', threatType: preset.threatType }
+  return { queued: String(queued.id), fighterId, siteScope: SITE_SCOPE, threatType: preset.threatType }
 }
 
 export async function setEmergencyStop(input: { target: string; stopped: boolean }) {

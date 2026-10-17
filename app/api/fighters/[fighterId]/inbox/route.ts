@@ -5,6 +5,7 @@ import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonEmergencyStop } from '@/lib/db/schema'
 import { readJsonBody } from '@/lib/read-json-body'
+import { SITE_SCOPE } from '@/lib/site-scope'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,9 @@ const listeningContract = {
 }
 const telemetryContract = {
   endpoint: '/api/telemetry',
+  siteScopeRequired: SITE_SCOPE,
+  scopeValidation: 'Exact scope required; out-of-scope telemetry is rejected.',
+  dataSource: 'Authenticated fighter reports only; not direct website request capture.',
   heartbeatEventType: 'listener_heartbeat',
   heartbeatRequiredEveryMs: 5000,
   passThresholdMs: 15000,
@@ -56,13 +60,13 @@ export async function GET(request: Request, { params }: Context) {
     if (!stops) return inboxJson({ error: 'Stop state unavailable' }, 503)
 
     if (isStopped(fighterId, stops)) {
-      return inboxJson({ fighterId, stopped: true, stopAll: stops.stopAll, commands: [], securityPacket: activeAttack, ...listeningContract, telemetryContract })
+      return inboxJson({ fighterId, siteScope: SITE_SCOPE, stopped: true, stopAll: stops.stopAll, commands: [], securityPacket: activeAttack, ...listeningContract, telemetryContract })
     }
 
     const [command] = await tx.select().from(dragonCommandQueue)
       .where(and(eq(dragonCommandQueue.fighterId, storageId), eq(dragonCommandQueue.status, 'queued'), gt(dragonCommandQueue.createdAt, stops.updatedAt)))
       .orderBy(asc(dragonCommandQueue.createdAt)).limit(1).for('update', { skipLocked: true })
-    if (!command) return inboxJson({ fighterId, stopped: false, commands: [], securityPacket: activeAttack, ...listeningContract, telemetryContract })
+    if (!command) return inboxJson({ fighterId, siteScope: SITE_SCOPE, stopped: false, commands: [], securityPacket: activeAttack, ...listeningContract, telemetryContract })
 
     const [acknowledged] = await tx.update(dragonCommandQueue)
       .set({ status: 'acknowledged', consumedAt: new Date() })
@@ -72,13 +76,13 @@ export async function GET(request: Request, { params }: Context) {
     return inboxJson({
       fighterId,
       stopped: false,
-      siteScope: 'montemader.com',
+      siteScope: SITE_SCOPE,
       command: acknowledged ? {
         id: String(acknowledged.id),
         strategy: acknowledged.strategy,
         formation: acknowledged.formation,
         threatType: acknowledged.threatType,
-        siteScope: 'montemader.com',
+        siteScope: SITE_SCOPE,
         issuedBy: acknowledged.issuedBy,
         createdAt: acknowledged.createdAt,
       } : null,
