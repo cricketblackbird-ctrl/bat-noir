@@ -95,6 +95,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
   const [isPending, startTransition] = useTransition()
   const [strikeToast, setStrikeToast] = useState<{ key: number; fighterId: string; side: 'left' | 'right' } | null>(null)
   const [showPrivacy, setShowPrivacy] = useState(false)
+  const [activeView, setActiveView] = useState<'dashboard' | 'tester' | 'intel'>('dashboard')
   const stoppedAll = Boolean(data?.stops.stopAll)
   const guards = data?.fighters ?? []
   const recentSignals = useMemo(() => guards.filter((fighter) => fighter.signal).length, [guards])
@@ -143,20 +144,31 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
   return (
     <main className="command-page">
       <header className="topbar">
-        <h1 className="brand-name">BOT🍓CONTROL</h1>
+        <div className="brand-lockup">
+          <img className="brand-logo" src="/icon.svg" alt="Montemader logo" />
+          <div>
+            <h1 className="brand-name">Montemader.com</h1>
+            <p className="brand-subtitle">DEFENSE COMMAND GRID</p>
+          </div>
+        </div>
         <div className="topbar-right">
           <span className="mm-pill">{operator.isMm ? 'MM · FULL CONTROL' : 'READ ONLY'}</span>
           <span className="operator-initials" aria-label={`Signed in as ${operator.name}`}>{operator.isMm ? 'MM' : operator.name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>
-          <img className="brand-logo" src="/icon.svg" alt="Montemader logo" />
           <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
         </div>
       </header>
 
-      <SiteHealthPanel canTestSms={operator.isMm} />
-      <PlatformConsole />
-      {!operator.isMm && <div className="readonly-notice" role="status">This account can read live reports. MM alone can issue or stop directives.</div>}
+      <nav className="dashboard-nav" aria-label="Defense dashboard views">
+        <button className={`view-tab${activeView === 'dashboard' ? ' is-active' : ''}`} type="button" aria-pressed={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')}>Dashboard</button>
+        <button className={`view-tab${activeView === 'tester' ? ' is-active' : ''}`} type="button" aria-pressed={activeView === 'tester'} onClick={() => setActiveView('tester')}>Tester &amp; capabilities</button>
+        <button className={`view-tab${activeView === 'intel' ? ' is-active' : ''}`} type="button" aria-pressed={activeView === 'intel'} onClick={() => setActiveView('intel')}>Intel &amp; activity</button>
+      </nav>
 
-      <div className="control-grid">
+      <div className="dashboard-views">
+        <section className="view-panel dashboard-view" aria-label="Dashboard" hidden={activeView !== 'dashboard'}>
+          <SiteHealthPanel canTestSms={operator.isMm} />
+          {!operator.isMm && <div className="readonly-notice" role="status">This account can read live reports. MM alone can issue or stop directives.</div>}
+          <div className="control-grid dashboard-grid">
         <section className="panel fighter-panel" aria-labelledby="fighters-heading">
           <div className="panel-heading"><div><p className="section-kicker">THREE GUARDIANS · SEPARATE STRENGTHS</p><h2 id="fighters-heading">Fighter status</h2></div><span className="report-count">{recentSignals} with recent signals</span></div>
           <div className="fighter-list">
@@ -203,6 +215,15 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
           {feedback && <p className="action-feedback" role="status">{feedback}</p>}
         </section>
 
+          </div>
+        </section>
+
+        <section className="view-panel tester-view" aria-label="Tester and capabilities" hidden={activeView !== 'tester'}>
+          <PlatformConsole />
+        </section>
+
+        <section className="view-panel intel-view" aria-label="Intel and activity" hidden={activeView !== 'intel'}>
+          <div className="control-grid intel-grid">
         <section className="panel magic-panel" aria-labelledby="magic-heading">
           <div className="panel-heading"><div><p className="section-kicker">SEPARATE · AGGREGATE ONLY</p><h2 id="magic-heading">Magic Dragons</h2></div><span className="panel-sigil magic-sigil" aria-hidden="true">✧</span></div>
           <p className="magic-description">A small, independent view of where visits come from—kept separate from fighter telemetry.</p>
@@ -216,6 +237,8 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
           <div className="panel-heading"><div><p className="section-kicker">AUDITABLE · NO SIMULATED EVENTS</p><h2 id="activity-heading">Directive activity</h2></div><span className="panel-sigil" aria-hidden="true">⌁</span></div>
           {error ? <p className="empty-insight">Could not load operations data.</p> : data?.commands.length ? <ul className="activity-list">{data.commands.map((command) => <li key={command.id}><span className="activity-indicator" aria-hidden="true"/><div><strong>{command.fighterName}</strong><p>{command.threatType.replace(/_/g, ' ')} · {strategyNames[command.strategy as Strategy] ?? command.strategy}</p></div><span className="activity-state">{command.status}</span></li>)}</ul> : <p className="empty-insight">No defensive directives have been issued.</p>}
           <p className="activity-footnote">Only events reported by authenticated agents appear here. This console does not claim to block traffic by itself.</p>
+        </section>
+          </div>
         </section>
       </div>
 

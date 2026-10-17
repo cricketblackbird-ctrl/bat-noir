@@ -387,3 +387,34 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
   .health-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .health-observed { width: 100%; margin-left: 0; }
 }
+
+.command-page { height: auto; min-height: 100dvh; overflow-x: hidden; overflow-y: auto; }
+.brand-lockup { gap: 8px; }
+.brand-lockup > div { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+.brand-logo { flex: 0 0 auto; }
+.brand-name { font-size: clamp(10px, 1.25vw, 15px); letter-spacing: .1em; }
+.brand-subtitle { margin: 0; color: var(--muted); font-size: 7px; letter-spacing: .14em; }
+.dashboard-nav { display: flex; flex: 0 0 auto; gap: 6px; overflow-x: auto; border-bottom: 1px solid rgb(123 63 158 / 24%); padding-bottom: 6px; scrollbar-width: thin; }
+.view-tab { flex: 0 0 auto; min-height: 30px; border: 1px solid rgb(123 63 158 / 42%); border-radius: 6px; padding: 5px 10px; background: #1a0f26; color: var(--foreground); cursor: pointer; font-size: 9px; white-space: nowrap; }
+.view-tab.is-active { border-color: var(--pink); background: var(--violet); box-shadow: 0 0 10px rgb(199 75 158 / 32%); }
+.view-tab:focus-visible { outline: 2px solid #e79bcd; outline-offset: 2px; }
+.dashboard-views { display: flex; flex: 1 0 auto; flex-direction: column; gap: 9px; min-height: 0; }
+.view-panel[hidden] { display: none !important; }
+.dashboard-view { display: flex; flex-direction: column; gap: 9px; }
+.tester-view { display: flex; flex-direction: column; gap: 9px; }
+.intel-view { display: block; }
+.dashboard-grid, .intel-grid { grid-template-rows: auto; grid-auto-rows: minmax(240px, auto); flex: 0 0 auto; }
+.dashboard-grid { grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr); }
+.intel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (max-width: 760px) {
+  .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .dashboard-nav { gap: 5px; }
+  .view-tab { min-height: 32px; padding-inline: 9px; }
+  .dashboard-grid, .intel-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+  .dashboard-grid .fighter-panel { min-height: 390px; }
+  .dashboard-grid .directives-panel, .intel-grid .magic-panel, .intel-grid .activity-panel { min-height: 230px; }
+}

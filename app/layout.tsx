@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Montemader Website Health & Security',
-  description: 'Authenticated website health dashboard with live Cloudflare request and firewall analytics, attack alerts, and SMS monitoring.',
+  title: 'Montemader Defense Command Grid',
+  description: 'Authenticated security operations dashboard with live site health, verified agent reports, defensive controls, and auditable activity.'
   generator: 'v0.app',
   icons: {
     icon: [
