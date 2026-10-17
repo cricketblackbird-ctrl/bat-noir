@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0710">
+  <meta name="description" content="Static visual review mockup for the Montemader defensive bot dashboard.">
+  <title>Montemader — Defense Command Grid</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0710;
+      --panel: #140c1e;
+      --panel-raised: #1b1026;
+      --purple: #7b3f9e;
+      --pink: #c74b9e;
+      --red: #ff526b;
+      --cyan: #64e3cc;
+      --gold: #e5bd83;
+      --text: #f1e6f6;
+      --muted: #aa9bb3;
+      --line: rgb(199 75 158 / 28%);
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --serif: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--bg); scroll-behavior: smooth; }
+    body { min-height: 100vh; margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    .shell { width: min(1180px, calc(100% - 36px)); margin: 0 auto; }
+
+    .site-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 0 18px; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; border: 1px solid rgb(199 75 158 / 42%); border-radius: 50%; color: var(--pink); font: 24px/1 var(--serif); }
+    .brand h1 { margin: 0; color: var(--text); font: 500 16px/1.3 var(--serif); letter-spacing: .08em; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .header-status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px rgb(229 189 131 / 50%); }
+
+    .nav { display: flex; gap: 8px; padding: 17px 0 0; overflow-x: auto; }
+    .nav button { flex: 0 0 auto; border: 1px solid transparent; border-radius: 999px; padding: 9px 15px; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; transition: background .18s ease, color .18s ease, border-color .18s ease; }
+    .nav button:hover { color: var(--text); }
+    .nav button[aria-current="page"] { border-color: rgb(199 75 158 / 35%); background: rgb(123 63 158 / 20%); color: var(--text); }
+
+    main { padding: 30px 0 52px; }
+    .view[hidden] { display: none; }
+    .eyebrow { margin: 0 0 9px; color: var(--pink); font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .page-heading h2 { margin: 0; font: 400 clamp(25px, 4vw, 35px)/1.1 var(--serif); letter-spacing: -.02em; }
+    .page-heading p { max-width: 600px; margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .demo-badge { flex: 0 0 auto; border: 1px solid rgb(229 189 131 / 30%); border-radius: 999px; padding: 7px 10px; color: var(--gold); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+
+    .banner { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; border: 1px solid rgb(229 189 131 / 27%); border-radius: 9px; padding: 13px 15px; background: rgb(229 189 131 / 5%); color: #ddc9ac; font-size: 12px; line-height: 1.5; }
+    .banner strong { color: var(--gold); }
+    .banner-icon { flex: 0 0 auto; color: var(--gold); font-size: 14px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .metric, .card { border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(145deg, rgb(27 16 38 / 95%), rgb(20 12 30 / 96%)); box-shadow: 0 12px 35px rgb(0 0 0 / 18%); }
+    .metric { padding: 15px; }
+    .metric-label { color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .metric-value { display: block; margin-top: 9px; color: var(--text); font: 400 24px/1 var(--serif); }
+    .metric-note { display: block; margin-top: 7px; color: var(--cyan); font-size: 10px; }
+
+    .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 28px 0 12px; }
+    .section-title h3 { margin: 0; font: 400 19px/1.2 var(--serif); }
+    .section-title span { color: var(--muted); font-size: 10px; }
+    .bot-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .bot-card { overflow: hidden; }
+    .bot-image-wrap { position: relative; height: 185px; overflow: hidden; background: #100a17; }
+    .bot-image-wrap::after { position: absolute; inset: 35% 0 0; background: linear-gradient(transparent, #171020); content: ""; pointer-events: none; }
+    .bot-image { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 39%; }
+    .bot-label { position: absolute; z-index: 1; right: 12px; bottom: 12px; left: 14px; display: flex; align-items: end; justify-content: space-between; gap: 8px; }
+    .bot-label h4 { margin: 0; font: 400 22px/1.1 var(--serif); }
+    .bot-label span { border: 1px solid rgb(100 227 204 / 27%); border-radius: 999px; padding: 5px 8px; background: rgb(11 7 16 / 75%); color: var(--cyan); font-size: 9px; }
+    .bot-details { padding: 15px; }
+    .bot-role { margin: 0 0 12px; color: #d4c5dc; font-size: 12px; }
+    .detail-list { display: grid; gap: 9px; margin: 0; }
+    .detail-row { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 11px; }
+    .detail-row dt { flex: 0 0 auto; }
+    .detail-row dd { margin: 0; color: var(--text); text-align: right; }
+    .healthy { color: var(--cyan) !important; }
+    .bot-foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px; border-top: 1px solid var(--line); padding-top: 11px; color: var(--muted); font-size: 10px; }
+
+    .two-column { display: grid; grid-template-columns: 1.1fr .9fr; gap: 14px; }
+    .card-pad { padding: 17px; }
+    .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; font: 400 18px/1.2 var(--serif); }
+    .card-heading small { color: var(--muted); font: 10px var(--sans); }
+    .terminal { min-height: 128px; max-height: 190px; overflow: auto; border: 1px solid #382246; border-radius: 7px; padding: 12px; background: #08060c; color: #b9d9cf; font: 10px/1.75 var(--mono); }
+    .terminal-line + .terminal-line { margin-top: 3px; }
+    .terminal-time { color: #927c9b; }
+    .sample-tag { color: var(--gold); }
+    .button-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
+    .button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; border: 1px solid rgb(199 75 158 / 38%); border-radius: 6px; padding: 8px 12px; background: rgb(123 63 158 / 16%); color: var(--text); cursor: pointer; font-size: 11px; transition: background .18s ease, border-color .18s ease; }
+    .button:hover { border-color: var(--pink); background: rgb(123 63 158 / 30%); }
+    .button-subtle { border-color: #4a3b50; background: transparent; color: var(--muted); }
+    .button:disabled { cursor: not-allowed; opacity: .55; }
+
+    .capability-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+    .capability-card { padding: 17px; }
+    .capability-card h3 { margin: 0 0 12px; font: 400 18px/1.2 var(--serif); }
+    .capability-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .capability-list { display: grid; gap: 8px; margin: 13px 0 0; padding: 0; list-style: none; }
+    .capability-list li { display: grid; grid-template-columns: 7px 1fr; gap: 8px; color: #d8cce6; font-size: 11px; line-height: 1.45; }
+    .capability-list li::before { width: 5px; height: 5px; margin-top: 5px; border-radius: 50%; background: var(--pink); content: ""; }
+    .diagnostic-output { margin-top: 16px; }
+
+    .matrix-gate { max-width: 620px; margin: 0 auto; border: 1px dashed rgb(199 75 158 / 55%); border-radius: 10px; padding: 24px; background: #140c1e; text-align: center; }
+    .matrix-gate h3 { margin: 0 0 7px; font: 400 21px/1.2 var(--serif); }
+    .matrix-gate p { margin: 0 auto 16px; max-width: 500px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .matrix-form { display: flex; justify-content: center; gap: 8px; }
+    .matrix-form input { width: min(250px, 100%); min-height: 38px; border: 1px solid #543366; border-radius: 6px; padding: 8px 10px; background: #08060c; color: var(--text); font-size: 12px; }
+    .matrix-error { min-height: 18px; margin: 10px 0 0 !important; color: var(--red) !important; }
+    .matrix-content { display: grid; gap: 14px; }
+    .matrix-content[hidden] { display: none; }
+    .data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .data-panel { padding: 17px; }
+    .data-panel h3 { margin: 0 0 12px; font: 400 17px/1.2 var(--serif); }
+    .data-entry { display: grid; grid-template-columns: minmax(110px, .8fr) 1.4fr; gap: 7px 12px; border-top: 1px solid var(--line); padding: 9px 0; font-size: 11px; }
+    .data-entry strong { color: #dfcfe7; font-weight: 500; }
+    .data-entry span { color: var(--muted); }
+    .data-entry:last-child { padding-bottom: 0; }
+    .demo-warning { border-color: rgb(229 189 131 / 30%); }
+
+    .entry-view { display: grid; min-height: 390px; place-items: center; }
+    .entry-content { width: min(100%, 390px); text-align: center; }
+    .entrance-button { display: grid; width: 176px; height: 176px; place-items: center; margin: 0 auto 10px; border: 0; border-radius: 50%; background: transparent; color: #050307; cursor: pointer; font: normal 132px/1 var(--serif); -webkit-text-stroke: 1px #ead8ee; text-shadow: 0 1px 0 #f5eaf7, 0 4px 0 #7b3f9e, 0 8px 12px rgb(0 0 0 / 84%); transition: transform .18s ease; }
+    .entrance-button:hover { transform: translateY(-2px); }
+    .entrance-button:active { transform: translateY(2px); }
+    .sign-in { margin: 0 auto; border: 1px solid var(--line); border-radius: 10px; padding: 20px; background: var(--panel); text-align: left; }
+    .sign-in[hidden] { display: none; }
+    .sign-in h3 { margin: 0 0 6px; font: 400 20px/1.2 var(--serif); }
+    .sign-in p { margin: 0 0 14px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .sign-in label { display: grid; gap: 6px; margin-top: 11px; color: #ddd0e5; font-size: 11px; }
+    .sign-in input { min-height: 38px; border: 1px solid #543366; border-radius: 6px; padding: 8px 10px; background: #08060c; color: var(--text); }
+    .sign-in .button { width: 100%; margin-top: 14px; }
+
+    footer { border-top: 1px solid var(--line); padding: 17px 0 24px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    footer .footer-row { display: flex; justify-content: space-between; gap: 12px; }
+
+    @media (max-width: 760px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .bot-grid, .capability-grid { grid-template-columns: 1fr; }
+      .bot-image-wrap { height: 220px; }
+      .two-column, .data-grid { grid-template-columns: 1fr; }
+      .page-heading { align-items: flex-start; flex-direction: column; }
+      .demo-badge { align-self: flex-start; }
+      .site-header { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 430px) {
+      .shell { width: min(100% - 24px, 1180px); }
+      .matrix-form { flex-direction: column; }
+      .matrix-form input, .matrix-form .button { width: 100%; }
+      .footer-row { flex-direction: column; }
+      .data-entry { grid-template-columns: 1fr; gap: 4px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="site-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <div>
+          <h1>MONTEMADER.COM</h1>
+          <p>Defense command grid · static review mockup</p>
+        </div>
+      </div>
+      <div class="header-status"><span class="status-dot" aria-hidden="true"></span>VISUAL PREVIEW · NOT CONNECTED TO LIVE BOTS</div>
+    </header>
+
+    <nav class="nav" aria-label="Review pages">
+      <button type="button" data-view="dashboard" aria-current="page">Dashboard</button>
+      <button type="button" data-view="tester">Tester &amp; Capabilities</button>
+      <button type="button" data-view="matrix">Enemy Intel / Matrix</button>
+      <button type="button" data-view="entry">M / Sign in</button>
+    </nav>
+
+    <main tabindex="-1">
+      <section class="view" id="view-dashboard" aria-labelledby="dashboard-title">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">Operations overview</p>
+            <h2 id="dashboard-title">Defense command grid</h2>
+            <p>A review layout for three defensive bot profiles, their capabilities, and example event records.</p>
+          </div>
+          <span class="demo-badge">Sample content only</span>
+        </div>
+
+        <aside class="banner" role="note">
+          <span class="banner-icon" aria-hidden="true">i</span>
+          <div><strong>Static mockup:</strong> the numbers, heartbeats, events, and IP addresses on this page are illustrative examples, not live readings or recorded production data. No bot commands are sent.</div>
+        </aside>
+
+        <div class="metrics" aria-label="Illustrative overview metrics">
+          <article class="metric"><span class="metric-label">Bot profiles</span><strong class="metric-value">03</strong><span class="metric-note">Configured for review</span></article>
+          <article class="metric"><span class="metric-label">Example events</span><strong class="metric-value">06</strong><span class="metric-note">Illustrative sample</span></article>
+          <article class="metric"><span class="metric-label">Attack reports</span><strong class="metric-value">00</strong><span class="metric-note">No live feed connected</span></article>
+          <article class="metric"><span class="metric-label">Protection status</span><strong class="metric-value">Preview</strong><span class="metric-note">Not a verified WAF state</span></article>
+        </div>
+
+        <div class="section-title"><h3>Defensive bot profiles</h3><span>Three individual inbox identities · sample configuration</span></div>
+        <div class="bot-grid">
+          <article class="card bot-card">
+            <div class="bot-image-wrap"><img class="bot-image" src="/images/superbot-portrait.png" alt="Illustration of the SuperBot dragon guardian"><div class="bot-label"><h4>SuperBot</h4><span>Profile preview</span></div></div>
+            <div class="bot-details">
+              <p class="bot-role">Edge filtering &amp; challenge routing</p>
+              <dl class="detail-list">
+                <div class="detail-row"><dt>Channel</dt><dd>Dedicated secure inbox</dd></div>
+                <div class="detail-row"><dt>Capabilities</dt><dd>Request screening, reputation review</dd></div>
+                <div class="detail-row"><dt>Example status</dt><dd class="healthy">Ready · illustrative</dd></div>
+                <div class="detail-row"><dt>Sample latency</dt><dd>— not connected —</dd></div>
+              </dl>
+              <div class="bot-foot"><span>Guardian role</span><span>SuperBot</span></div>
+            </div>
+          </article>
+
+          <article class="card bot-card">
+            <div class="bot-image-wrap"><img class="bot-image" src="/images/xena-portrait.png" alt="Illustration of Xena, a dragon guardian holding a plain shield"><div class="bot-label"><h4>Xena</h4><span>Profile preview</span></div></div>
+            <div class="bot-details">
+              <p class="bot-role">Traffic resilience &amp; defensive load handling</p>
+              <dl class="detail-list">
+                <div class="detail-row"><dt>Channel</dt><dd>Dedicated secure inbox</dd></div>
+                <div class="detail-row"><dt>Capabilities</dt><dd>Load distribution, defensive buffering</dd></div>
+                <div class="detail-row"><dt>Example status</dt><dd class="healthy">Ready · illustrative</dd></div>
+                <div class="detail-row"><dt>Shield</dt><dd>Plain, unmarked</dd></div>
+              </dl>
+              <div class="bot-foot"><span>Guardian role</span><span>Xena</span></div>
+            </div>
+          </article>
+
+          <article class="card bot-card">
+            <div class="bot-image-wrap"><img class="bot-image" src="/images/ruach-portrait.png" alt="Illustration of Ruach, an ember-red dragon guardian"><div class="bot-label"><h4>Ruach</h4><span>Profile preview</span></div></div>
+            <div class="bot-details">
+              <p class="bot-role">Request-pattern review &amp; origin safety</p>
+              <dl class="detail-list">
+                <div class="detail-row"><dt>Channel</dt><dd>Dedicated secure inbox</dd></div>
+                <div class="detail-row"><dt>Capabilities</dt><dd>Signal correlation, defensive escalation</dd></div>
+                <div class="detail-row"><dt>Example status</dt><dd class="healthy">Ready · illustrative</dd></div>
+                <div class="detail-row"><dt>Response</dt><dd>Defensive directives only</dd></div>
+              </dl>
+              <div class="bot-foot"><span>Guardian role</span><span>Ruach</span></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="section-title"><h3>Example activity</h3><span>Not a live event stream</span></div>
+        <div class="two-column">
+          <article class="card card-pad">
+            <h3 class="card-heading">Illustrative event log <small>sample records</small></h3>
+            <div class="terminal" aria-label="Example event log">
+              <div class="terminal-line"><span class="terminal-time">[09:38:00]</span> <span class="sample-tag">[SAMPLE]</span> SuperBot profile marked ready for review.</div>
+              <div class="terminal-line"><span class="terminal-time">[09:38:12]</span> <span class="sample-tag">[SAMPLE]</span> Screening capability listed; no traffic inspected.</div>
+              <div class="terminal-line"><span class="terminal-time">[09:39:01]</span> <span class="sample-tag">[SAMPLE]</span> Xena defensive buffer profile available.</div>
+              <div class="terminal-line"><span class="terminal-time">[09:40:14]</span> <span class="sample-tag">[SAMPLE]</span> Ruach signal-correlation profile available.</div>
+            </div>
+            <div class="button-row"><button class="button" type="button" data-action="append-sample">Add sample line</button><button class="button button-subtle" type="button" data-action="clear-sample">Clear preview lines</button></div>
+          </article>
+          <article class="card card-pad">
+            <h3 class="card-heading">Response boundary <small>read-only preview</small></h3>
+            <p style="margin:0;color:var(--muted);font-size:12px;line-height:1.65">The intended response model is defensive: correlate a recent authenticated report, then queue a defensive runbook through each bot’s separate authenticated inbox. This HTML preview does not terminate bot processes, block website traffic, proxy requests, or change hosting and WAF settings.</p>
+            <div class="button-row"><button class="button" type="button" data-action="preview-all">Preview all 3 defenders</button></div>
+            <div class="terminal" id="response-log" aria-live="polite" style="min-height:74px;margin-top:11px">No live action is available in this static preview.</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-tester" aria-labelledby="tester-title" hidden>
+        <div class="page-heading">
+          <div><p class="eyebrow">Capability review</p><h2 id="tester-title">Tester &amp; capabilities</h2><p>Compare each bot’s intended defensive role. Diagnostics below update only this page’s sample console.</p></div>
+          <span class="demo-badge">Local-only interactions</span>
+        </div>
+        <aside class="banner" role="note"><span class="banner-icon" aria-hidden="true">i</span><div><strong>Review mode:</strong> buttons run visual-only sample diagnostics. No network traffic is generated and no external system is contacted.</div></aside>
+        <div class="capability-grid">
+          <article class="card capability-card">
+            <h3>SuperBot · Edge guardian</h3>
+            <p>A conceptual first layer for defensive request screening and challenge routing.</p>
+            <ul class="capability-list"><li>Request screening and reputation review</li><li>Challenge routing through the site’s actual edge provider</li><li>Separate authenticated bot inbox for commands</li></ul>
+            <button class="button" type="button" data-diagnostic="SuperBot">Preview SuperBot diagnostic</button>
+          </article>
+          <article class="card capability-card">
+            <h3>Xena · Shield guardian</h3>
+            <p>A conceptual resilience role focused on defensive load handling and distribution.</p>
+            <ul class="capability-list"><li>Defensive buffering and load distribution</li><li>Plain, unmarked shield artwork</li><li>Separate authenticated bot inbox for commands</li></ul>
+            <button class="button" type="button" data-diagnostic="Xena">Preview Xena diagnostic</button>
+          </article>
+          <article class="card capability-card">
+            <h3>Ruach · Signal guardian</h3>
+            <p>A conceptual request-pattern review role for coordinating a measured defensive response.</p>
+            <ul class="capability-list"><li>Authenticated report correlation</li><li>Defensive escalation and origin-safety guidance</li><li>Separate authenticated bot inbox for commands</li></ul>
+            <button class="button" type="button" data-diagnostic="Ruach">Preview Ruach diagnostic</button>
+          </article>
+        </div>
+        <div class="section-title"><h3>Diagnostic console</h3><span>Visual preview only</span></div>
+        <article class="card card-pad">
+          <div class="terminal" id="tester-output" aria-live="polite"><div class="terminal-line"><span class="sample-tag">[PREVIEW]</span> Diagnostic console ready. No bots are connected.</div></div>
+          <div class="button-row"><button class="button" type="button" data-action="run-diagnostics">Run local UI diagnostic</button><button class="button button-subtle" type="button" data-action="clear-diagnostics">Clear console</button></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-matrix" aria-labelledby="matrix-title" hidden>
+        <div class="page-heading">
+          <div><p class="eyebrow">Restricted sample view</p><h2 id="matrix-title">Enemy intel / Matrix vault</h2><p>A visual example of how reviewed security notes could be grouped behind a data-entry gate.</p></div>
+          <span class="demo-badge">Demo gate · not security</span>
+        </div>
+        <aside class="banner demo-warning" role="note"><span class="banner-icon" aria-hidden="true">!</span><div><strong>Important:</strong> this is a client-side demonstration gate. The password is present in this HTML and does not protect confidential data. The content below is fabricated sample data; do not use this gate for real security.</div></aside>
+        <div class="matrix-gate" id="matrix-gate">
+          <h3>Matrix data review</h3>
+          <p>Enter the requested demo key to reveal the illustrative records on this page. Nothing is fetched from a database.</p>
+          <form class="matrix-form" id="matrix-form">
+            <label class="sr-only" for="matrix-password">Demo data-entry password</label>
+            <input id="matrix-password" name="password" type="password" autocomplete="off" placeholder="Data-entry password" required>
+            <button class="button" type="submit">Unlock sample view</button>
+          </form>
+          <p class="matrix-error" id="matrix-error" role="alert" aria-live="polite"></p>
+        </div>
+        <div class="matrix-content" id="matrix-content" hidden>
+          <div class="data-grid">
+            <article class="card data-panel">
+              <h3>Example security events</h3>
+              <div class="data-entry"><strong>192.0.2.88</strong><span>Reserved documentation address · sample path /api/data · illustrative pattern review</span></div>
+              <div class="data-entry"><strong>203.0.113.42</strong><span>Reserved documentation address · sample path /login · illustrative challenge</span></div>
+              <div class="data-entry"><strong>198.51.100.14</strong><span>Reserved documentation address · sample volumetric event · no traffic observed</span></div>
+              <div class="data-entry"><strong>Record status</strong><span>Fabricated review examples, not actual incident reports</span></div>
+            </article>
+            <article class="card data-panel">
+              <h3>Example bot health notes</h3>
+              <div class="data-entry"><strong>SuperBot</strong><span>Illustrative profile status · no live heartbeat</span></div>
+              <div class="data-entry"><strong>Xena</strong><span>Illustrative profile status · no live heartbeat</span></div>
+              <div class="data-entry"><strong>Ruach</strong><span>Illustrative profile status · no live heartbeat</span></div>
+              <div class="data-entry"><strong>Website / WAF</strong><span>Unverified · configure and review at your actual hosting or edge provider</span></div>
+            </article>
+          </div>
+          <article class="card data-panel">
+            <h3>Data and retention note</h3>
+            <div class="data-entry"><strong>Included records</strong><span>Only the explicitly labeled sample rows shown above</span></div>
+            <div class="data-entry"><strong>Storage</strong><span>No browser storage, backend database, or remote data connection</span></div>
+            <div class="data-entry"><strong>Actual app</strong><span>Use the authenticated Next.js app to review its server-backed operational data</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-entry" aria-labelledby="entry-title" hidden>
+        <div class="page-heading"><div><p class="eyebrow">Entrance &amp; sign-in design</p><h2 id="entry-title">The M entrance</h2><p>The M opens the sign-in visual. This static file does not authenticate, create accounts, or connect to the app’s session system.</p></div><span class="demo-badge">Design preview</span></div>
+        <aside class="banner" role="note"><span class="banner-icon" aria-hidden="true">i</span><div><strong>Authentication remains in the full app.</strong> The form below is presented for visual review and does not submit credentials.</div></aside>
+        <div class="entry-view">
+          <div class="entry-content">
+            <button class="entrance-button" id="entrance-button" type="button" aria-label="Open sign-in form" aria-controls="sign-in-panel" aria-expanded="false"><span aria-hidden="true">M</span></button>
+            <section class="sign-in" id="sign-in-panel" aria-labelledby="sign-in-heading" hidden>
+              <h3 id="sign-in-heading">Sign in</h3>
+              <p>Review-only form layout. Authentication is available in the full application, not this standalone HTML.</p>
+              <form id="sign-in-form">
+                <label for="sign-in-email">Email<input id="sign-in-email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="name@example.com"></label>
+                <label for="sign-in-password">Password<input id="sign-in-password" name="password" type="password" autocomplete="current-password" maxlength="128" placeholder="Your password"></label>
+                <button class="button" type="submit">Sign in · preview only</button>
+              </form>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-row"><span>Montemader.com · Defense Command Grid · static review mockup</span><span>SMS alert line shown in supplied design: 425-830-3312</span></div>
+      <p>All bot states, metrics, events, and security records in this file are illustrative. This file is not connected to production systems.</p>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const viewButtons = [...document.querySelectorAll("[data-view]")];
+      const views = [...document.querySelectorAll(".view")];
+      const showView = (name) => {
+        views.forEach((view) => { view.hidden = view.id !== `view-${name}`; });
+        viewButtons.forEach((button) => {
+          if (button.dataset.view === name) button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+        document.querySelector("main").focus({ preventScroll: true });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+      viewButtons.forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
+
+      const addLine = (target, message) => {
+        const line = document.createElement("div");
+        line.className = "terminal-line";
+        const tag = document.createElement("span");
+        tag.className = "sample-tag";
+        tag.textContent = "[PREVIEW] ";
+        line.append(tag, document.createTextNode(message));
+        target.append(line);
+        target.scrollTop = target.scrollHeight;
+      };
+
+      document.querySelector('[data-action="append-sample"]').addEventListener("click", () => {
+        addLine(document.querySelector('[aria-label="Example event log"]'), "Additional illustrative line added locally.");
+      });
+      document.querySelector('[data-action="clear-sample"]').addEventListener("click", () => {
+        document.querySelector('[aria-label="Example event log"]').replaceChildren();
+      });
+      document.querySelector('[data-action="preview-all"]').addEventListener("click", () => {
+        document.querySelector("#response-log").textContent = "Preview only: SuperBot, Xena, and Ruach are shown as a coordinated defensive team. No action was sent.";
+      });
+      document.querySelectorAll("[data-diagnostic]").forEach((button) => button.addEventListener("click", () => {
+        addLine(document.querySelector("#tester-output"), `${button.dataset.diagnostic} sample capability preview completed locally.`);
+      }));
+      document.querySelector('[data-action="run-diagnostics"]').addEventListener("click", () => {
+        const output = document.querySelector("#tester-output");
+        ["SuperBot", "Xena", "Ruach"].forEach((name) => addLine(output, `${name} visual profile check complete; no bot connected.`));
+      });
+      document.querySelector('[data-action="clear-diagnostics"]').addEventListener("click", () => {
+        document.querySelector("#tester-output").replaceChildren();
+      });
+
+      const entranceButton = document.querySelector("#entrance-button");
+      const signInPanel = document.querySelector("#sign-in-panel");
+      entranceButton.addEventListener("click", () => {
+        entranceButton.hidden = true;
+        signInPanel.hidden = false;
+        entranceButton.setAttribute("aria-expanded", "true");
+        signInPanel.querySelector("input").focus();
+      });
+      document.querySelector("#sign-in-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        window.alert("This standalone preview does not authenticate or submit credentials. Use the full application to sign in.");
+      });
+
+      const matrixForm = document.querySelector("#matrix-form");
+      matrixForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const password = new FormData(matrixForm).get("password");
+        const error = document.querySelector("#matrix-error");
+        if (password === "MATRIX") {
+          document.querySelector("#matrix-gate").hidden = true;
+          document.querySelector("#matrix-content").hidden = false;
+          error.textContent = "";
+          document.querySelector("#matrix-content h3").setAttribute("tabindex", "-1");
+          document.querySelector("#matrix-content h3").focus();
+        } else {
+          error.textContent = "That demo key did not match. Try again.";
+          document.querySelector("#matrix-password").focus();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
