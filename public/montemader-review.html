@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b0710">
-  <meta name="description" content="Montemader defense grid review mockup.">
-  <title>Montemader · Defense Grid</title>
+  <meta name="theme-color" content="#07090a">
+  <meta name="description" content="A dark, Tolkien-inspired sample control room with a green leaf sigil, field trials, and a lore archive.">
+  <title>Montemader · Green Leaf Watch</title>
   <style>
     :root {
       color-scheme: dark;
@@ -26,8 +26,8 @@
     }
 
     * { box-sizing: border-box; }
-    html { min-width: 320px; background: var(--bg); }
-    body { min-height: 100vh; margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); }
+    html { min-width: 320px; background: #07090a; }
+    body { min-height: 100vh; margin: 0; background: radial-gradient(ellipse at 50% -18%, rgb(52 81 58 / 34%), transparent 54%), linear-gradient(180deg, #0b100d 0%, #07090a 46%, #050707 100%); background-attachment: fixed; color: var(--text); font-family: var(--sans); }
     button, input { font: inherit; }
     button { color: inherit; }
     button:focus-visible, input:focus-visible { outline: 2px solid var(--silvergreen); outline-offset: 3px; }
@@ -110,7 +110,7 @@
     .bot-card:nth-child(2) .action { animation-delay: .16s; }
     .bot-card:nth-child(3) .action { animation-delay: .32s; }
 
-    .section-heading { margin: 22px 0 10px; font: 400 17px/1.2 var(--serif); }
+    .section-heading { margin: 22px 0 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; color: #dce5d5; font: 400 17px/1.2 var(--serif); text-shadow: 0 2px 8px rgb(0 0 0 / 65%); }
     .two-column { display: grid; grid-template-columns: 1.1fr .9fr; gap: 12px; }
     .card-pad { padding: 14px; }
     .card h2 { margin: 0 0 11px; font: 400 16px/1.2 var(--serif); }
@@ -182,8 +182,8 @@
       <div class="brand">
         <button class="brand-mark" id="open-sign-in" type="button" aria-label="M — open sign in">M</button>
         <div class="brand-info">
-          <strong><a href="https://montemader.com" target="_blank" rel="noopener noreferrer">Montemader.com</a> · Defense Grid</strong>
-          <span>Tunnel status · bot controls · event data</span>
+          <strong><a href="https://montemader.com" target="_blank" rel="noopener noreferrer">Montemader.com</a> · Green Leaf Watch</strong>
+          <span>Two dragon agents · one blade sentinel · sample only</span>
         </div>
       </div>
       <span class="preview-state">SAMPLE</span>
@@ -191,14 +191,14 @@
 
     <nav aria-label="Pages">
       <button type="button" data-view="dashboard" aria-current="page">Dashboard</button>
-      <button type="button" data-view="tester">Tester</button>
-      <button type="button" data-view="matrix">Intel</button>
+      <button type="button" data-view="tester">Field Trials</button>
+      <button type="button" data-view="matrix">Elven Archive</button>
       <button class="manual-toggle" type="button" data-action="toggle-manual" aria-pressed="false" aria-label="Toggle manual override">MM: Auto</button>
     </nav>
 
     <main tabindex="-1">
       <section class="view" id="view-dashboard" aria-labelledby="dashboard-title">
-        <div class="page-title"><h1 id="dashboard-title">Defense grid</h1><span class="sample-tag">DEMO DATA</span></div>
+        <div class="page-title"><h1 id="dashboard-title">The Green Leaf Watch</h1><span class="sample-tag">DEMO DATA</span></div>
         <div class="status-strip">
           <p class="notice" role="note">Sample telemetry · not connected to live bots.</p>
           <a class="sms-link" href="sms:+14258303312?body=EMERGENCY%20SITE%20ATTACK%20-%20montemader.com" aria-label="Compose an emergency SMS to +1 425-830-3312">SMS +1 425-830-3312</a>
@@ -212,9 +212,9 @@
         </div>
         <div class="bot-grid">
           <article class="card bot-card">
-            <div class="bot-image-wrap"><img class="bot-image" src="/images/superbot-portrait.png" alt="Photorealistic teal-black dragon staring forward with glowing red eyes and breathing fire"><h2 class="bot-name">SuperBot</h2></div>
+            <div class="bot-image-wrap"><img class="bot-image" src="/images/superbot-portrait.png" alt="Broken elven sword with a vivid green Leaf of Lórien brooch in a shadowed forest"><h2 class="bot-name">SuperBot</h2></div>
             <div class="bot-info">
-              <p class="bot-role">Elf Lord WAF / Edge AI</p>
+              <p class="bot-role">Narsil-inspired blade sentinel · Leaf of Lórien sigil</p>
               <dl>
                 <div class="detail"><dt>Target</dt><dd><a class="target-link" href="https://montemader.com" target="_blank" rel="noopener noreferrer">montemader.com</a></dd></div>
                 <div class="detail"><dt>Tunnel</dt><dd>Alpha · 443</dd></div>
@@ -222,7 +222,7 @@
                 <div class="detail"><dt>Health</dt><dd class="healthy">Sample · 100%</dd></div>
                 <div class="detail"><dt>Heartbeat</dt><dd>Demo only</dd></div>
               </dl>
-              <div class="conduit">WAF · reputation scoring · JS challenge</div>
+              <div class="conduit">Green leaf of protection · visual sigil only · sample mode</div>
               <button class="action" type="button" data-demo-attack="SuperBot">Preview route</button>
             </div>
           </article>
@@ -259,7 +259,7 @@
             </div>
           </article>
         </div>
-        <h2 class="section-heading">Events</h2>
+        <h2 class="section-heading">The Watch Ledger</h2>
         <div class="two-column">
           <article class="card card-pad">
             <h2>Sample event log</h2>
@@ -278,7 +278,7 @@
       </section>
 
       <section class="view" id="view-tester" aria-labelledby="tester-title" hidden>
-        <div class="page-title"><h1 id="tester-title">Tester</h1><span class="sample-tag">LOCAL ONLY</span></div>
+        <div class="page-title"><h1 id="tester-title">Field Trials</h1><span class="sample-tag">LOCAL ONLY</span></div>
         <div class="capability-grid">
           <article class="card capability-card">
             <h2>SuperBot</h2>
@@ -304,7 +304,7 @@
       </section>
 
       <section class="view" id="view-matrix" aria-labelledby="matrix-title" hidden>
-        <div class="page-title"><h1 id="matrix-title">Intel</h1><span class="sample-tag">DEMO RECORDS</span></div>
+        <div class="page-title"><h1 id="matrix-title">Elven Archive</h1><span class="sample-tag">DEMO RECORDS</span></div>
         <p class="notice" role="note">Sample records only.</p>
         <div class="matrix-data" id="matrix-data">
           <div class="data-grid">
