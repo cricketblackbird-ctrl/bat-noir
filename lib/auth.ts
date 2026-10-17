@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth'
+import { username } from 'better-auth/plugins'
 import { pool } from '@/lib/db'
 
 export const auth = betterAuth({
@@ -12,8 +13,9 @@ export const auth = betterAuth({
         : process.env.V0_RUNTIME_URL),
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true,
+    disableSignUp: true,
   },
+  plugins: [username()],
   trustedOrigins: [
     ...(process.env.NODE_ENV === 'development'
       ? [

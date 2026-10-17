@@ -124,7 +124,7 @@
     <section class="sign-in" id="sign-in-panel" aria-labelledby="sign-in-title" hidden>
       <h1 id="sign-in-title">Sign in</h1>
       <form id="sign-in-form">
-        <label for="email">Email<input id="email" name="email" type="email" autocomplete="email" required maxlength="254"></label>
+        <label for="username">Sign in<input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" required minlength="3" maxlength="30"></label>
         <label for="password">Password<input id="password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></label>
         <p class="error" id="sign-in-error" role="alert" aria-live="polite"></p>
         <button type="submit">Sign in</button>
@@ -153,11 +153,11 @@
         submit.textContent = "Please wait…";
 
         try {
-          const response = await fetch("/api/auth/sign-in/email", {
+          const response = await fetch("/api/auth/sign-in/username", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              email: String(data.get("email") ?? "").trim(),
+              username: String(data.get("username") ?? "").trim(),
               password: String(data.get("password") ?? "")
             })
           });

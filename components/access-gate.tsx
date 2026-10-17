@@ -4,9 +4,8 @@ import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 
-export function AccessGate({ allowInitialSignup }: { allowInitialSignup: boolean }) {
+export function AccessGate() {
   const router = useRouter()
-  const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [showEntry, setShowEntry] = useState(false)
@@ -16,16 +15,13 @@ export function AccessGate({ allowInitialSignup }: { allowInitialSignup: boolean
     const nativeEvent = event.nativeEvent as SubmitEvent & { isComposing?: boolean; keyCode?: number }
     if (nativeEvent.isComposing || nativeEvent.keyCode === 229) return
     const formData = new FormData(event.currentTarget)
-    const name = String(formData.get('name') ?? '').trim()
-    const email = String(formData.get('email') ?? '').trim()
+    const username = String(formData.get('username') ?? '').trim()
     const password = String(formData.get('password') ?? '')
     setError('')
     setBusy(true)
 
     try {
-      const result = mode === 'sign-up'
-        ? await authClient.signUp.email({ name, email, password })
-        : await authClient.signIn.email({ email, password })
+      const result = await authClient.signIn.username({ username, password })
       if (result.error) throw new Error('Authentication failed')
       router.refresh()
     } catch {
@@ -43,19 +39,15 @@ export function AccessGate({ allowInitialSignup }: { allowInitialSignup: boolean
         </button>
       ) : (
         <section className="auth-card" aria-labelledby="auth-title">
-          <h1 id="auth-title">{mode === 'sign-in' ? 'Sign in' : 'Create account'}</h1>
+          <h1 id="auth-title">Sign in</h1>
           <form className="auth-form" onSubmit={submit}>
-            {mode === 'sign-up' && allowInitialSignup && <label>Name<input name="name" autoComplete="name" required maxLength={80} /></label>}
-            <label>Email<input type="email" name="email" autoComplete="email" required maxLength={254} /></label>
-            <label>Password<input type="password" name="password" autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'} required minLength={8} maxLength={128} /></label>
+            <label>Sign in<input type="text" name="username" autoComplete="username" autoCapitalize="none" required minLength={3} maxLength={30} /></label>
+            <label>Password<input type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={128} /></label>
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button-primary" type="submit" disabled={busy}>
-              {busy ? 'Please wait…' : mode === 'sign-in' ? 'Sign in' : 'Create account'}
+              {busy ? 'Please wait…' : 'Sign in'}
             </button>
           </form>
-          {allowInitialSignup && <button className="text-button" type="button" onClick={() => { setError(''); setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in') }}>
-            {mode === 'sign-in' ? 'Create account' : 'Sign in'}
-          </button>}
         </section>
       )}
     </main>
