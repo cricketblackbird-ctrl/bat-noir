@@ -33,7 +33,7 @@ export async function GET() {
     db.select().from(dragonTelemetryRecords)
       .where(gte(dragonTelemetryRecords.receivedAt, cutoff))
       .orderBy(desc(dragonTelemetryRecords.receivedAt)).limit(60),
-    db.select({ id: dragonCommandQueue.id, fighterId: dragonCommandQueue.fighterId, strategy: dragonCommandQueue.strategy, formation: dragonCommandQueue.formation, status: dragonCommandQueue.status, createdAt: dragonCommandQueue.createdAt })
+    db.select({ id: dragonCommandQueue.id, fighterId: dragonCommandQueue.fighterId, strategy: dragonCommandQueue.strategy, formation: dragonCommandQueue.formation, threatType: dragonCommandQueue.threatType, status: dragonCommandQueue.status, createdAt: dragonCommandQueue.createdAt })
       .from(dragonCommandQueue).orderBy(desc(dragonCommandQueue.createdAt)).limit(6),
     db.select().from(dragonControlState),
     db.select().from(dragonEmergencyStop).where(eq(dragonEmergencyStop.singleton, true)).limit(1),

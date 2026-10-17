@@ -1,15 +1,16 @@
-import { randomInt } from 'node:crypto'
+import { randomInt, timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { dragonTelemetryRecords } from '@/lib/db/schema'
 
 export const runtime = 'nodejs'
 
-function authorized(request: Request) {
-  const secret = process.env.DRAGON_INGEST_TOKEN
+function authorized(request: Request, dragonId: string) {
+  const tokenName = dragonId === 'ruach' ? 'DRAGON_RUACH_TOKEN' : dragonId === 'xena' || dragonId === 'zena' ? 'DRAGON_XENA_TOKEN' : 'DRAGON_SUPERBOT_TOKEN'
+  const secret = process.env[tokenName]
   const candidate = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? ''
   if (!secret || candidate.length !== secret.length) return false
-  return Buffer.from(candidate).equals(Buffer.from(secret))
+  return timingSafeEqual(Buffer.from(candidate), Buffer.from(secret))
 }
 
 function recordId() {
@@ -17,7 +18,6 @@ function recordId() {
 }
 
 export async function POST(request: Request) {
-  if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const declaredLength = Number(request.headers.get('content-length') ?? 0)
   if (declaredLength > 8192) return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
 
@@ -33,7 +33,9 @@ export async function POST(request: Request) {
   const nodeId = typeof value.nodeId === 'string' ? value.nodeId.trim() : ''
   const validIds = ['ruach', 'xena', 'zena', 'superbot']
   const validTypes = ['health_report', 'hit', 'recall', 'reappear']
-  if (!validIds.includes(dragonId) || typeof eventType !== 'string' || !validTypes.includes(eventType) ||
+  if (!validIds.includes(dragonId)) return NextResponse.json({ error: 'Unknown fighter' }, { status: 400 })
+  if (!authorized(request, dragonId)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (typeof eventType !== 'string' || !validTypes.includes(eventType) ||
     typeof health !== 'number' || !Number.isFinite(health) || health < 0 || health > 100 ||
     !Number.isInteger(hits) || (hits as number) < 0 || !Number.isInteger(capacity) || (capacity as number) <= 0 ||
     (hits as number) > (capacity as number) && eventType !== 'recall' || !nodeId || nodeId.length > 120) {

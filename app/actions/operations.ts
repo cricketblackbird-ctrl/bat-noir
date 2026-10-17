@@ -7,14 +7,18 @@ import { dragonCommandQueue, dragonEmergencyStop } from '@/lib/db/schema'
 import { requireMm } from '@/lib/operator'
 
 const strategies = ['inspect_verify', 'shield_restore', 'isolate_recover'] as const
+const fighters = ['ruach', 'xena', 'superbot'] as const
+const strikePresets = {
+  ruach: { strategy: 'isolate_recover', threatType: 'scraper' },
+  xena: { strategy: 'shield_restore', threatType: 'traffic_surge' },
+  superbot: { strategy: 'inspect_verify', threatType: 'credential_probe' },
+} as const
+
+export type FighterId = (typeof fighters)[number]
 const formations = [
   'ruach_only',
   'xena_only',
   'superbot_only',
-  'ruach_xena',
-  'ruach_superbot',
-  'xena_superbot',
-  'all_three',
 ] as const
 
 export type Strategy = (typeof strategies)[number]
@@ -25,10 +29,6 @@ const formationFighters: Record<Formation, string[]> = {
   ruach_only: ['ruach'],
   xena_only: ['zena'],
   superbot_only: ['superbot'],
-  ruach_xena: ['ruach', 'zena'],
-  ruach_superbot: ['ruach', 'superbot'],
-  xena_superbot: ['zena', 'superbot'],
-  all_three: ['ruach', 'zena', 'superbot'],
 }
 
 function stopAppliesTo(fighter: string, state: typeof dragonEmergencyStop.$inferSelect) {
@@ -67,6 +67,35 @@ export async function issueDefenseRunbook(input: { strategy: string; formation: 
 
   revalidatePath('/')
   return { queued: rows.length }
+}
+
+export async function issueStrike(input: { fighterId: string }) {
+  const mm = await requireMm()
+  if (!fighters.includes(input.fighterId as FighterId)) throw new Error('Choose one assigned fighter.')
+
+  const fighterId = input.fighterId as FighterId
+  const fighterKey = fighterId === 'xena' ? 'zena' : fighterId
+  const preset = strikePresets[fighterId]
+
+  const [queued] = await db.transaction(async (tx) => {
+    await tx.insert(dragonEmergencyStop).values({ singleton: true }).onConflictDoNothing()
+    const [stops] = await tx.select().from(dragonEmergencyStop)
+      .where(eq(dragonEmergencyStop.singleton, true)).for('update').limit(1)
+    if (!stops || stopAppliesTo(fighterKey, stops)) {
+      throw new Error('This fighter is stopped. Release its MM stop before issuing a directive.')
+    }
+
+    return tx.insert(dragonCommandQueue).values({
+      fighterId: fighterKey,
+      strategy: preset.strategy,
+      formation: `${fighterId}_solo_combo`,
+      threatType: preset.threatType,
+      issuedBy: mm.id,
+    }).returning({ id: dragonCommandQueue.id })
+  })
+
+  revalidatePath('/')
+  return { queued: String(queued.id), fighterId, siteScope: 'montemader.com', threatType: preset.threatType }
 }
 
 export async function setEmergencyStop(input: { target: string; stopped: boolean }) {

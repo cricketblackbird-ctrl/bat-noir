@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
-import { issueDefenseRunbook, setEmergencyStop, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
+import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
 type Fighter = {
   id: string
@@ -23,7 +23,7 @@ type Operations = {
   operator: { name: string; email: string; isMm: boolean }
   fighters: Fighter[]
   stops: { stopRuach?: boolean; stopXena?: boolean; stopSuperbot?: boolean; stopAll?: boolean; updatedAt?: string | null }
-  commands: Array<{ id: string; fighterId: string; fighterName: string; strategy: string; formation: string; status: string; createdAt: string }>
+  commands: Array<{ id: string; fighterId: string; fighterName: string; strategy: string; formation: string; threatType: string; status: string; createdAt: string }>
   telemetryCount24h: number
   observedAt: string
 }
@@ -42,9 +42,15 @@ const fetcher = async (url: string) => {
 }
 
 const fighterCopy: Record<string, string> = {
-  ruach: 'Independent read · threat interpretation',
-  xena: 'Edge defense · isolated traffic',
-  superbot: 'Infrastructure · shared coordination',
+  ruach: 'Independent read · scraper containment',
+  xena: 'Edge defense · traffic surge shield',
+  superbot: 'Infrastructure · credential probe review',
+}
+
+const strikeLabels: Record<FighterId, string> = {
+  ruach: 'Strike · scraper',
+  xena: 'Strike · traffic surge',
+  superbot: 'Strike · credential probe',
 }
 
 const stopTargets: Array<{ id: StopTarget; label: string; flag: keyof NonNullable<Operations['stops']> }> = [
@@ -64,10 +70,6 @@ const formationNames: Record<Formation, string> = {
   ruach_only: 'Ruach alone',
   xena_only: 'Xena alone',
   superbot_only: 'SuperBot alone',
-  ruach_xena: 'Ruach + Xena',
-  ruach_superbot: 'Ruach + SuperBot',
-  xena_superbot: 'Xena + SuperBot',
-  all_three: 'All three · coordinated',
 }
 
 function formatAge(date: string | null) {
@@ -85,10 +87,10 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
   const { data, error, mutate } = useSWR<Operations>('/api/operations', fetcher, { refreshInterval: 5000, revalidateOnFocus: true })
   const magic = useSWR<MagicInsights>('/api/magic-dragons', fetcher, { refreshInterval: 30000, revalidateOnFocus: true })
   const [strategy, setStrategy] = useState<Strategy>('inspect_verify')
-  const [formation, setFormation] = useState<Formation>('all_three')
+  const [formation, setFormation] = useState<Formation>('ruach_only')
   const [feedback, setFeedback] = useState('')
   const [isPending, startTransition] = useTransition()
-  const [swordDrawn, setSwordDrawn] = useState(false)
+  const [strikeToast, setStrikeToast] = useState<{ key: number; fighterId: string; side: 'left' | 'right' } | null>(null)
   const [showPrivacy, setShowPrivacy] = useState(false)
   const stoppedAll = Boolean(data?.stops.stopAll)
   const guards = data?.fighters ?? []
@@ -108,6 +110,20 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
     })
   }
 
+  function onStrike(fighterId: FighterId) {
+    setFeedback('')
+    startTransition(async () => {
+      try {
+        const result = await issueStrike({ fighterId })
+        setStrikeToast({ key: Date.now(), fighterId, side: Math.random() > 0.5 ? 'left' : 'right' })
+        setFeedback(`Combo queued for ${fighterId} on ${result.siteScope} only; awaiting its completion report.`)
+        await mutate()
+      } catch {
+        setFeedback('Combo not queued. Check MM access and this fighter’s stop state.')
+      }
+    })
+  }
+
   function onStop(target: StopTarget, stopped: boolean) {
     setFeedback('')
     startTransition(async () => {
@@ -123,6 +139,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
 
   return (
     <main className="command-page">
+      <p className="topline-message">{"Don't turn away, get in front of it"}</p>
       <header className="topbar">
         <div className="brand-lockup"><span className="brand-sigil" aria-hidden="true">✦</span><div><p className="brand-name">MONTEMADER</p><p className="brand-subtitle">DEFENSE COMMAND</p></div></div>
         <div className="topbar-right"><span className="mm-pill">{operator.isMm ? 'MM · FULL CONTROL' : 'READ ONLY'}</span><button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button></div>
@@ -147,6 +164,12 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
                 {fighter.health === null ? <p className="health-reading">Awaiting a signed report</p> : <p className="health-reading"><span>{fighter.health}%</span> health · {fighter.hitsTaken}/{fighter.hitCapacity} hits</p>}
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
                 <p className="signal-age">{formatAge(fighter.lastSeen)}</p>
+                <div className="fighter-strike-row">
+                  <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped} aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} on montemader.com`}>
+                    {isPending ? 'Queuing…' : strikeLabels[fighter.id as FighterId]}
+                  </button>
+                  {strikeToast?.fighterId === fighter.id && <span key={strikeToast.key} className={`strike-ack strike-ack-${strikeToast.side}`} role="status" aria-live="polite" onAnimationEnd={() => setStrikeToast(null)}>Anger is a gift.</span>}
+                </div>
               </article>
             ))}
           </div>
@@ -188,7 +211,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
 
         <section className="panel activity-panel" aria-labelledby="activity-heading">
           <div className="panel-heading"><div><p className="section-kicker">AUDITABLE · NO SIMULATED EVENTS</p><h2 id="activity-heading">Directive activity</h2></div><span className="panel-sigil" aria-hidden="true">⌁</span></div>
-          {error ? <p className="empty-insight">Could not load operations data.</p> : data?.commands.length ? <ul className="activity-list">{data.commands.map((command) => <li key={command.id}><span className="activity-indicator" aria-hidden="true"/><div><strong>{command.fighterName}</strong><p>{strategyNames[command.strategy as Strategy] ?? command.strategy} · {formationNames[command.formation as Formation] ?? command.formation}</p></div><span className="activity-state">{command.status}</span></li>)}</ul> : <p className="empty-insight">No defensive directives have been issued.</p>}
+          {error ? <p className="empty-insight">Could not load operations data.</p> : data?.commands.length ? <ul className="activity-list">{data.commands.map((command) => <li key={command.id}><span className="activity-indicator" aria-hidden="true"/><div><strong>{command.fighterName}</strong><p>{command.threatType.replaceAll('_', ' ')} · {strategyNames[command.strategy as Strategy] ?? command.strategy}</p></div><span className="activity-state">{command.status}</span></li>)}</ul> : <p className="empty-insight">No defensive directives have been issued.</p>}
           <p className="activity-footnote">Only events reported by authenticated agents appear here. This console does not claim to block traffic by itself.</p>
         </section>
       </div>
@@ -196,9 +219,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
       <footer className="heart-footer">
         <span className="footer-star footer-star-left" aria-hidden="true">✧</span>
         <span className="footer-thread footer-thread-left" aria-hidden="true" />
-        <button className={`heart-phrase${swordDrawn ? ' sword-drawn' : ''}`} type="button" onClick={() => setSwordDrawn((drawn) => !drawn)} aria-label={swordDrawn ? 'Freedom, crossed by a sword. Activate to restore the message.' : 'You are safe because you deserve better. But you are a fighter because you chose to be. We’ll be with you. Activate to reveal freedom.'} aria-live="polite">
-          {swordDrawn ? <span className="freedom-word">freedom<span className="sword-slash" aria-hidden="true"><svg viewBox="0 0 100 20" focusable="false"><path d="M4 15 88 4m-9-1 10 1-4 8M12 12l-7 4 6 2" /></svg></span></span> : 'You are safe because you deserve better. But you are a fighter because you chose to be. We’ll be with you.'}
-        </button>
+        <span className="heart-phrase freedom-word">freedom<span className="sword-slash" aria-hidden="true"><svg viewBox="0 0 100 20" focusable="false"><path d="M4 15 88 4m-9-1 10 1-4 8M12 12l-7 4 6 2" /></svg></span></span>
         <span className="footer-thread footer-thread-right" aria-hidden="true" />
         <span className="footer-star footer-star-right" aria-hidden="true">✦</span>
       </footer>

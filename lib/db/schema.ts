@@ -98,6 +98,7 @@ export const dragonCommandQueue = pgTable('dragon_command_queue', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   consumedAt: timestamp('consumed_at', { withTimezone: true }),
   status: text('status').notNull().default('queued'),
+  threatType: text('threat_type').notNull().default('unclassified'),
 })
 
 export const dragonEmergencyStop = pgTable('dragon_emergency_stop', {

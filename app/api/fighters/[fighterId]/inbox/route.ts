@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic'
 
 type Context = { params: Promise<{ fighterId: string }> }
 
-function authorized(request: Request) {
-  const secret = process.env.DRAGON_INGEST_TOKEN
+function authorized(request: Request, fighterId: string) {
+  const tokenName = fighterId === 'ruach' ? 'DRAGON_RUACH_TOKEN' : fighterId === 'zena' ? 'DRAGON_XENA_TOKEN' : 'DRAGON_SUPERBOT_TOKEN'
+  const secret = process.env[tokenName]
   const candidate = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? ''
   if (!secret || candidate.length !== secret.length) return false
   return timingSafeEqual(Buffer.from(candidate), Buffer.from(secret))
@@ -30,10 +31,10 @@ function isStopped(fighterId: string, stops: typeof dragonEmergencyStop.$inferSe
 }
 
 export async function GET(request: Request, { params }: Context) {
-  if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { fighterId: rawId } = await params
   const fighterId = normalizeFighter(rawId)
   if (!fighterId) return NextResponse.json({ error: 'Unknown fighter' }, { status: 404 })
+  if (!authorized(request, fighterId)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   return db.transaction(async (tx) => {
     await tx.insert(dragonEmergencyStop).values({ singleton: true }).onConflictDoNothing()
@@ -54,15 +55,15 @@ export async function GET(request: Request, { params }: Context) {
       .where(and(eq(dragonCommandQueue.id, command.id), eq(dragonCommandQueue.status, 'queued')))
       .returning()
 
-    return NextResponse.json({ fighterId, stopped: false, command: acknowledged ? { id: String(acknowledged.id), strategy: acknowledged.strategy, formation: acknowledged.formation, issuedBy: acknowledged.issuedBy, createdAt: acknowledged.createdAt } : null, commands: [] })
+    return NextResponse.json({ fighterId, stopped: false, siteScope: 'montemader.com', command: acknowledged ? { id: String(acknowledged.id), strategy: acknowledged.strategy, formation: acknowledged.formation, threatType: acknowledged.threatType, siteScope: 'montemader.com', issuedBy: acknowledged.issuedBy, createdAt: acknowledged.createdAt } : null, commands: [] })
   })
 }
 
 export async function POST(request: Request, { params }: Context) {
-  if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { fighterId: rawId } = await params
   const fighterId = normalizeFighter(rawId)
   if (!fighterId) return NextResponse.json({ error: 'Unknown fighter' }, { status: 404 })
+  if (!authorized(request, fighterId)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   let payload: unknown
   try { payload = await request.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   if (!payload || typeof payload !== 'object' || !('commandId' in payload) || typeof payload.commandId !== 'string' || !/^\d{1,18}$/.test(payload.commandId)) {
