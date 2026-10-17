@@ -1,6 +1,7 @@
 import {
   bigint,
   boolean,
+  date,
   integer,
   jsonb,
   pgTable,
@@ -69,9 +70,7 @@ export const dragonTelemetryRecords = pgTable('dragon_telemetry_records', {
   hitCapacity: integer('hit_capacity').notNull(),
   skills: jsonb('skills').$type<string[]>().notNull().default([]),
   payload: jsonb('payload').$type<Record<string, string>>().notNull().default({}),
-  receivedAt: timestamp('received_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
 export const dragonControlState = pgTable('dragon_control_state', {
@@ -91,7 +90,7 @@ export const dragonMasterAuthority = pgTable('dragon_master_authority', {
 })
 
 export const dragonCommandQueue = pgTable('dragon_command_queue', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   fighterId: text('fighter_id').notNull(),
   strategy: text('strategy').notNull(),
   formation: text('formation').notNull(),
@@ -99,4 +98,24 @@ export const dragonCommandQueue = pgTable('dragon_command_queue', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   consumedAt: timestamp('consumed_at', { withTimezone: true }),
   status: text('status').notNull().default('queued'),
+})
+
+export const dragonEmergencyStop = pgTable('dragon_emergency_stop', {
+  singleton: boolean('singleton').primaryKey().notNull().default(true),
+  stopRuach: boolean('stop_ruach').notNull().default(false),
+  stopXena: boolean('stop_xena').notNull().default(false),
+  stopSuperbot: boolean('stop_superbot').notNull().default(false),
+  stopAll: boolean('stop_all').notNull().default(false),
+  updatedBy: text('updated_by').references(() => user.id, { onDelete: 'restrict' }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const magicDragonInsights = pgTable('magic_dragon_insights', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  insightDate: date('insight_date', { mode: 'string' }).notNull(),
+  countryCode: text('country_code').notNull(),
+  countryName: text('country_name').notNull(),
+  visitorCount: integer('visitor_count').notNull(),
+  source: text('source').notNull(),
+  capturedAt: timestamp('captured_at', { withTimezone: true }).notNull().defaultNow(),
 })
