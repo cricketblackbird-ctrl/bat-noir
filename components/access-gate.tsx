@@ -8,7 +8,6 @@ export function AccessGate() {
   const router = useRouter()
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const [showEntry, setShowEntry] = useState(false)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -32,24 +31,41 @@ export function AccessGate() {
   }
 
   return (
-    <main className={`auth-screen${showEntry ? '' : ' auth-screen-entry'}`}>
-      {!showEntry ? (
-        <button className="entrance-mark-button" type="button" onClick={() => setShowEntry(true)} aria-label="Open secure sign-in">
-          <span aria-hidden="true">M</span>
-        </button>
-      ) : (
-        <section className="auth-card" aria-labelledby="auth-title">
+    <main className="auth-screen">
+      <div className="auth-card" aria-labelledby="auth-title">
+        <header className="auth-brand">
+          <div className="auth-brand-mark" aria-hidden="true">M</div>
+          <p className="auth-brand-name">MONTEMADER</p>
+          <p className="auth-brand-caption">DEFENSE COMMAND GRID</p>
+        </header>
+
+        <div className="auth-divider" aria-hidden="true"><span /></div>
+
+        <section className="auth-content">
+          <p className="auth-kicker">PROTECTED ACCESS</p>
           <h1 id="auth-title">Sign in</h1>
+          <p className="auth-description">Enter your account credentials to continue.</p>
+
           <form className="auth-form" onSubmit={submit}>
-            <label>Sign in<input type="text" name="username" autoComplete="username" autoCapitalize="none" required minLength={3} maxLength={30} /></label>
-            <label>Password<input type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={128} /></label>
+            <label htmlFor="username">Sign in</label>
+            <input id="username" type="text" name="username" autoComplete="username" autoCapitalize="none" required minLength={3} maxLength={30} />
+
+            <label htmlFor="password">Password</label>
+            <input id="password" type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={128} />
+
             {error && <p className="form-error" role="alert">{error}</p>}
-            <button className="button button-primary" type="submit" disabled={busy}>
+            <button className="button button-primary auth-submit" type="submit" disabled={busy}>
               {busy ? 'Please wait…' : 'Sign in'}
             </button>
           </form>
         </section>
-      )}
+
+        <footer className="auth-footer">
+          <span className="auth-footer-dot" aria-hidden="true" />
+          <span>SECURE ACCOUNT ACCESS</span>
+        </footer>
+      </div>
+      <p className="auth-background-label" aria-hidden="true">MONTEMADER.COM <span>·</span> AUTHORIZED USERS ONLY</p>
     </main>
   )
 }
