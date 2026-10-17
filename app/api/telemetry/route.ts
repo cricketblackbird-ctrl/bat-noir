@@ -1,4 +1,5 @@
 import { randomInt } from 'node:crypto'
+import { isIP } from 'node:net'
 import { NextResponse } from 'next/server'
 import { authorizeFighter, fighterStorageId, normalizeFighterId } from '@/lib/bot-auth'
 import { db } from '@/lib/db'
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic'
 
 const jsonHeaders = { 'Cache-Control': 'private, no-store' }
 const int32Max = 2_147_483_647
-const validTypes = ['health_report', 'hit', 'recall', 'reappear', 'listener_heartbeat']
+const validTypes = ['health_report', 'hit', 'recall', 'reappear', 'listener_heartbeat', 'combat_strike', 'strike_completed', 'strike_failed']
 
 function telemetryJson(body: unknown, status = 200) {
   return NextResponse.json(body, { status, headers: jsonHeaders })
@@ -34,14 +35,20 @@ export async function POST(request: Request) {
   if (authorizeFighter(request, rawDragonId) !== fighterId) return telemetryJson({ error: 'Unauthorized' }, 401)
   if (value.siteScope !== SITE_SCOPE) return telemetryJson({ error: `Telemetry must be scoped to ${SITE_SCOPE}` }, 403)
 
-  const eventType = value.eventType
+  const eventType = typeof value.eventType === 'string' ? value.eventType.trim().toLowerCase() : ''
   const health = value.healthPercent
   const hits = value.hitsTaken
   const capacity = value.hitCapacity
+  const actionType = typeof value.actionType === 'string' ? value.actionType : eventType
+  const threatSignature = typeof value.threatSignature === 'string' ? value.threatSignature : ''
+  const status = typeof value.status === 'string' ? value.status : 'ACTIVE'
+  const forwardedIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const suppliedIp = typeof value.clientIp === 'string' ? value.clientIp.trim() : ''
+  const clientIp = forwardedIp && isIP(forwardedIp) ? forwardedIp : suppliedIp && isIP(suppliedIp) ? suppliedIp : ''
   const nodeId = typeof value.nodeId === 'string'
     ? value.nodeId.replace(/[\u0000-\u001f\u007f]/g, '').trim()
     : ''
-  if (typeof eventType !== 'string' || !validTypes.includes(eventType) ||
+  if (!validTypes.includes(eventType) ||
     typeof health !== 'number' || !Number.isFinite(health) || health < 0 || health > 100 ||
     typeof hits !== 'number' || !Number.isInteger(hits) || hits < 0 || hits > int32Max ||
     typeof capacity !== 'number' || !Number.isInteger(capacity) || capacity <= 0 || capacity > int32Max ||
@@ -57,6 +64,13 @@ export async function POST(request: Request) {
     : []
   const allowedPayloadKeys = ['signature', 'vector', 'category']
   const payload: Record<string, string> = { siteScope: SITE_SCOPE }
+  const boundedMetadata: Record<string, string> = {
+    actionType: actionType.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 80),
+    status: status.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 40),
+  }
+  if (threatSignature) boundedMetadata.threatSignature = threatSignature.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 120)
+  if (clientIp) boundedMetadata.clientIp = clientIp
+  Object.assign(payload, boundedMetadata)
   if (value.payload && typeof value.payload === 'object' && !Array.isArray(value.payload)) {
     for (const key of allowedPayloadKeys) {
       const field = (value.payload as Record<string, unknown>)[key]

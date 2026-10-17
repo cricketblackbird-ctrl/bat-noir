@@ -32,6 +32,7 @@ type Operations = {
   fighters: Fighter[]
   stops: { stopRuach?: boolean; stopXena?: boolean; stopSuperbot?: boolean; stopAll?: boolean; updatedAt?: string | null }
   commands: Array<{ id: string; fighterId: string; fighterName: string; strategy: string; formation: string; threatType: string; status: string; createdAt: string }>
+  combatEvents: Array<{ id: string; fighterId: string; fighterName: string; eventType: string; actionType: string | null; status: string | null; threatSignature: string | null; healthPercent: number; hitsTaken: number; hitCapacity: number; receivedAt: string }>
   telemetryCount24h: number
   observedAt: string
 }
@@ -235,9 +236,12 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
         </section>
 
         <section className="panel activity-panel" aria-labelledby="activity-heading">
-          <div className="panel-heading"><div><p className="section-kicker">AUDITABLE · NO SIMULATED EVENTS</p><h2 id="activity-heading">Directive activity</h2></div><span className="panel-sigil" aria-hidden="true">⌁</span></div>
-          {error ? <p className="empty-insight">Could not load operations data.</p> : data?.commands.length ? <ul className="activity-list">{data.commands.map((command) => <li key={command.id}><span className="activity-indicator" aria-hidden="true"/><div><strong>{command.fighterName}</strong><p>{command.threatType.replace(/_/g, ' ')} · {strategyNames[command.strategy as Strategy] ?? command.strategy}</p></div><span className="activity-state">{command.status}</span></li>)}</ul> : <p className="empty-insight">No defensive directives have been issued.</p>}
-          <p className="activity-footnote">Only events reported by authenticated agents appear here. This console does not claim to block traffic by itself.</p>
+          <div className="panel-heading"><div><p className="section-kicker">SIGNED TELEMETRY · AUDITABLE DIRECTIVES</p><h2 id="activity-heading">Combat &amp; directive activity</h2></div><span className="panel-sigil" aria-hidden="true">⌁</span></div>
+          {error ? <p className="empty-insight">Could not load operations data.</p> : <>
+            {data?.combatEvents.length ? <ul className="activity-list">{data.combatEvents.map((event) => <li key={`combat-${event.id}`}><span className="activity-indicator" aria-hidden="true"/><div><strong>{event.fighterName} · {event.actionType ?? event.eventType.replace(/_/g, ' ')}</strong><p>{event.threatSignature ? `${event.threatSignature} · ` : ''}{event.healthPercent}% health · {event.hitsTaken}/{event.hitCapacity} hits · {formatAge(event.receivedAt)}</p></div><span className="activity-state">{event.status ?? event.eventType.replace(/_/g, ' ')}</span></li>)}</ul> : <p className="empty-insight">No signed combat-strike reports have been received.</p>}
+            {data?.commands.length ? <ul className="activity-list">{data.commands.map((command) => <li key={`command-${command.id}`}><span className="activity-indicator" aria-hidden="true"/><div><strong>{command.fighterName}</strong><p>{command.threatType.replace(/_/g, ' ')} · {strategyNames[command.strategy as Strategy] ?? command.strategy} · {formatAge(command.createdAt)}</p></div><span className="activity-state">{command.status}</span></li>)}</ul> : <p className="empty-insight">No defensive directives have been issued.</p>}
+          </>}
+          <p className="activity-footnote">Only authenticated reports and queued directives appear here. A queued directive is not evidence of a completed strike.</p>
         </section>
           </div>
         </section>
