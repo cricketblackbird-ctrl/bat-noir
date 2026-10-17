@@ -62,7 +62,7 @@ const topicDescriptions: Record<StreamTopic, string> = {
   all: 'Capture current authenticated status, listener heartbeats, signal interpretations, and the directive queue.',
   health: 'Capture reported health, hit counts, and MM inbox-listener PASS/FAIL for each fighter.',
   safety: 'Capture emergency stop states and the mandatory MM-listening PASS/FAIL rule. Stops never authorize a bot to stop listening.',
-  security: 'Capture authenticated signal interpretations, active-attack correlation, and credential boundaries. Website request data is not ingested; WAF status remains unverified.',
+  security: 'Capture authenticated signal interpretations, active-attack correlation, and credential boundaries. Aggregate Cloudflare traffic and firewall counts are shown in the live site-health panel; no per-visitor IP history is stored.',
   clarity: 'Capture observation time, report count, freshness, and whether a signal is reported or heuristic.',
 }
 
@@ -116,7 +116,7 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
     lines.push(`Source: authenticated agent reports and the command queue; observed ${new Date(snapshot.observedAt).toISOString()}.`)
     lines.push(`Recent directives returned: ${snapshot.commands.length}`)
     for (const command of snapshot.commands) {
-      lines.push(`${command.fighterName}: ${command.threatType.replaceAll('_', ' ')} · ${command.strategy.replaceAll('_', ' ')} · ${command.status} · ${new Date(command.createdAt).toISOString()}`)
+      lines.push(`${command.fighterName}: ${command.threatType.replace(/_/g, ' ')} · ${command.strategy.replace(/_/g, ' ')} · ${command.status} · ${new Date(command.createdAt).toISOString()}`)
     }
     lines.push('Interpretations marked heuristic are pattern hints, not confirmed incidents. No simulated events are added.')
   }
@@ -197,7 +197,7 @@ export function PlatformConsole() {
           </div>
           <div className="guide-block">
             <h4>Protect the site</h4>
-            <p>Attack reports are exposed only through each fighter&apos;s separate authenticated inbox during the 60-second active-report window. This app does not ingest website requests, proxy traffic, hide the origin, or apply WAF rules; configure those at your hosting or edge provider.</p>
+            <p>Live aggregate request and firewall counts come from Cloudflare. Attack reports still enter fighter inboxes separately; this app does not proxy traffic, hide the origin, or change edge firewall rules.</p>
           </div>
           <p className="listener-contract"><strong>Listener rule:</strong> PASS requires a fresh authenticated heartbeat. FAIL if it is missing or older than 15 seconds—even during an execution stop. This status is agent-reported, not proof of future polling.</p>
         </aside>

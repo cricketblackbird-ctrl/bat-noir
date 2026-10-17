@@ -170,14 +170,15 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .footer-star { color: #df9bd0; font-size: 11px; text-shadow: 0 0 9px rgb(220 130 197 / 60%); }
 .footer-thread { width: clamp(10px, 7vw, 80px); height: 1px; background: linear-gradient(90deg, transparent, rgb(207 142 202 / 64%)); }
 .footer-thread-right { transform: rotate(180deg); }
-.auth-screen { display: grid; width: 100%; height: 100dvh; place-items: center; overflow: hidden; padding: 14px;   background: var(--background); }
+.auth-screen { position: relative; isolation: isolate; display: grid; width: 100%; height: 100dvh; place-items: center; overflow: hidden; padding: 14px; background: #050407; }
+.auth-screen-entry::before { position: absolute; z-index: 0; inset: -12%; background-image: radial-gradient(circle at 12% 20%, rgb(243 213 154 / 78%) 0 1px, transparent 2px), radial-gradient(circle at 23% 67%, rgb(229 189 104 / 55%) 0 1px, transparent 2px), radial-gradient(circle at 37% 31%, rgb(255 243 210 / 62%) 0 1px, transparent 2px), radial-gradient(circle at 51% 82%, rgb(229 189 104 / 65%) 0 1px, transparent 2px), radial-gradient(circle at 68% 17%, rgb(255 243 210 / 70%) 0 1px, transparent 2px), radial-gradient(circle at 79% 59%, rgb(229 189 104 / 58%) 0 1px, transparent 2px), radial-gradient(circle at 91% 34%, rgb(243 213 154 / 68%) 0 1px, transparent 2px), radial-gradient(ellipse at 50% 48%, rgb(123 63 158 / 13%), transparent 46%); opacity: .72; animation: auth-dust-drift 14s ease-in-out infinite alternate; content: ""; pointer-events: none; }
 .auth-card { width: min(100%, 390px); border: 1px solid rgb(123 63 158 / 48%); border-radius: 16px; padding: clamp(18px, 5vw, 32px); background: rgb(20 12 30 / 94%); box-shadow: 0 12px 46px rgb(0 0 0 / 38%), 0 0 22px rgb(123 63 158 / 12%); }
 .auth-card h1 { margin: 0 0 18px; color: #f0dff0; font-family: Georgia, serif; font-size: clamp(20px, 6vw, 28px); font-weight: 400; text-align: center; }
 .auth-form { display: flex; flex-direction: column; gap: 10px; }
 .auth-form label { display: flex; flex-direction: column; gap: 5px; color: #c4b3cf; font-size: 10px; }
 .auth-form input { padding: 9px 10px; font-size: 12px; }
 .auth-form .button { min-height: 36px; margin-top: 3px; font-size: 11px; }
-.entrance-mark-button { position: relative; isolation: isolate; display: grid; width: clamp(120px, 32vw, 176px); min-height: clamp(120px, 32vw, 176px); place-items: center; border: 0; border-radius: 50%; padding: 0; background: transparent; color: #683386; cursor: pointer; font-family: 'Palatino Linotype', 'Book Antiqua', Georgia, serif; font-size: clamp(92px, 20vw, 132px); font-style: normal; font-weight: 400; line-height: 1; -webkit-text-stroke: 1.5px #f3d59a; text-shadow: 0 1px 0 #fff3d2, 0 2px 0 #e7c177, 0 4px 0 #e79ac9, 0 7px 0 #c74b9e, 0 10px 0 #9e3ca5, 0 14px 0 #71388f, 0 18px 0 #43234a, 0 23px 28px rgb(0 0 0 / 82%), 0 0 30px rgb(123 63 158 / 38%), 0 0 30px rgb(229 189 104 / 20%); box-shadow: none; transition: transform .18s ease, opacity .18s ease; }
+.entrance-mark-button { position: relative; z-index: 1; isolation: isolate; display: grid; width: clamp(120px, 32vw, 176px); min-height: clamp(120px, 32vw, 176px); place-items: center; border: 1px solid rgb(243 213 154 / 65%); outline: 1px solid rgb(255 243 210 / 28%); outline-offset: 6px; border-radius: 50%; padding: 0; background: radial-gradient(circle, rgb(16 10 20 / 86%), rgb(5 4 7 / 20%) 72%); color: #683386; cursor: pointer; font-family: 'Palatino Linotype', 'Book Antiqua', Georgia, serif; font-size: clamp(92px, 20vw, 132px); font-style: normal; font-weight: 400; line-height: 1; -webkit-text-stroke: 1.5px #f3d59a; text-shadow: 0 1px 0 #fff3d2, 0 2px 0 #e7c177, 0 4px 0 #e79ac9, 0 7px 0 #c74b9e, 0 10px 0 #9e3ca5, 0 14px 0 #71388f, 0 18px 0 #43234a, 0 23px 28px rgb(0 0 0 / 82%), 0 0 30px rgb(123 63 158 / 38%), 0 0 30px rgb(229 189 104 / 20%); box-shadow: 0 0 0 4px rgb(243 213 154 / 9%), 0 0 32px rgb(229 189 104 / 19%); transition: transform .18s ease, opacity .18s ease; }
 .entrance-mark-button::after { position: absolute; z-index: 0; inset: 7%; border-radius: 50%; background: radial-gradient(circle at 17% 31%, rgb(229 189 104 / 68%) 0 1px, transparent 2px), radial-gradient(circle at 83% 36%, rgb(199 75 158 / 58%) 0 1px, transparent 2px), radial-gradient(circle at 27% 78%, rgb(123 63 158 / 78%) 0 1px, transparent 2px), radial-gradient(circle at 76% 74%, rgb(229 189 104 / 52%) 0 1px, transparent 2px), radial-gradient(ellipse at center, rgb(123 63 158 / 17%), transparent 67%); filter: blur(.4px); opacity: .56; transform: scale(.88); animation: entrance-mark-aura 3.8s ease-in-out infinite; content: ""; pointer-events: none; }
 .entrance-mark-button > span { position: relative; z-index: 1; }
 .entrance-mark-button { animation: entrance-mark-lift 2.8s ease-in-out infinite; }
@@ -186,14 +187,18 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .entrance-mark-button:disabled { cursor: wait; opacity: .65; }
 @keyframes entrance-mark-lift {
   0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 4px 4px rgb(0 0 0 / 34%)); }
-  44%, 60% { transform: translateY(-14px) scale(1.04); filter: drop-shadow(0 21px 13px rgb(0 0 0 / 62%)) drop-shadow(0 0 10px rgb(229 189 104 / 20%)); }
+  44%, 60% { transform: translateY(-20px) scale(1.05); filter: drop-shadow(0 25px 15px rgb(0 0 0 / 64%)) drop-shadow(0 0 12px rgb(229 189 104 / 23%)); }
+}
+@keyframes auth-dust-drift {
+  from { transform: translate3d(-4px, 5px, 0) scale(1); }
+  to { transform: translate3d(5px, -8px, 0) scale(1.035); }
 }
 @keyframes entrance-mark-aura {
   0%, 100% { opacity: .46; transform: scale(.88) rotate(-2deg); }
   50% { opacity: .72; transform: scale(1) rotate(2deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .entrance-mark-button, .entrance-mark-button::after { animation: none; transition: none; }
+  .entrance-mark-button, .entrance-mark-button::after, .auth-screen-entry::before { animation: none; transition: none; }
 }
 .form-error { margin: 0; color: #f0adc9; font-size: 10px; }
 .text-button { display: block; margin: 12px auto 0; padding: 6px; color: #d49ac9; font-size: 9px; }
@@ -347,4 +352,38 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
   .panel { padding: 7px; }
   .fighter-card { padding: 6px; }
   .heart-footer { flex-basis: 30px; }
+}
+
+.site-health-panel { flex: 0 0 auto; gap: 12px; }
+.health-actions { display: flex; align-items: center; gap: 8px; }
+.health-test-button { min-height: 30px; }
+.health-description, .health-loading, .health-unavailable, .health-details p, .health-caveat { margin: 0; color: #c3b3cb; font-size: 11px; line-height: 1.5; }
+.health-unavailable { border: 1px solid rgb(239 68 68 / 40%); border-radius: 7px; padding: 10px; color: #ffc2cc; }
+.health-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.health-status { border: 1px solid currentColor; border-radius: 999px; padding: 3px 8px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.health-good { color: #8ce0b0; }
+.health-bad { color: #ff9aa5; }
+.health-observed { margin-left: auto; color: #aa9cad; font-size: 9px; }
+.health-metrics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; }
+.health-metrics article { display: flex; min-width: 0; flex-direction: column; gap: 4px; border: 1px solid rgb(199 75 158 / 20%); border-radius: 7px; padding: 9px; background: rgb(9 6 13 / 45%); }
+.health-metrics article span { color: #aa9cad; font-size: 9px; }
+.health-metrics article strong { overflow-wrap: anywhere; color: #f4eaf2; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; font-weight: 600; }
+.health-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+.health-details h3 { margin: 0 0 5px; color: #e7b9df; font-size: 11px; font-weight: 600; }
+.health-incident { color: #ffbdc4 !important; }
+.health-event-list { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.health-event-list li { display: flex; justify-content: space-between; gap: 12px; color: #c3b3cb; font-size: 10px; }
+.health-event-list strong { color: #f3e6ef; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.health-notice { min-height: 14px; margin: 0; color: #b5efc9; font-size: 10px; }
+.health-caveat { border-top: 1px solid rgb(199 75 158 / 18%); padding-top: 8px; color: #a99bad; font-size: 9px; }
+
+@media (max-width: 760px) {
+  .health-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .health-details { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 410px) {
+  .health-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .health-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .health-observed { width: 100%; margin-left: 0; }
 }

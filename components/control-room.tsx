@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
 import { PlatformConsole } from '@/components/platform-console'
+import { SiteHealthPanel } from '@/components/site-health-panel'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
 type Fighter = {
@@ -151,6 +152,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
         </div>
       </header>
 
+      <SiteHealthPanel canTestSms={operator.isMm} />
       <PlatformConsole />
       {!operator.isMm && <div className="readonly-notice" role="status">This account can read live reports. MM alone can issue or stop directives.</div>}
 
@@ -212,7 +214,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
 
         <section className="panel activity-panel" aria-labelledby="activity-heading">
           <div className="panel-heading"><div><p className="section-kicker">AUDITABLE · NO SIMULATED EVENTS</p><h2 id="activity-heading">Directive activity</h2></div><span className="panel-sigil" aria-hidden="true">⌁</span></div>
-          {error ? <p className="empty-insight">Could not load operations data.</p> : data?.commands.length ? <ul className="activity-list">{data.commands.map((command) => <li key={command.id}><span className="activity-indicator" aria-hidden="true"/><div><strong>{command.fighterName}</strong><p>{command.threatType.replaceAll('_', ' ')} · {strategyNames[command.strategy as Strategy] ?? command.strategy}</p></div><span className="activity-state">{command.status}</span></li>)}</ul> : <p className="empty-insight">No defensive directives have been issued.</p>}
+          {error ? <p className="empty-insight">Could not load operations data.</p> : data?.commands.length ? <ul className="activity-list">{data.commands.map((command) => <li key={command.id}><span className="activity-indicator" aria-hidden="true"/><div><strong>{command.fighterName}</strong><p>{command.threatType.replace(/_/g, ' ')} · {strategyNames[command.strategy as Strategy] ?? command.strategy}</p></div><span className="activity-state">{command.status}</span></li>)}</ul> : <p className="empty-insight">No defensive directives have been issued.</p>}
           <p className="activity-footnote">Only events reported by authenticated agents appear here. This console does not claim to block traffic by itself.</p>
         </section>
       </div>

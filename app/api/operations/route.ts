@@ -35,7 +35,7 @@ function interpretSignal(event: typeof dragonTelemetryRecords.$inferSelect) {
     if (/dns|config|certificate|ssl/.test(terms)) return { label: 'Possible configuration signal', confidence: 'heuristic' }
     return { label: 'Unclassified impact reported', confidence: 'heuristic' }
   }
-  return { label: event.eventType.replaceAll('_', ' '), confidence: 'reported' }
+  return { label: event.eventType.replace(/_/g, ' '), confidence: 'reported' }
 }
 
 export async function GET() {

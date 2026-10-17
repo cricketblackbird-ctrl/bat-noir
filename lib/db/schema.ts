@@ -8,6 +8,7 @@ import {
   real,
   text,
   timestamp,
+  uuid,
 } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
@@ -121,4 +122,18 @@ export const magicDragonInsights = pgTable('magic_dragon_insights', {
   visitorCount: integer('visitor_count').notNull(),
   source: text('source').notNull(),
   capturedAt: timestamp('captured_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const securityAlertIncidents = pgTable('security_alert_incidents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  siteScope: text('site_scope').notNull(),
+  status: text('status').notNull(),
+  detectedAt: timestamp('detected_at', { withTimezone: true }).notNull().defaultNow(),
+  lastTriggeredAt: timestamp('last_triggered_at', { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  blockedCount: integer('blocked_count').notNull().default(0),
+  smsStatus: text('sms_status').notNull().default('pending'),
+  smsSentAt: timestamp('sms_sent_at', { withTimezone: true }),
+  smsProviderId: text('sms_provider_id'),
+  smsError: text('sms_error'),
 })
