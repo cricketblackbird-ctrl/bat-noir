@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
+import { PlatformConsole } from '@/components/platform-console'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
 type Fighter = {
@@ -139,18 +140,17 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
 
   return (
     <main className="command-page">
-      <p className="topline-message">{"Don't turn away, get in front of it"}</p>
       <header className="topbar">
-        <div className="brand-lockup"><span className="brand-sigil" aria-hidden="true">✦</span><div><p className="brand-name">MONTEMADER</p><p className="brand-subtitle">DEFENSE COMMAND</p></div></div>
-        <div className="topbar-right"><span className="mm-pill">{operator.isMm ? 'MM · FULL CONTROL' : 'READ ONLY'}</span><button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button></div>
+        <h1 className="brand-name">BOT🍓CONTROL</h1>
+        <div className="topbar-right">
+          <span className="mm-pill">{operator.isMm ? 'MM · FULL CONTROL' : 'READ ONLY'}</span>
+          <span className="operator-initials" aria-label={`Signed in as ${operator.name}`}>{operator.isMm ? 'MM' : operator.name.split(/\\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>
+          <img className="brand-logo" src="/icon.svg" alt="Montemader logo" />
+          <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
+        </div>
       </header>
 
-      <section className="welcome-strip" aria-label="Coordination doctrine">
-        <div className="welcome-mark" aria-hidden="true"><span>✧</span><span>✦</span><span>✧</span></div>
-        <div><h1>Stand together. Think independently.</h1><p>SuperBot coordinates; Ruach and Xena keep distinct defensive roles. Never target one another.</p></div>
-        <div className="live-summary"><span className="summary-number">{data?.telemetryCount24h ?? '—'}</span><span>verified reports<br />last 24 hours</span></div>
-      </section>
-
+      <PlatformConsole />
       {!operator.isMm && <div className="readonly-notice" role="status">This account can read live reports. MM alone can issue or stop directives.</div>}
 
       <div className="control-grid">
@@ -196,7 +196,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
               return <button key={id} className={`stop-button stop-${id}${stopped ? ' stop-active' : ''}`} type="button" onClick={() => onStop(id, !stopped)} disabled={!operator.isMm || isPending} aria-pressed={stopped}>{stopped ? `Release ${id === 'all' ? 'all' : id === 'xena' ? 'Xena' : id === 'superbot' ? 'SuperBot' : 'Ruach'}` : label}</button>
             })}
           </div></div>
-          <p className="stop-caveat">A stop blocks queued directives at the next agent check-in; it cannot halt a disconnected process.</p>
+          <p className="stop-caveat">A stop blocks new queued actions only. The fighter must keep polling MM while stopped; a disconnected process cannot be stopped remotely.</p>
           {feedback && <p className="action-feedback" role="status">{feedback}</p>}
         </section>
 

@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Montemader — Defense Command',
-  description: 'Private defensive command room with verified fighter telemetry and isolated per-agent access.',
+  title: 'BOT🍓CONTROL — Montemader',
+  description: 'Private bot operations console for authenticated health, safety, security, and defensive telemetry.'
   generator: 'v0.app',
   icons: {
     icon: [

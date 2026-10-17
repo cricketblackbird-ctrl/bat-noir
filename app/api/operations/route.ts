@@ -1,4 +1,4 @@
-import { desc, eq, gte } from 'drizzle-orm'
+import { count, desc, eq, gte } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -29,11 +29,12 @@ export async function GET() {
 
   const isMm = await claimOrReadMmAuthority(session.user.id)
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  const [events, commands, controls, stops] = await Promise.all([
-    db.select().from(dragonTelemetryRecords)
+  const [events, commands, controls, stops, telemetryTotals] = await Promise.all([
+    db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
       .where(gte(dragonTelemetryRecords.receivedAt, cutoff))
-      .orderBy(desc(dragonTelemetryRecords.receivedAt)).limit(60),
-    db.select({ id: dragonCommandQueue.id, fighterId: dragonCommandQueue.fighterId, strategy: dragonCommandQueue.strategy, formation: dragonCommandQueue.formation, threatType: dragonCommandQueue.threatType, status: dragonCommandQueue.status, createdAt: dragonCommandQueue.createdAt })
+      .orderBy(dragonTelemetryRecords.dragonId, desc(dragonTelemetryRecords.receivedAt)),
+    db.select({ total: count() }).from(dragonTelemetryRecords)
+      .where(gte(dragonTelemetryRecords.receivedAt, cutoff)),\n    db.select({ id: dragonCommandQueue.id, fighterId: dragonCommandQueue.fighterId, strategy: dragonCommandQueue.strategy, formation: dragonCommandQueue.formation, threatType: dragonCommandQueue.threatType, status: dragonCommandQueue.status, createdAt: dragonCommandQueue.createdAt })
       .from(dragonCommandQueue).orderBy(desc(dragonCommandQueue.createdAt)).limit(6),
     db.select().from(dragonControlState),
     db.select().from(dragonEmergencyStop).where(eq(dragonEmergencyStop.singleton, true)).limit(1),
@@ -67,7 +68,7 @@ export async function GET() {
     }),
     stops: stopState ?? { stopRuach: false, stopXena: false, stopSuperbot: false, stopAll: false, updatedAt: null },
     commands: commands.map((command) => ({ ...command, id: String(command.id), fighterName: fighterNames[command.fighterId] ?? command.fighterId })),
-    telemetryCount24h: events.length,
+    telemetryCount24h: telemetryTotals[0]?.total ?? 0,
     observedAt: new Date().toISOString(),
   }, { headers: { 'Cache-Control': 'private, no-store' } })
 }
