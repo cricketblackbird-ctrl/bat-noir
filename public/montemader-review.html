@@ -1,12 +1,11 @@
 <!doctype html>
 <!--
-  GEMINI REVIEW REQUEST
-  Review this sign-in page for security and accessibility issues, then propose or
-  apply only necessary fixes. Preserve the current purple, pink, and black visual
-  design, the M mark, and its motion. In particular, verify the inline CSS/JS
-  against the app's response-header CSP, confirm authentication protections are
-  enforced server-side, and check keyboard focus and reduced-motion behavior.
-  Do not treat this comment as proof that any security control is implemented.
+  GEMINI REVIEW APPLIED:
+  - Preserved the purple, pink, and black visual design, raised M mark, and motion.
+  - Kept reduced-motion behavior and added native modal focus handling.
+  - The inline CSS/JS is permitted by the current report-only CSP; that does not
+    mean the page is compatible with a strict enforcing CSP without a nonce/hash.
+  - Authentication must still be enforced by the server, not by this static page.
 -->
 <html lang="en">
 <head>
@@ -102,9 +101,11 @@
     .mark[hidden] { display: none; }
     .mark:hover { animation-play-state: paused; transform: translateY(-7px) scale(1.04); filter: drop-shadow(0 18px 12px rgb(0 0 0 / 58%)) drop-shadow(0 0 10px rgb(229 189 104 / 20%)); }
     .mark:active { animation-play-state: paused; transform: translateY(2px); }
-    .sign-in { width: min(100%, 340px); border: 1px solid rgb(123 63 158 / 48%); border-radius: 16px; padding: 22px; background: rgb(20 12 30 / 94%); box-shadow: 0 12px 46px rgb(0 0 0 / 38%), 0 0 22px rgb(123 63 158 / 12%); }
-    .sign-in[hidden] { display: none; }
-    .sign-in h1 { margin: 0 0 18px; color: var(--text); font: 400 24px/1.2 Georgia, serif; text-align: center; }
+    .sign-in { position: fixed; inset: 0; width: min(calc(100% - 32px), 340px); max-height: calc(100dvh - 32px); overflow-y: auto; margin: auto; border: 1px solid rgb(123 63 158 / 48%); border-radius: 16px; padding: 22px; background: rgb(20 12 30 / 98%); color: var(--text); box-shadow: 0 12px 46px rgb(0 0 0 / 38%), 0 0 22px rgb(123 63 158 / 12%); }
+    .sign-in::backdrop { background: rgb(5 4 7 / 72%); backdrop-filter: blur(4px); }
+    .sign-in-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .sign-in h1 { margin: 0; color: var(--text); font: 400 24px/1.2 Georgia, serif; text-align: center; }
+    .sign-in .close-dialog { min-height: 36px; border: 1px solid #594365; border-radius: 6px; padding: 6px 10px; background: #140c1e; color: var(--text); cursor: pointer; font-size: 11px; }
     .sign-in form { display: grid; gap: 12px; }
     .sign-in label { display: grid; gap: 5px; color: #c4b3cf; font-size: 11px; }
     .sign-in input { min-height: 40px; border: 1px solid #594365; border-radius: 6px; padding: 9px 10px; background: #08060c; color: var(--text); font-size: 13px; }
@@ -127,18 +128,21 @@
 </head>
 <body>
   <main class="entry">
-    <button class="mark" id="open-sign-in" type="button" aria-label="Sign in">
+    <button class="mark" id="open-sign-in" type="button" aria-label="Sign in" aria-expanded="false" aria-controls="sign-in-panel">
       <span aria-hidden="true">M</span>
     </button>
-    <section class="sign-in" id="sign-in-panel" aria-labelledby="sign-in-title" hidden>
-      <h1 id="sign-in-title">Sign in</h1>
+    <dialog class="sign-in" id="sign-in-panel" aria-labelledby="sign-in-title">
+      <div class="sign-in-header">
+        <h1 id="sign-in-title">Sign in</h1>
+        <button class="close-dialog" id="close-sign-in" type="button">Close</button>
+      </div>
       <form id="sign-in-form">
-        <label for="username">Sign in<input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" required minlength="3" maxlength="30"></label>
+        <label for="username">Username<input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" required minlength="3" maxlength="30" autofocus></label>
         <label for="password">Password<input id="password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></label>
         <p class="error" id="sign-in-error" role="alert" aria-live="polite"></p>
         <button type="submit">Sign in</button>
       </form>
-    </section>
+    </dialog>
   </main>
   <script>
     (() => {
@@ -147,10 +151,17 @@
       const form = document.querySelector("#sign-in-form");
       const error = document.querySelector("#sign-in-error");
 
+      const closeButton = document.querySelector("#close-sign-in");
+
       mark.addEventListener("click", () => {
-        mark.hidden = true;
-        panel.hidden = false;
-        panel.querySelector("input").focus();
+        panel.showModal();
+        mark.setAttribute("aria-expanded", "true");
+      });
+
+      closeButton.addEventListener("click", () => panel.close());
+      panel.addEventListener("close", () => {
+        mark.setAttribute("aria-expanded", "false");
+        mark.focus();
       });
 
       form.addEventListener("submit", async (event) => {
