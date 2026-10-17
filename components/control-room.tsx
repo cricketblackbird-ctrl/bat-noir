@@ -193,6 +193,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
 
         <section className="panel directives-panel" aria-labelledby="directives-heading">
           <div className="panel-heading"><div><p className="section-kicker">MM · DEFENSIVE PLAYBOOK</p><h2 id="directives-heading">Issue a directive</h2></div><span className="panel-sigil" aria-hidden="true">✦</span></div>
+          {operator.isMm && <p className="directive-authorization">MM is authorized to direct Ruach, Xena, and SuperBot with defensive actions for montemader.com. Choose a response and assignment below; attack-report gates and emergency stops remain in force. Nothing is queued until you submit.</p>}
           <form className="directive-form" onSubmit={onRunbook}>
             <label className="control-label" htmlFor="strategy">Response</label>
             <select id="strategy" value={strategy} onChange={(event) => setStrategy(event.target.value as Strategy)} disabled={!operator.isMm || isPending}>
