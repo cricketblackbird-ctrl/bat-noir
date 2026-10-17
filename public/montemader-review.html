@@ -45,6 +45,9 @@
     .nav button { flex: 0 0 auto; border: 1px solid transparent; border-radius: 999px; padding: 9px 15px; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; transition: background .18s ease, color .18s ease, border-color .18s ease; }
     .nav button:hover { color: var(--text); }
     .nav button[aria-current="page"] { border-color: rgb(199 75 158 / 35%); background: rgb(123 63 158 / 20%); color: var(--text); }
+    .nav button.manual-toggle { margin-left: auto; border-color: rgb(255 82 107 / 40%); color: #ffb3bd; }
+    .nav button.manual-toggle[aria-pressed="true"] { border-color: #ff526b; background: rgb(255 82 107 / 16%); color: #fff; }
+    body.manual-mode-active { box-shadow: inset 0 0 0 3px #ff526b; }
 
     main { padding: 30px 0 52px; }
     .view[hidden] { display: none; }
@@ -180,6 +183,7 @@
       <button type="button" data-view="tester">Tester &amp; Capabilities</button>
       <button type="button" data-view="matrix">Enemy Intel / Matrix</button>
       <button type="button" data-view="entry">M / Sign in</button>
+      <button class="manual-toggle" type="button" data-action="toggle-manual" aria-pressed="false">MM: Auto Active</button>
     </nav>
 
     <main tabindex="-1">
@@ -210,42 +214,43 @@
           <article class="card bot-card">
             <div class="bot-image-wrap"><img class="bot-image" src="/images/superbot-portrait.png" alt="Illustration of the SuperBot dragon guardian"><div class="bot-label"><h4>SuperBot</h4><span>Profile preview</span></div></div>
             <div class="bot-details">
-              <p class="bot-role">Edge filtering &amp; challenge routing</p>
+              <p class="bot-role">Elf Lord WAF / Edge AI · sample profile</p>
               <dl class="detail-list">
-                <div class="detail-row"><dt>Channel</dt><dd>Dedicated secure inbox</dd></div>
-                <div class="detail-row"><dt>Capabilities</dt><dd>Request screening, reputation review</dd></div>
-                <div class="detail-row"><dt>Example status</dt><dd class="healthy">Ready · illustrative</dd></div>
-                <div class="detail-row"><dt>Sample latency</dt><dd>— not connected —</dd></div>
+                <div class="detail-row"><dt>Tunnel</dt><dd>Tunnel-Alpha · Port 443</dd></div>
+                <div class="detail-row"><dt>Strike combo</dt><dd>JS challenge &amp; IP throttling</dd></div>
+                <div class="detail-row"><dt>Health</dt><dd class="healthy">100% · illustrative</dd></div>
+                <div class="detail-row"><dt>Heartbeat</dt><dd>Active · sample only</dd></div>
               </dl>
-              <div class="bot-foot"><span>Guardian role</span><span>SuperBot</span></div>
+              <div class="bot-foot"><span>Profile preview</span><button class="button" type="button" data-demo-attack="SuperBot">Simulate sample event</button></div>
             </div>
           </article>
 
           <article class="card bot-card">
             <div class="bot-image-wrap"><img class="bot-image" src="/images/xena-portrait.png" alt="Illustration of Xena, a dragon guardian holding a plain shield"><div class="bot-label"><h4>Xena</h4><span>Profile preview</span></div></div>
             <div class="bot-details">
-              <p class="bot-role">Traffic resilience &amp; defensive load handling</p>
+              <p class="bot-role">Interceptor dragon · defensive buffer profile</p>
               <dl class="detail-list">
-                <div class="detail-row"><dt>Channel</dt><dd>Dedicated secure inbox</dd></div>
-                <div class="detail-row"><dt>Capabilities</dt><dd>Load distribution, defensive buffering</dd></div>
-                <div class="detail-row"><dt>Example status</dt><dd class="healthy">Ready · illustrative</dd></div>
+                <div class="detail-row"><dt>Tunnel</dt><dd>Tunnel-Beta · Port 8443</dd></div>
+                <div class="detail-row"><dt>Strike combo</dt><dd>Kinetic shockwave &amp; phase shift</dd></div>
+                <div class="detail-row"><dt>Health</dt><dd class="healthy">100% · illustrative</dd></div>
+                <div class="detail-row"><dt>Hold duration</dt><dd>Indefinite · conceptual</dd></div>
                 <div class="detail-row"><dt>Shield</dt><dd>Plain, unmarked</dd></div>
               </dl>
-              <div class="bot-foot"><span>Guardian role</span><span>Xena</span></div>
+              <div class="bot-foot"><span>Profile preview</span><button class="button" type="button" data-demo-attack="Xena">Simulate sample event</button></div>
             </div>
           </article>
 
           <article class="card bot-card">
             <div class="bot-image-wrap"><img class="bot-image" src="/images/ruach-portrait.png" alt="Illustration of Ruach, an ember-red dragon guardian"><div class="bot-label"><h4>Ruach</h4><span>Profile preview</span></div></div>
             <div class="bot-details">
-              <p class="bot-role">Request-pattern review &amp; origin safety</p>
+              <p class="bot-role">Vanguard dragon · scraper signal review</p>
               <dl class="detail-list">
-                <div class="detail-row"><dt>Channel</dt><dd>Dedicated secure inbox</dd></div>
-                <div class="detail-row"><dt>Capabilities</dt><dd>Signal correlation, defensive escalation</dd></div>
-                <div class="detail-row"><dt>Example status</dt><dd class="healthy">Ready · illustrative</dd></div>
-                <div class="detail-row"><dt>Response</dt><dd>Defensive directives only</dd></div>
+                <div class="detail-row"><dt>Tunnel</dt><dd>Tunnel-Gamma · Port 9443</dd></div>
+                <div class="detail-row"><dt>Palette</dt><dd>Obsidian / purple / crimson</dd></div>
+                <div class="detail-row"><dt>Health</dt><dd class="healthy">100% · illustrative</dd></div>
+                <div class="detail-row"><dt>Executioner</dt><dd>Zero tolerance · conceptual</dd></div>
               </dl>
-              <div class="bot-foot"><span>Guardian role</span><span>Ruach</span></div>
+              <div class="bot-foot"><span>Profile preview</span><button class="button" type="button" data-demo-attack="Ruach">Simulate sample event</button></div>
             </div>
           </article>
         </div>
@@ -255,10 +260,10 @@
           <article class="card card-pad">
             <h3 class="card-heading">Illustrative event log <small>sample records</small></h3>
             <div class="terminal" aria-label="Example event log">
-              <div class="terminal-line"><span class="terminal-time">[09:38:00]</span> <span class="sample-tag">[SAMPLE]</span> SuperBot profile marked ready for review.</div>
-              <div class="terminal-line"><span class="terminal-time">[09:38:12]</span> <span class="sample-tag">[SAMPLE]</span> Screening capability listed; no traffic inspected.</div>
-              <div class="terminal-line"><span class="terminal-time">[09:39:01]</span> <span class="sample-tag">[SAMPLE]</span> Xena defensive buffer profile available.</div>
-              <div class="terminal-line"><span class="terminal-time">[09:40:14]</span> <span class="sample-tag">[SAMPLE]</span> Ruach signal-correlation profile available.</div>
+              <div class="terminal-line"><span class="terminal-time">[09:38:00]</span> <span class="sample-tag">[SAMPLE]</span> Tunnel-Alpha · SuperBot profile online for review.</div>
+              <div class="terminal-line"><span class="terminal-time">[09:38:12]</span> <span class="sample-tag">[SAMPLE]</span> Edge challenge and throttling capabilities listed; no traffic inspected.</div>
+              <div class="terminal-line"><span class="terminal-time">[09:39:01]</span> <span class="sample-tag">[SAMPLE]</span> Tunnel-Beta · Xena buffer profile available.</div>
+              <div class="terminal-line"><span class="terminal-time">[09:40:14]</span> <span class="sample-tag">[SAMPLE]</span> Tunnel-Gamma · Ruach profile available; no live heartbeat.</div>
             </div>
             <div class="button-row"><button class="button" type="button" data-action="append-sample">Add sample line</button><button class="button button-subtle" type="button" data-action="clear-sample">Clear preview lines</button></div>
           </article>
@@ -280,20 +285,20 @@
         <div class="capability-grid">
           <article class="card capability-card">
             <h3>SuperBot · Edge guardian</h3>
-            <p>A conceptual first layer for defensive request screening and challenge routing.</p>
-            <ul class="capability-list"><li>Request screening and reputation review</li><li>Challenge routing through the site’s actual edge provider</li><li>Separate authenticated bot inbox for commands</li></ul>
+            <p>A conceptual edge guardian profile for screening and challenge routing.</p>
+            <ul class="capability-list"><li>Dedicated WebSocket / TLS 1.3 · sample design detail</li><li>WAF filtering, IP reputation scoring, and JavaScript challenge routing</li><li>Separate authenticated inbox in the full application; not connected in this preview</li></ul>
             <button class="button" type="button" data-diagnostic="SuperBot">Preview SuperBot diagnostic</button>
           </article>
           <article class="card capability-card">
             <h3>Xena · Shield guardian</h3>
             <p>A conceptual resilience role focused on defensive load handling and distribution.</p>
-            <ul class="capability-list"><li>Defensive buffering and load distribution</li><li>Plain, unmarked shield artwork</li><li>Separate authenticated bot inbox for commands</li></ul>
+            <ul class="capability-list"><li>Independent gRPC channel · sample design detail</li><li>Volumetric flood absorption, phase shielding, and load distribution</li><li>Plain, unmarked shield artwork; no live DDoS mitigation is connected</li></ul>
             <button class="button" type="button" data-diagnostic="Xena">Preview Xena diagnostic</button>
           </article>
           <article class="card capability-card">
             <h3>Ruach · Signal guardian</h3>
             <p>A conceptual request-pattern review role for coordinating a measured defensive response.</p>
-            <ul class="capability-list"><li>Authenticated report correlation</li><li>Defensive escalation and origin-safety guidance</li><li>Separate authenticated bot inbox for commands</li></ul>
+            <ul class="capability-list"><li>Direct secure TCP socket · sample design detail</li><li>Scraper signal review and origin-vault lockdown concept</li><li>Defensive escalation through the full app; not connected in this preview</li></ul>
             <button class="button" type="button" data-diagnostic="Ruach">Preview Ruach diagnostic</button>
           </article>
         </div>
@@ -324,16 +329,16 @@
           <div class="data-grid">
             <article class="card data-panel">
               <h3>Example security events</h3>
-              <div class="data-entry"><strong>192.0.2.88</strong><span>Reserved documentation address · sample path /api/data · illustrative pattern review</span></div>
-              <div class="data-entry"><strong>203.0.113.42</strong><span>Reserved documentation address · sample path /login · illustrative challenge</span></div>
-              <div class="data-entry"><strong>198.51.100.14</strong><span>Reserved documentation address · sample volumetric event · no traffic observed</span></div>
+              <div class="data-entry"><strong>192.0.2.88</strong><span>Reserved documentation address · /api/data · sample scraper-pattern review · Ruach profile</span></div>
+              <div class="data-entry"><strong>203.0.113.42</strong><span>Reserved documentation address · /login · sample brute-force pattern · SuperBot challenge</span></div>
+              <div class="data-entry"><strong>198.51.100.14</strong><span>Reserved documentation address · sample volumetric event · 18,200 req/s illustrative only · Xena profile</span></div>
               <div class="data-entry"><strong>Record status</strong><span>Fabricated review examples, not actual incident reports</span></div>
             </article>
             <article class="card data-panel">
               <h3>Example bot health notes</h3>
-              <div class="data-entry"><strong>SuperBot</strong><span>Illustrative profile status · no live heartbeat</span></div>
-              <div class="data-entry"><strong>Xena</strong><span>Illustrative profile status · no live heartbeat</span></div>
-              <div class="data-entry"><strong>Ruach</strong><span>Illustrative profile status · no live heartbeat</span></div>
+              <div class="data-entry"><strong>SuperBot · Alpha</strong><span>Example 100% profile health · Port 443 · no live heartbeat</span></div>
+              <div class="data-entry"><strong>Xena · Beta</strong><span>Example 100% profile health · Port 8443 · no live heartbeat</span></div>
+              <div class="data-entry"><strong>Ruach · Gamma</strong><span>Example 100% profile health · Port 9443 · no live heartbeat</span></div>
               <div class="data-entry"><strong>Website / WAF</strong><span>Unverified · configure and review at your actual hosting or edge provider</span></div>
             </article>
           </div>
@@ -387,6 +392,17 @@
       };
       viewButtons.forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
 
+      const manualToggle = document.querySelector('[data-action="toggle-manual"]');
+      manualToggle.addEventListener("click", () => {
+        const active = manualToggle.getAttribute("aria-pressed") !== "true";
+        manualToggle.setAttribute("aria-pressed", String(active));
+        manualToggle.textContent = active ? "MM: Manual Active" : "MM: Auto Active";
+        document.body.classList.toggle("manual-mode-active", active);
+        document.querySelector("#response-log").textContent = active
+          ? "[PREVIEW] Manual override enabled. Automated sample responses are suspended in this UI demo."
+          : "[PREVIEW] Auto mode restored. All activity remains local sample content.";
+      });
+
       const addLine = (target, message) => {
         const line = document.createElement("div");
         line.className = "terminal-line";
@@ -397,6 +413,18 @@
         target.append(line);
         target.scrollTop = target.scrollHeight;
       };
+
+      document.querySelectorAll("[data-demo-attack]").forEach((button) => button.addEventListener("click", () => {
+        const eventLog = document.querySelector('[aria-label="Example event log"]');
+        const responseLog = document.querySelector("#response-log");
+        const botName = button.dataset.demoAttack;
+        if (manualToggle.getAttribute("aria-pressed") === "true") {
+          responseLog.textContent = "[PREVIEW] Manual override is active. This sample response remains suspended.";
+          return;
+        }
+        addLine(eventLog, `${botName} sample alert; local mutual-support preview only, no traffic or bot contacted.`);
+        responseLog.textContent = `[PREVIEW] ${botName} sample response displayed locally; no defensive action was sent.`;
+      }));
 
       document.querySelector('[data-action="append-sample"]').addEventListener("click", () => {
         addLine(document.querySelector('[aria-label="Example event log"]'), "Additional illustrative line added locally.");
