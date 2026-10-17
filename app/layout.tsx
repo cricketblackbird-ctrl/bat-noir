@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Montemader Defense Command Grid',
-  description: 'Authenticated security operations dashboard with live site health, verified agent reports, defensive controls, and auditable activity.'
+  description: 'Authenticated security operations dashboard with live site health, verified agent reports, defensive controls, and auditable activity.',
   generator: 'v0.app',
   icons: {
     icon: [
