@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto'
 import { NextResponse } from 'next/server'
-import { authorizeFighter, normalizeFighterId } from '@/lib/bot-auth'
+import { authorizeFighter, fighterStorageId, normalizeFighterId } from '@/lib/bot-auth'
 import { db } from '@/lib/db'
 import { dragonTelemetryRecords } from '@/lib/db/schema'
 import { readJsonBody } from '@/lib/read-json-body'
@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic'
 
 const jsonHeaders = { 'Cache-Control': 'private, no-store' }
 const int32Max = 2_147_483_647
+const validTypes = ['health_report', 'hit', 'recall', 'reappear', 'listener_heartbeat']
 
 function telemetryJson(body: unknown, status = 200) {
   return NextResponse.json(body, { status, headers: jsonHeaders })
@@ -38,7 +39,6 @@ export async function POST(request: Request) {
   const nodeId = typeof value.nodeId === 'string'
     ? value.nodeId.replace(/[\u0000-\u001f\u007f]/g, '').trim()
     : ''
-  const validTypes = ['health_report', 'hit', 'recall', 'reappear']
   if (typeof eventType !== 'string' || !validTypes.includes(eventType) ||
     typeof health !== 'number' || !Number.isFinite(health) || health < 0 || health > 100 ||
     typeof hits !== 'number' || !Number.isInteger(hits) || hits < 0 || hits > int32Max ||
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
   const [created] = await db.insert(dragonTelemetryRecords).values({
     id: recordId(),
-    dragonId: fighterId,
+    dragonId: fighterStorageId(fighterId),
     nodeId,
     eventType,
     healthPercent: health,

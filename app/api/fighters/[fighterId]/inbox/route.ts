@@ -1,6 +1,6 @@
 import { and, asc, eq, gt } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
-import { authorizeFighter, normalizeFighterId } from '@/lib/bot-auth'
+import { authorizeFighter, fighterStorageId, normalizeFighterId } from '@/lib/bot-auth'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonEmergencyStop } from '@/lib/db/schema'
 import { readJsonBody } from '@/lib/read-json-body'
@@ -16,7 +16,17 @@ const listeningContract = {
   nextPollRequired: true,
   nextPollAfterMs: 5000,
   stopBlocksExecutionOnly: true,
-  contract: 'Keep polling the authenticated MM inbox while stopped; stop only blocks new execution.',
+  contract: 'PASS only when this authenticated bot continues polling the MM inbox, including while stopped. Stop blocks execution only.',
+}
+const telemetryContract = {
+  endpoint: '/api/telemetry',
+  heartbeatEventType: 'listener_heartbeat',
+  heartbeatRequiredEveryMs: 5000,
+  passThresholdMs: 15000,
+  allowedEventTypes: ['health_report', 'hit', 'recall', 'reappear', 'listener_heartbeat'],
+  reportOnlyObservedFacts: true,
+  neverSendSecretsOrVisitorPersonalData: true,
+  labelInferencesAsHeuristic: true,
 }
 
 function isStopped(fighterId: string, stops: typeof dragonEmergencyStop.$inferSelect) {
@@ -36,6 +46,7 @@ export async function GET(request: Request, { params }: Context) {
   if (!fighterId) return inboxJson({ error: 'Unknown fighter' }, 404)
   if (authorizeFighter(request, rawId) !== fighterId) return inboxJson({ error: 'Unauthorized' }, 401)
 
+  const storageId = fighterStorageId(fighterId)
   return db.transaction(async (tx) => {
     await tx.insert(dragonEmergencyStop).values({ singleton: true }).onConflictDoNothing()
     const [stops] = await tx.select().from(dragonEmergencyStop)
@@ -43,13 +54,13 @@ export async function GET(request: Request, { params }: Context) {
     if (!stops) return inboxJson({ error: 'Stop state unavailable' }, 503)
 
     if (isStopped(fighterId, stops)) {
-      return inboxJson({ fighterId, stopped: true, stopAll: stops.stopAll, commands: [], ...listeningContract })
+      return inboxJson({ fighterId, stopped: true, stopAll: stops.stopAll, commands: [], ...listeningContract, telemetryContract })
     }
 
     const [command] = await tx.select().from(dragonCommandQueue)
-      .where(and(eq(dragonCommandQueue.fighterId, fighterId), eq(dragonCommandQueue.status, 'queued'), gt(dragonCommandQueue.createdAt, stops.updatedAt)))
+      .where(and(eq(dragonCommandQueue.fighterId, storageId), eq(dragonCommandQueue.status, 'queued'), gt(dragonCommandQueue.createdAt, stops.updatedAt)))
       .orderBy(asc(dragonCommandQueue.createdAt)).limit(1).for('update', { skipLocked: true })
-    if (!command) return inboxJson({ fighterId, stopped: false, commands: [], ...listeningContract })
+    if (!command) return inboxJson({ fighterId, stopped: false, commands: [], ...listeningContract, telemetryContract })
 
     const [acknowledged] = await tx.update(dragonCommandQueue)
       .set({ status: 'acknowledged', consumedAt: new Date() })
@@ -71,13 +82,7 @@ export async function GET(request: Request, { params }: Context) {
       } : null,
       commands: [],
       ...listeningContract,
-      telemetryContract: {
-        endpoint: '/api/telemetry',
-        allowedEventTypes: ['health_report', 'hit', 'recall', 'reappear'],
-        reportOnlyObservedFacts: true,
-        neverSendSecretsOrVisitorPersonalData: true,
-        labelInferencesAsHeuristic: true,
-      },
+      telemetryContract,
     })
   })
 }
@@ -100,7 +105,7 @@ export async function POST(request: Request, { params }: Context) {
 
   const [updated] = await db.update(dragonCommandQueue)
     .set({ status: 'complete', consumedAt: new Date() })
-    .where(and(eq(dragonCommandQueue.id, commandId), eq(dragonCommandQueue.fighterId, fighterId), eq(dragonCommandQueue.status, 'acknowledged')))
+    .where(and(eq(dragonCommandQueue.id, commandId), eq(dragonCommandQueue.fighterId, fighterStorageId(fighterId)), eq(dragonCommandQueue.status, 'acknowledged')))
     .returning({ id: dragonCommandQueue.id })
   if (!updated) return inboxJson({ error: 'Command not found or already completed' }, 404)
   return inboxJson({ completed: String(updated.id), ...listeningContract })

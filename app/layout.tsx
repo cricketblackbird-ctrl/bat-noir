@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'BOT🍓CONTROL — Montemader',
-  description: 'Private bot operations console for authenticated health, safety, security, and defensive telemetry.'
+  description: 'Private bot operations console for authenticated health, safety, security, and defensive telemetry.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
-  themeColor: '#000000',
+  themeColor: '#0b0710',
   userScalable: true,
 }
 

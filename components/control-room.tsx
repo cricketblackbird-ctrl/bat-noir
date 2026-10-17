@@ -11,7 +11,11 @@ type Fighter = {
   name: string
   mode: string
   status: string
+  role: string
   health: number | null
+  listenerStatus: 'PASS' | 'FAIL'
+  lastInboxPoll: string | null
+  credentialBoundary: string
   hitsTaken: number | null
   hitCapacity: number | null
   lastSeen: string | null
@@ -40,12 +44,6 @@ const fetcher = async (url: string) => {
   const response = await fetch(url, { cache: 'no-store' })
   if (!response.ok) throw new Error('Could not load live information.')
   return response.json()
-}
-
-const fighterCopy: Record<string, string> = {
-  ruach: 'Independent read · scraper containment',
-  xena: 'Edge defense · traffic surge shield',
-  superbot: 'Infrastructure · credential probe review',
 }
 
 const strikeLabels: Record<FighterId, string> = {
@@ -79,9 +77,9 @@ function formatAge(date: string | null) {
   return seconds < 60 ? 'Just reported' : `${Math.floor(seconds / 60)}m ago`
 }
 
-function StatusDot({ stopped, reporting }: { stopped: boolean; reporting: boolean }) {
-  const label = stopped ? 'Stopped by MM' : reporting ? 'Telemetry reporting' : 'Awaiting telemetry'
-  return <span className={`status-dot${stopped ? ' is-stopped' : reporting ? ' is-live' : ''}`}><span aria-hidden="true" />{label}</span>
+function StatusDot({ stopped, listenerStatus }: { stopped: boolean; listenerStatus: 'PASS' | 'FAIL' }) {
+  const label = `MM poll ${listenerStatus}${stopped ? ' · execution stopped' : ''}`
+  return <span className={`status-dot${listenerStatus === 'PASS' ? ' is-live' : ' is-stopped'}`}><span aria-hidden="true" />{label}</span>
 }
 
 export function ControlRoom({ operator }: { operator: Operations['operator'] }) {
@@ -144,7 +142,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
         <h1 className="brand-name">BOT🍓CONTROL</h1>
         <div className="topbar-right">
           <span className="mm-pill">{operator.isMm ? 'MM · FULL CONTROL' : 'READ ONLY'}</span>
-          <span className="operator-initials" aria-label={`Signed in as ${operator.name}`}>{operator.isMm ? 'MM' : operator.name.split(/\\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>
+          <span className="operator-initials" aria-label={`Signed in as ${operator.name}`}>{operator.isMm ? 'MM' : operator.name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>
           <img className="brand-logo" src="/icon.svg" alt="Montemader logo" />
           <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
         </div>
@@ -159,11 +157,11 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
           <div className="fighter-list">
             {guards.map((fighter) => (
               <article className={`fighter-card fighter-${fighter.id}`} key={fighter.id}>
-                <div className="fighter-topline"><div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? 'X' : 'S'}</div><div className="fighter-heading"><h3>{fighter.name}</h3><StatusDot stopped={fighter.stopped} reporting={fighter.status === 'reporting'} /></div></div>
-                <p className="fighter-role">{fighterCopy[fighter.id]}</p>
+                <div className="fighter-topline"><div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? 'X' : 'S'}</div><div className="fighter-heading"><h3>{fighter.name}</h3><StatusDot stopped={fighter.stopped} listenerStatus={fighter.listenerStatus} /></div></div>
+                <p className="fighter-role">{fighter.role}</p>
                 {fighter.health === null ? <p className="health-reading">Awaiting a signed report</p> : <p className="health-reading"><span>{fighter.health}%</span> health · {fighter.hitsTaken}/{fighter.hitCapacity} hits</p>}
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
-                <p className="signal-age">{formatAge(fighter.lastSeen)}</p>
+                <p className="signal-age">Report {formatAge(fighter.lastSeen)} · inbox poll {formatAge(fighter.lastInboxPoll)}</p>
                 <div className="fighter-strike-row">
                   <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped} aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} on montemader.com`}>
                     {isPending ? 'Queuing…' : strikeLabels[fighter.id as FighterId]}
