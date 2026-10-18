@@ -55,24 +55,24 @@ export function CredentialScopeAudit() {
       <section className="credential-scope-audit credential-scope-audit--summary" aria-labelledby="privacy-audit-heading">
         <header className="credential-scope-header">
           <p className="credential-scope-kicker">Credential Audit View Update</p>
-          <h2 id="privacy-audit-heading">Privacy Audit Card Alignment (Commit d90d781)</h2>
+          <h2 id="privacy-audit-heading">Privacy Audit Card Alignment (Commit 8c0800d)</h2>
         </header>
 
         <div className="credential-scope-notice credential-scope-notice--success" role="note">
-          <p><strong>Integration Status:</strong> The privacy audit card has been updated to match your exact reference structure, incorporating precise integration status reporting and clean code validation.</p>
+          <p><strong>Integration Status:</strong> The privacy audit card has been successfully synchronized to match the latest reference parameters, incorporating precise integration text and clean validation.</p>
         </div>
 
         <div className="credential-scope-list">
           <h3>Build &amp; Inspection Summary</h3>
           <ul>
             <li><strong>Code Quality:</strong><span> TypeScript compilation and diff checks pass cleanly.</span></li>
-            <li><strong>Preview Verification:</strong><span> The page loads successfully but remains at the sign-in boundary; authenticated visual inspection is pending session state.</span></li>
-            <li><strong>Version Control:</strong><span> Changes successfully packaged and pushed under commit <code>d90d781</code>.</span></li>
+            <li><strong>Preview Verification:</strong><span> The browser confirms the app loads, but remains at the sign-in boundary; the authenticated card itself could not be visually checked.</span></li>
+            <li><strong>Version Control:</strong><span> Changes successfully packaged and pushed under commit <code>8c0800d</code>.</span></li>
           </ul>
         </div>
 
         <footer className="credential-scope-footer">
-          <span>Commit: d90d781</span>
+          <span>Commit: 8c0800d</span>
           <span className="credential-scope-status">Committed &amp; Synced</span>
         </footer>
       </section>
