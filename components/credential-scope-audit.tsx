@@ -76,6 +76,31 @@ export function CredentialScopeAudit() {
           <span className="credential-scope-status">Committed &amp; Synced</span>
         </footer>
       </section>
+
+      <section className="credential-scope-audit credential-scope-audit--analytics" aria-labelledby="analytics-architecture-heading">
+        <header className="credential-scope-header">
+          <p className="credential-scope-kicker">Analytics &amp; Telemetry Architecture</p>
+          <h2 id="analytics-architecture-heading">Privacy-Preserving Visitor Tracking &amp; Aggregate Feeds</h2>
+        </header>
+
+        <div className="credential-scope-notice credential-scope-notice--success" role="note">
+          <p><strong>Design Principle:</strong> Production page visits are measured site-wide via Vercel Analytics. The application does not store visitor identities, IP addresses, or per-person visit histories.</p>
+        </div>
+
+        <div className="credential-scope-list">
+          <h3>Data Pipeline &amp; Feed Separation</h3>
+          <ul>
+            <li><strong>Sign-In Analytics:</strong><span> Guests reaching the sign-in boundary contribute to site-wide aggregate page-view counts without app-level identity or visit-history records.</span></li>
+            <li><strong>Cloudflare Edge:</strong><span> Traffic totals operate as an independent aggregate feed, separate from application storage.</span></li>
+            <li><strong>Database Views:</strong><span> The “Magic Dragons” view reads aggregate data. This codebase has no active writer for that table, so it remains empty until an external ingestion process populates it.</span></li>
+          </ul>
+        </div>
+
+        <footer className="credential-scope-footer">
+          <span>Analytics: Vercel &amp; Cloudflare Feeds</span>
+          <span className="credential-scope-status">Privacy-First</span>
+        </footer>
+      </section>
     </>
   )
 }
