@@ -7,6 +7,7 @@ import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
 import { PlatformConsole } from '@/components/platform-console'
 import { BrowserEnvironmentPanel } from '@/components/browser-environment-panel'
+import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
 import { SiteHealthPanel } from '@/components/site-health-panel'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
@@ -272,6 +273,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         <section id="view-panel-intel" className="view-panel intel-view" role="tabpanel" aria-labelledby="view-tab-intel" tabIndex={0} hidden={activeView !== 'intel'}>
           <KeyChest userId={operator.id} />
           <div className="control-grid intel-grid">
+        <CloudflareTelemetryPanel fighters={data?.fighters ?? []} />
         <BrowserEnvironmentPanel />
         <section className="panel magic-panel" aria-labelledby="magic-heading">
           <div className="panel-heading"><div><p className="section-kicker">SEPARATE · AGGREGATE ONLY</p><h2 id="magic-heading">Magic Dragons</h2></div><span className="panel-sigil magic-sigil" aria-hidden="true">✧</span></div>
