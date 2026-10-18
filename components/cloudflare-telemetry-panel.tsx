@@ -106,7 +106,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
               <p className="origin-isolation-subtitle">Origin isolation: <strong>unverified</strong> · no tunnel health source connected</p>
             </div>
           </div>
-          <span className="origin-isolation-state"><span aria-hidden="true" />Tunnel not connected</span>
+          <span className="origin-isolation-state">Tunnel not connected</span>
         </header>
 
         <div className="origin-isolation-metrics">
