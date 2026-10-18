@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { betterAuth } from 'better-auth'
 import { username } from 'better-auth/plugins'
 import { pool } from '@/lib/db'
-import { escapeEmailHtml, MAIL_RECIPIENT, sendOwnerEmail } from '@/lib/email'
+import { escapeEmailHtml, isProductionMailEnvironment, MAIL_RECIPIENT, sendOwnerEmail } from '@/lib/email'
 
 export const auth = betterAuth({
   database: pool,
@@ -19,11 +19,18 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url, token }) => {
       if (user.email.trim().toLowerCase() !== MAIL_RECIPIENT) return
 
-      const safeUrl = escapeEmailHtml(url)
+      const productionMail = isProductionMailEnvironment()
+      const resetMessage = productionMail
+        ? `Use this link to choose a new password: ${url}\n\nIf you did not request this, you can ignore this email.`
+        : 'A password reset was requested in a non-production environment. The live reset link is intentionally omitted from preview email.'
+      const resetHtml = productionMail
+        ? `<p>We received a request to reset your password.</p><p><a href="${escapeEmailHtml(url)}">Choose a new password</a></p><p>If you did not request this, you can ignore this email.</p>`
+        : '<p>A password reset was requested in a non-production environment.</p><p>The live reset link is intentionally omitted from preview email.</p>'
       const result = await sendOwnerEmail({
+        sender: 'security',
         subject: 'Reset your Montemader Defense Command password',
-        text: `Use this link to choose a new password: ${url}\n\nIf you did not request this, you can ignore this email.`,
-        html: `<p>We received a request to reset your password.</p><p><a href="${safeUrl}">Choose a new password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+        text: resetMessage,
+        html: resetHtml,
         idempotencyKey: `password-reset/${createHash('sha256').update(token).digest('hex')}`,
       })
 

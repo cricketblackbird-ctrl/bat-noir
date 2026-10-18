@@ -1,5 +1,6 @@
 import { randomInt, timingSafeEqual } from 'node:crypto'
 import { isIP } from 'node:net'
+import { sql } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { authorizeFighter, fighterStorageId, normalizeFighterId } from '@/lib/bot-auth'
 import { db } from '@/lib/db'
@@ -95,17 +96,24 @@ export async function POST(request: Request) {
     }
   }
 
-  const [created] = await db.insert(dragonTelemetryRecords).values({
-    id: recordId(),
-    dragonId: fighterStorageId(fighterId),
-    nodeId,
-    eventType,
-    healthPercent: health,
-    hitsTaken: hits,
-    hitCapacity: capacity,
-    skills,
-    payload,
-  }).returning({ id: dragonTelemetryRecords.id, receivedAt: dragonTelemetryRecords.receivedAt })
+  const created = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(741925, 1)`)
+    await tx.execute(sql`SELECT pg_sleep(1)`)
+
+    const [record] = await tx.insert(dragonTelemetryRecords).values({
+      id: recordId(),
+      dragonId: fighterStorageId(fighterId),
+      nodeId,
+      eventType,
+      healthPercent: health,
+      hitsTaken: hits,
+      hitCapacity: capacity,
+      skills,
+      payload,
+    }).returning({ id: dragonTelemetryRecords.id, receivedAt: dragonTelemetryRecords.receivedAt })
+
+    return record
+  })
 
   return telemetryJson({ accepted: true, id: String(created.id), receivedAt: created.receivedAt, siteScope: SITE_SCOPE }, 201)
 }

@@ -19,6 +19,7 @@ export async function GET(request: Request) {
       const safeSite = escapeEmailHtml(SITE_SCOPE)
       const safeIncidentId = escapeEmailHtml(result.incidentId)
       const delivery = await sendOwnerEmail({
+        sender: 'alerts',
         subject,
         text,
         html: `<p>A new Cloudflare security incident was detected for <strong>${safeSite}</strong>.</p><p>Blocked or challenged requests in the 60-second window: <strong>${result.count.toLocaleString()}</strong>.</p><p>Incident ID: <code>${safeIncidentId}</code></p><p>Sign in to the dashboard to review the current aggregate security status.</p>`,

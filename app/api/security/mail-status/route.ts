@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { MAIL_RECIPIENT, isOwnerEmailConfigured } from '@/lib/email'
+import { getTransactionalEmailRouting, isOwnerEmailConfigured } from '@/lib/email'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +14,7 @@ export async function GET() {
 
   return NextResponse.json({
     configured: isOwnerEmailConfigured(),
-    recipient: MAIL_RECIPIENT,
+    routing: getTransactionalEmailRouting(),
     authMail: 'Password recovery',
     telemetryMail: 'New Cloudflare security incidents',
   }, { headers: { 'Cache-Control': 'private, no-store' } })

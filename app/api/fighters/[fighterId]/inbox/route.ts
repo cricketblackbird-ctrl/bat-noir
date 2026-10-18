@@ -27,6 +27,7 @@ const telemetryContract = {
   dataSource: 'Authenticated fighter reports only; not direct website request capture.',
   heartbeatEventType: 'listener_heartbeat',
   heartbeatRequiredEveryMs: 5000,
+  minimumDispatchIntervalMs: 1000,
   passThresholdMs: 32000,
   allowedEventTypes: ['health_report', 'hit', 'recall', 'reappear', 'listener_heartbeat'],
   reportOnlyObservedFacts: true,
