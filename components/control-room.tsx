@@ -200,7 +200,6 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         </div>
         <div className="topbar-right">
           <a className="website-destination-link" href="/diagnostics">Connection diagnostics</a>
-          <a className="website-destination-link" href="https://montemader.com" target="_blank" rel="noopener noreferrer">Go to my website <span aria-hidden="true">↗</span></a>
           <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
         </div>
       </header>
