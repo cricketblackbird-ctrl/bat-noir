@@ -51,6 +51,31 @@ export function CredentialScopeAudit() {
           <span className="credential-scope-status credential-scope-status--warning">Review Recommended</span>
         </footer>
       </section>
+
+      <section className="credential-scope-audit credential-scope-audit--summary" aria-labelledby="privacy-audit-heading">
+        <header className="credential-scope-header">
+          <p className="credential-scope-kicker">Privacy &amp; pipeline audit: complete</p>
+          <h2 id="privacy-audit-heading">Repository Hardening &amp; Path Sanitization</h2>
+        </header>
+
+        <div className="credential-scope-notice credential-scope-notice--success" role="note">
+          <p><strong>Sanitization status:</strong> Branded public references were removed, the review page path is now <code>/secure-review.html</code>, and operational identifiers were preserved.</p>
+        </div>
+
+        <div className="credential-scope-list">
+          <h3>Repository isolation summary</h3>
+          <ul>
+            <li><strong>Scoped identifiers:</strong><span> Organization references remain only in site-scope, OIDC audience, Cloudflare connector, and vault encryption contexts.</span></li>
+            <li><strong>Routing &amp; sign-in:</strong><span> Generic sign-in copy is in place; the review page is available at <code>/secure-review.html</code>.</span></li>
+            <li><strong>TypeScript &amp; diff checks:</strong><span> Passed before commit <code>54baa4f</code>.</span></li>
+          </ul>
+        </div>
+
+        <footer className="credential-scope-footer">
+          <span>Commit: 54baa4f</span>
+          <span className="credential-scope-status">Privacy cleanup complete</span>
+        </footer>
+      </section>
     </>
   )
 }

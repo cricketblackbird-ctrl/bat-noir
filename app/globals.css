@@ -555,6 +555,10 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .credential-scope-audit--database .credential-scope-list li strong { color: #f7f0f9; }
 .credential-scope-audit--database .credential-scope-footer { margin-top: 2rem; padding-top: 1.5rem; font-size: .85rem; }
 .credential-scope-audit--database .credential-scope-status--warning { color: #f59e0b; }
+.credential-scope-audit--summary { gap: clamp(18px, 3vw, 28px); }
+.credential-scope-audit--summary .credential-scope-notice--success { border-left-color: #34d399; }
+.credential-scope-audit--summary .credential-scope-notice--success strong { color: #34d399; }
+.credential-scope-audit--summary .credential-scope-list li + li { margin-top: .5rem; }
 
 @media (max-width: 760px) {
   .mail-sorter-workspace { grid-template-columns: minmax(0, 1fr); }
