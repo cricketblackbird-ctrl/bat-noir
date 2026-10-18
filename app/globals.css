@@ -282,7 +282,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .origin-isolation-topbar h3 code { color: #cbd5e1; font-size: .9em; font-weight: 500; }
 .origin-isolation-subtitle { margin: 4px 0 0; color: #94a3b8; font-size: 12px; }
 .origin-isolation-subtitle strong { color: #fbbf24; font-weight: 600; }
-.origin-isolation-state { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 7px; border: 1px solid rgb(251 191 36 / 28%); border-radius: 999px; padding: 6px 9px; background: rgb(120 53 15 / 14%); color: #fcd34d; font-size: 11px; font-weight: 700; letter-spacing: .03em; white-space: nowrap; }
 .origin-isolation-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .origin-isolation-metrics article { display: flex; min-width: 0; flex-direction: column; gap: 5px; border: 1px solid #334155; border-radius: 9px; padding: 10px; background: rgb(30 41 59 / 58%); }
 .origin-isolation-metrics article > span { color: #94a3b8; font-size: 11px; font-weight: 500; }
@@ -297,8 +296,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .origin-diagnostics-title > svg { width: 18px; height: 18px; flex: 0 0 auto; color: #fb923c; }
 .origin-diagnostics-title h4 { margin: 0; color: #f1f5f9; font-size: 13px; font-weight: 700; }
 .origin-diagnostics-title p { margin: 3px 0 0; color: #64748b; font-size: 10px; }
-.origin-diagnostics-state { display: inline-flex; align-items: center; gap: 5px; color: #fbbf24; font-size: 10px; }
-.origin-diagnostics-state svg { width: 13px; height: 13px; }
 .origin-diagnostics-log { display: flex; max-height: 160px; flex-direction: column; gap: 7px; overflow: auto; }
 .origin-diagnostics-log p { margin: 0; color: #cbd5e1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .origin-diagnostics-log p > span { color: #94a3b8; }
@@ -306,7 +303,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .origin-diagnostics-log code { color: #e2e8f0; }
 .origin-isolation-caveat { display: flex; align-items: flex-start; gap: 7px; margin: 0; color: #94a3b8; font-size: 11px; line-height: 1.5; }
 .origin-isolation-caveat svg { width: 14px; height: 14px; flex: 0 0 auto; margin-top: 1px; color: #fb923c; }
-@media (max-width: 680px) { .origin-isolation-metrics { grid-template-columns: minmax(0, 1fr); } .origin-isolation-state { font-size: 10px; } .origin-diagnostics-heading { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 680px) { .origin-isolation-metrics { grid-template-columns: minmax(0, 1fr); } }
 .telemetry-message { margin: 0; border: 1px dashed rgb(150 119 167 / 36%); border-radius: 7px; padding: 10px; color: #c8b4d1; font-size: calc((12px) + 1pt); line-height: 1.45; }
 .telemetry-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
 .telemetry-metric { display: flex; min-width: 0; flex-direction: column; gap: 5px; border: 1px solid rgb(123 63 158 / 36%); border-radius: 8px; padding: 9px; background: linear-gradient(145deg, rgb(40 21 49 / 68%), rgb(13 9 18 / 90%)); }

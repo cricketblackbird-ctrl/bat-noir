@@ -1,7 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
-import { Activity, LockKeyhole, Network, Shield, Terminal } from 'lucide-react'
+import { LockKeyhole, Network, Shield, Terminal } from 'lucide-react'
 import { DnsHistoryPanel } from '@/components/dns-history-panel'
 
 type FighterHeartbeat = {
@@ -106,7 +106,6 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
               <p className="origin-isolation-subtitle">Origin isolation: <strong>unverified</strong> · no tunnel health source connected</p>
             </div>
           </div>
-          <span className="origin-isolation-state">Tunnel not connected</span>
         </header>
 
         <div className="origin-isolation-metrics">
@@ -133,10 +132,9 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
               <Terminal aria-hidden="true" />
               <div>
                 <h4 id="origin-diagnostics-heading">Tunnel diagnostics</h4>
-                <p>Connection telemetry · not a live daemon log</p>
+                <p>No connector telemetry · not a live daemon log</p>
               </div>
             </div>
-            <span className="origin-diagnostics-state"><Activity aria-hidden="true" />No connector telemetry</span>
           </header>
           <div className="origin-diagnostics-log" role="group" aria-label="Tunnel diagnostic status">
             <p><span>[INFO]</span> No Cloudflare Tunnel connector is reporting to this dashboard.</p>
