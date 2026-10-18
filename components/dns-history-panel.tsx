@@ -17,6 +17,13 @@ type DnsHistoryItem = {
 type DnsSnapshot = { hostname: string; enabled: boolean; updatedAt: string | null; history: DnsHistoryItem[] }
 type Action = { action: 'toggle'; enabled: boolean } | { action: 'capture' }
 
+const providedDnsRecords = [
+  { type: 'A', name: '@', target: '192.0.2.14', routing: 'Proxied', ttl: 'Auto' },
+  { type: 'CNAME', name: 'www', target: 'montemader.com', routing: 'Proxied', ttl: 'Auto' },
+  { type: 'MX', name: '@', target: 'mail.montemader.com', routing: 'DNS only', ttl: 'Auto' },
+  { type: 'TXT', name: '@', target: 'v=spf1 include:_spf.google.com ~all', routing: 'DNS only', ttl: '3600' },
+] as const
+
 async function fetchSnapshot(url: string): Promise<DnsSnapshot> {
   const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin' })
   if (!response.ok) throw new Error('Could not load DNS history.')
@@ -96,6 +103,25 @@ export function DnsHistoryPanel() {
       </div>
 
       <p className="dns-history-explanation">When on, this panel checks DNS answers about once a minute while the dashboard is open. It stores the A and nameserver results—not WAF visitor IPs—and never changes your DNS or firewall settings.</p>
+
+      <section className="dns-provided-records" aria-labelledby="dns-provided-heading">
+        <div>
+          <h4 id="dns-provided-heading">DNS records you provided</h4>
+          <p>Reference only · not fetched from Cloudflare or Vercel, and not verified against live DNS.</p>
+        </div>
+        <ul>
+          {providedDnsRecords.map((record) => (
+            <li key={`${record.type}-${record.name}`}>
+              <div><span>Type</span><strong>{record.type}</strong></div>
+              <div><span>Name</span><strong>{record.name}</strong></div>
+              <div className="dns-provided-target"><span>Target / content</span><code>{record.target}</code></div>
+              <div><span>Routing</span><strong>{record.routing}</strong></div>
+              <div><span>TTL</span><strong>{record.ttl}</strong></div>
+            </li>
+          ))}
+        </ul>
+        <p className="dns-provided-caveat">The supplied A-record value 192.0.2.14 is in a reserved documentation range, not a publicly routable origin IP. No A/AAAA record for mail.montemader.com was included in the supplied details.</p>
+      </section>
 
       {error ? (
         <p className="dns-history-state" role="alert">DNS history is unavailable. Check your signed-in operator access and try again.</p>

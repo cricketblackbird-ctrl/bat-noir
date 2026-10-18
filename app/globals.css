@@ -299,6 +299,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dns-history-toggle[aria-checked="true"] > span { background: #e6a5d3; box-shadow: 0 0 0 3px rgb(230 165 211 / 18%); }
 .dns-history-toggle:focus-visible, .dns-history-details summary:focus-visible { outline: 2px solid #d6a9f2; outline-offset: 3px; }
 .dns-history-explanation, .dns-history-state { margin: 0; color: #a493ad; font-size: calc((12px) + 1pt); line-height: 1.5; overflow-wrap: anywhere; }
+.dns-provided-records { display: flex; min-width: 0; flex-direction: column; gap: 8px; border: 1px solid rgb(123 63 158 / 20%); border-radius: 7px; padding: 10px; background: rgb(21 14 27 / 55%); }
+.dns-provided-records h4 { margin: 0; color: #ead6e9; font-size: calc((12px) + 1pt); font-weight: 600; }
+.dns-provided-records > div > p, .dns-provided-caveat { margin: 4px 0 0; color: #a493ad; font-size: calc((12px) + 1pt); line-height: 1.5; overflow-wrap: anywhere; }
+.dns-provided-records ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dns-provided-records li { display: grid; min-width: 0; grid-template-columns: 1fr 1fr; gap: 8px; border: 1px solid rgb(123 63 158 / 16%); border-radius: 6px; padding: 8px; }
+.dns-provided-records li > div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.dns-provided-records li span { color: #9e8daa; font-size: calc((11px) + 1pt); }
+.dns-provided-records li strong, .dns-provided-records li code { color: #d9bfdd; font-size: calc((12px) + 1pt); font-weight: 500; overflow-wrap: anywhere; word-break: break-word; }
+.dns-provided-records .dns-provided-target { grid-column: 1 / -1; }
+.dns-provided-records .dns-provided-target code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .dns-history-status { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; color: #b9a9c1; font-size: calc((12px) + 1pt); }
 .dns-history-status > span:last-child { margin-left: auto; font-variant-numeric: tabular-nums; }
 .dns-history-dot { width: 7px; height: 7px; border-radius: 50%; background: #8b7b91; }
