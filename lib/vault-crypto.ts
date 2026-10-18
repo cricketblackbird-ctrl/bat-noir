@@ -3,7 +3,7 @@ const decoder = new TextDecoder()
 const keyDerivationIterations = 600_000
 const vaultContext = 'Montemader-Key-Chest-v1'
 
-export type VaultCategory = 'key' | 'recovery'
+export type VaultCategory = 'key' | 'recovery' | 'site-info'
 
 export type VaultEntry = {
   id: string
@@ -58,7 +58,7 @@ function isVaultEntry(value: unknown): value is VaultEntry {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const entry = value as Record<string, unknown>
   return typeof entry.id === 'string' && entry.id.length > 0 && entry.id.length <= 100 &&
-    (entry.category === 'key' || entry.category === 'recovery') &&
+    (entry.category === 'key' || entry.category === 'recovery' || entry.category === 'site-info') &&
     typeof entry.title === 'string' && entry.title.trim().length > 0 && entry.title.length <= 100 &&
     typeof entry.value === 'string' && entry.value.length > 0 && entry.value.length <= 10_000 &&
     typeof entry.createdAt === 'string' && Number.isFinite(Date.parse(entry.createdAt))

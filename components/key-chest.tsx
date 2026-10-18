@@ -182,12 +182,12 @@ export function KeyChest({ userId }: { userId: string }) {
     <section className="panel key-chest-panel" aria-labelledby="key-chest-heading">
       <div className="panel-heading">
         <div>
-          <p className="section-kicker">PAGE 03 · PRIVATE CREDENTIAL CHEST</p>
-          <h2 id="key-chest-heading">Keys &amp; recovery specs</h2>
+          <p className="section-kicker">PAGE 03 · PRIVATE SITE CHEST</p>
+          <h2 id="key-chest-heading">Site information &amp; keys</h2>
         </div>
         <span className="key-chest-mark" aria-hidden="true">✦</span>
       </div>
-      <p className="key-chest-intro">The chest is encrypted in this browser before anything is saved. Your chest passphrase never leaves this device.</p>
+      <p className="key-chest-intro">Save useful site notes, credentials, and recovery details for later. Everything is encrypted in this browser and stays hidden until you choose Recall; your passphrase never leaves this device.</p>
 
       {loadError ? (
         <div className="key-chest-state" role="status">
@@ -206,29 +206,30 @@ export function KeyChest({ userId }: { userId: string }) {
           <form className="chest-entry-form" onSubmit={onAddEntry}>
             <label className="control-label" htmlFor="chest-category">Entry type</label>
             <select id="chest-category" value={category} onChange={(event) => setCategory(event.target.value as VaultCategory)} disabled={busy}>
+              <option value="site-info">Site information</option>
               <option value="key">Key or credential</option>
               <option value="recovery">Recovery specification</option>
             </select>
-            <label className="control-label" htmlFor="chest-title">Title</label>
+            <label className="control-label" htmlFor="chest-title">{category === 'site-info' ? 'Information title' : 'Title'}</label>
             <input id="chest-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={100} autoComplete="off" disabled={busy} required />
-            <label className="control-label" htmlFor="chest-value">Secret or recovery details</label>
-            <textarea id="chest-value" value={value} onChange={(event) => setValue(event.target.value)} maxLength={10_000} autoComplete="off" rows={3} disabled={busy} required />
+            <label className="control-label" htmlFor="chest-value">{category === 'site-info' ? 'Site information' : 'Secret or recovery details'}</label>
+            <textarea id="chest-value" value={value} onChange={(event) => setValue(event.target.value)} maxLength={10_000} autoComplete="off" rows={3} disabled={busy} placeholder={category === 'site-info' ? 'Paste deployment notes, domain settings, useful links, or other site guidance.' : category === 'recovery' ? 'Enter recovery instructions.' : 'Enter a key or credential.'} required />
             <button className="button button-primary" type="submit" disabled={busy || entries.length >= 50}>{busy ? 'Saving…' : 'Encrypt & save entry'}</button>
           </form>
 
           {entries.length > 0 ? (
             <ul className="key-chest-list">
-              {entries.map((entry) => {
+              {entries.map((entry, index) => {
                 const isRevealed = revealed.includes(entry.id)
                 return (
                   <li className="key-chest-entry" key={entry.id}>
                     <div className="key-chest-entry-heading">
                       <div>
-                        <span className="key-chest-category">{entry.category === 'key' ? 'KEY / CREDENTIAL' : 'RECOVERY SPEC'}</span>
-                        <h3>{entry.title}</h3>
+                        <span className="key-chest-category">{isRevealed ? entry.category === 'site-info' ? 'SITE INFORMATION' : entry.category === 'key' ? 'KEY / CREDENTIAL' : 'RECOVERY SPEC' : 'LOCKED ENTRY'}</span>
+                        <h3>{isRevealed ? entry.title : `Entry ${index + 1}`}</h3>
                       </div>
                       <div className="key-chest-entry-actions">
-                        <button className="chest-text-button" type="button" aria-pressed={isRevealed} onClick={() => setRevealed((current) => isRevealed ? current.filter((id) => id !== entry.id) : [...current, entry.id])}>{isRevealed ? 'Hide' : 'Reveal'}</button>
+                        <button className="chest-text-button" type="button" aria-pressed={isRevealed} aria-label={`${isRevealed ? 'Hide' : 'Recall'} ${isRevealed ? entry.title : `entry ${index + 1}`}`} onClick={() => setRevealed((current) => isRevealed ? current.filter((id) => id !== entry.id) : [...current, entry.id])}>{isRevealed ? 'Hide' : 'Recall'}</button>
                         <button className="chest-text-button chest-remove-button" type="button" onClick={() => void onRemoveEntry(entry)} disabled={busy}>Remove</button>
                       </div>
                     </div>
@@ -237,7 +238,7 @@ export function KeyChest({ userId }: { userId: string }) {
                 )
               })}
             </ul>
-          ) : <p className="key-chest-empty">No entries yet. Add a key or recovery specification above.</p>}
+          ) : <p className="key-chest-empty">No entries yet. Add site information, a key, or a recovery specification above.</p>}
         </div>
       ) : savedVault ? (
         <form className="chest-unlock-form" onSubmit={onUnlock}>

@@ -199,6 +199,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .auth-content { padding: 22px clamp(24px, 7vw, 42px) 28px; }
 .auth-card h1 { margin: 0; color: #f4e8f5; font-family: Georgia, serif; font-size: clamp(28px, calc(7vw + 2px), 34px); font-weight: 400; letter-spacing: .01em; text-align: center; }
 .auth-description { margin: 8px 0 20px; color: #a99bad; font-size: 16px; line-height: 1.5; text-align: center; }
+.auth-privacy-notice { margin: -8px 0 18px; border: 1px solid rgb(229 189 104 / 22%); border-radius: 8px; padding: 9px 11px; background: rgb(229 189 104 / 5%); color: #c9b9c9; font-size: 12px; line-height: 1.5; text-align: center; }
 .auth-tabs { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 4px; margin-bottom: 22px; border: 1px solid #483254; border-radius: 9px; padding: 4px; background: rgb(7 5 10 / 76%); }
 .auth-tab { min-height: 36px; border: 1px solid transparent; border-radius: 6px; padding: 6px 5px; background: transparent; color: #a99bad; font-size: 12px; font-weight: 500; transition: border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease; }
 .auth-tab:hover { color: #f3d59a; }

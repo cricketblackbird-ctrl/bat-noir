@@ -278,7 +278,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <p className="magic-description">A small, independent view of where visits come from—kept separate from fighter telemetry.</p>
           {magic.error ? <p className="empty-insight">Aggregate insights are unavailable right now.</p> : magic.data?.available ? <ul className="insight-list">{magic.data.insights.map((insight, index) => <li key={`${insight.date}-${insight.countryCode}-${index}`}><span className="insight-country">{insight.country}</span><span>{insight.visitors.toLocaleString()} visits</span><time dateTime={insight.date}>{insight.date}</time></li>)}</ul> : <p className="empty-insight">No Cloudflare aggregate feed is connected yet. Nothing is inferred or invented.</p>}
           <button className="privacy-toggle" type="button" aria-expanded={showPrivacy} onClick={() => setShowPrivacy((current) => !current)}>{showPrivacy ? 'Hide privacy note' : 'What this view stores'}</button>
-          {showPrivacy && <p className="privacy-note">{magic.data?.privacy ?? 'Only daily, country-level totals are intended. No visitor names, IP addresses, or per-person trails.'}</p>}
+          {showPrivacy && <p className="privacy-note">{magic.data?.privacy ?? 'Only daily country-level aggregates are intended. No visitor IP addresses, identities, or per-person history are stored in this feed.'}</p>}
           <div className="magic-boundary"><span aria-hidden="true">✦</span> Not used to decide who is an enemy.</div>
         </section>
 
