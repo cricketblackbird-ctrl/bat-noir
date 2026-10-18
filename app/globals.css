@@ -130,6 +130,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .status-dot.is-pass > span { background: #e6a5d3; box-shadow: 0 0 7px rgb(214 166 210 / 55%); animation: heartbeat-breathe 1.6s ease-in-out infinite; }
 .status-dot.is-waiting > span { background: #d6a6d2; }
 .status-dot.is-stale > span { background: #a894ac; }
+.guardian-status-widget { position: fixed; z-index: 50; bottom: 16px; left: 16px; display: flex; align-items: center; gap: 11px; max-width: min(380px, calc(100vw - 32px)); border: 1px solid rgb(214 166 210 / 45%); border-radius: 12px; padding: 10px 13px; background: rgb(20 12 27 / 94%); box-shadow: 0 12px 34px rgb(0 0 0 / 42%), 0 0 20px rgb(214 166 210 / 10%); backdrop-filter: blur(12px); }
+.guardian-status-mark { position: relative; display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid rgb(226 177 105 / 42%); border-radius: 9px; background: rgb(226 177 105 / 11%); color: #e4b36f; }
+.guardian-status-mark svg { width: 19px; height: 19px; }
+.guardian-status-light { position: absolute; top: -4px; right: -4px; width: 11px; height: 11px; border: 2px solid #140c1b; border-radius: 50%; background: #9a829e; }
+.guardian-status-widget.is-live .guardian-status-light { background: #e6a5d3; box-shadow: 0 0 9px rgb(214 166 210 / 65%); animation: heartbeat-breathe 1.6s ease-in-out infinite; }
+.guardian-status-widget.is-attention .guardian-status-light { background: #d7a14c; }
+.guardian-status-copy { min-width: 0; }
+.guardian-status-copy strong { display: block; color: #fff4fc; font-size: 12px; letter-spacing: .03em; }
+.guardian-status-copy p { margin: 3px 0 0; color: #b9a9c1; font-size: 11px; line-height: 1.35; }
 @keyframes heartbeat-breathe { 50% { opacity: .45; transform: scale(.78); } }
 .fighter-role { margin: 5px 0; color: #b2a4bd; font-size: 12px; }
 .health-reading { margin: 0; color: #b8a9c0; font-size: 12px; }
@@ -387,6 +396,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 @media (max-width: 560px) {
   html, body { height: auto; min-height: 100%; overflow-x: hidden; overflow-y: auto; }
+  .guardian-status-widget { bottom: 8px; left: 8px; max-width: calc(100vw - 16px); }
   .command-page { height: auto; min-height: 100dvh; overflow: visible; padding-top: 0; }
   .topline-message { margin: 0 -10px; }
   .control-grid { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
@@ -676,7 +686,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .view-tab:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgb(0 0 0 / 42%); }
 .view-tab:focus-visible { outline: 2px solid #e79bcd; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .brand-name, .view-tab, .status-dot.is-pass > span, .footer-star, .issue-button, .issue-button::before { transition: none; animation: none; }
+  .brand-name, .view-tab, .status-dot.is-pass > span, .guardian-status-widget.is-live .guardian-status-light, .footer-star, .issue-button, .issue-button::before { transition: none; animation: none; }
 }
 .dashboard-views { display: flex; flex: 1 0 auto; flex-direction: column; gap: 9px; min-height: 0; }
 .view-panel[hidden] { display: none !important; }

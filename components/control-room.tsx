@@ -2,7 +2,7 @@
 
 import { Shield } from 'lucide-react'
 import dynamic from 'next/dynamic'
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useState, useTransition } from 'react'
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
@@ -96,6 +96,34 @@ function StatusDot({ stopped, listenerStatus, heartbeatAgeMs }: { stopped: boole
   return <span className={`status-dot is-${listenerStatus.toLowerCase()}`} title={age}><span aria-hidden="true" />{label}</span>
 }
 
+function GuardianStatusWidget({ fighters, isLoading, hasError }: { fighters: Fighter[]; isLoading: boolean; hasError: boolean }) {
+  const liveCount = fighters.filter((fighter) => fighter.listenerStatus === 'PASS').length
+  const pausedCount = fighters.filter((fighter) => fighter.stopped).length
+  const allLive = !isLoading && !hasError && liveCount === 3
+  const isHealthy = allLive && pausedCount === 0
+  const heading = hasError
+    ? 'Guardian reports unavailable'
+    : isLoading
+      ? 'Connecting to guardians'
+      : pausedCount === 3
+        ? 'All guardian execution paused'
+        : allLive && pausedCount > 0
+          ? 'Listeners live · execution paused'
+          : isHealthy
+            ? 'Guardians active'
+            : 'Guardian attention needed'
+  const detail = isLoading || hasError
+    ? 'Checking authenticated heartbeat status'
+    : `${liveCount} of 3 listeners live${pausedCount > 0 ? ` · ${pausedCount} execution${pausedCount === 1 ? '' : 's'} paused` : ''}`
+
+  return (
+    <aside className={`guardian-status-widget${isHealthy ? ' is-live' : ' is-attention'}`} role="status" aria-live="polite" aria-label={`${heading}. ${detail}.`}>
+      <span className="guardian-status-mark" aria-hidden="true"><Shield /><span className="guardian-status-light" /></span>
+      <div className="guardian-status-copy"><strong>{heading}</strong><p>{detail}. Heartbeat monitoring continues while stopped.</p></div>
+    </aside>
+  )
+}
+
 export function ControlRoom({ operator }: { operator: Operations['operator'] & { id: string } }) {
   const { data, error, mutate } = useSWR<Operations>('/api/operations', fetcher, { refreshInterval: 5000, revalidateOnFocus: true })
   const [strategy, setStrategy] = useState<Strategy>('inspect_verify')
@@ -105,9 +133,15 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
   const [strikeToast, setStrikeToast] = useState<{ key: number; fighterId: string; side: 'left' | 'right' } | null>(null)
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [activeView, setActiveView] = useState<DashboardView>('dashboard')
+  const isMounted = useRef(false)
   const stoppedAll = Boolean(data?.stops.stopAll)
   const guards = data?.fighters ?? []
   const recentSignals = useMemo(() => guards.filter((fighter) => fighter.signal).length, [guards])
+
+  useEffect(() => {
+    isMounted.current = true
+    return () => { isMounted.current = false }
+  }, [])
 
   useEffect(() => {
     const syncViewFromLocation = () => {
@@ -150,10 +184,11 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
     startTransition(async () => {
       try {
         const result = await issueDefenseRunbook({ strategy, formation })
+        if (!isMounted.current) return
         setFeedback(`${result.queued} defensive directive${result.queued === 1 ? '' : 's'} queued.`)
         await mutate()
       } catch {
-        setFeedback('Directive not sent. Check MM access and the fighters’ stop states.')
+        if (isMounted.current) setFeedback('Directive not sent. Check MM access and the fighters’ stop states.')
       }
     })
   }
@@ -163,11 +198,12 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
     startTransition(async () => {
       try {
         const result = await issueStrike({ fighterId })
+        if (!isMounted.current) return
         setStrikeToast({ key: Date.now(), fighterId, side: Math.random() > 0.5 ? 'left' : 'right' })
         setFeedback(`Combo queued for ${fighterId} on ${result.siteScope} only; awaiting its completion report.`)
         await mutate()
       } catch {
-        setFeedback('Directive not queued. Check the active attack report, MM access, and this fighter’s stop state.')
+        if (isMounted.current) setFeedback('Directive not queued. Check the active attack report, MM access, and this fighter’s stop state.')
       }
     })
   }
@@ -177,10 +213,11 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
     startTransition(async () => {
       try {
         await setEmergencyStop({ target, stopped })
+        if (!isMounted.current) return
         setFeedback(stopped ? `${target === 'all' ? 'All fighters' : target} stopped at the command layer.` : 'Stop released. Fresh directives only.')
         await mutate()
       } catch {
-        setFeedback('Stop control unavailable. Verify MM access and retry.')
+        if (isMounted.current) setFeedback('Stop control unavailable. Verify MM access and retry.')
       }
     })
   }
@@ -301,6 +338,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         <span className="footer-thread footer-thread-right" aria-hidden="true" />
         <span className="footer-star footer-star-right" aria-hidden="true">★</span>
       </footer>
+      <GuardianStatusWidget fighters={guards} isLoading={!data && !error} hasError={Boolean(error)} />
     </main>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 
@@ -17,6 +17,12 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
+  const isMounted = useRef(false)
+
+  useEffect(() => {
+    isMounted.current = true
+    return () => { isMounted.current = false }
+  }, [])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -39,6 +45,7 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
           email,
           redirectTo: `${window.location.origin}/reset-password`,
         })
+        if (!isMounted.current) return
         if (result.error) throw new Error('Reset request failed')
         setNotice('If an account uses that email, a password reset link will arrive shortly.')
         return
@@ -52,6 +59,7 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
           return
         }
         const result = await authClient.resetPassword({ newPassword: password, token: resetToken })
+        if (!isMounted.current) return
         if (result.error) throw new Error('Password reset failed')
         router.replace('/')
         router.refresh()
@@ -70,14 +78,17 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
           })
         : await authClient.signIn.username({ username: key, password })
 
+      if (!isMounted.current) return
       if (result.error) throw new Error('Authentication failed')
       router.refresh()
     } catch {
-      setError(mode === 'forgot-password' || mode === 'reset-password'
-        ? 'We could not complete that request. Check the details or try again shortly.'
-        : 'We could not verify those details. Please check them and try again.')
+      if (isMounted.current) {
+        setError(mode === 'forgot-password' || mode === 'reset-password'
+          ? 'We could not complete that request. Check the details or try again shortly.'
+          : 'We could not verify those details. Please check them and try again.')
+      }
     } finally {
-      setBusy(false)
+      if (isMounted.current) setBusy(false)
     }
   }
 
