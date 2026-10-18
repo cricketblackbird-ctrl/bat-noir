@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Defense Command Grid',
-  description: 'Authenticated security operations dashboard with Cloudflare aggregate analytics, verified guardian reports, defensive controls, and auditable activity.',
+  title: 'Master Control & Link Health',
+  description: 'Authenticated security operations and private destination-health dashboard. External monitoring and account analytics appear only after their separate services are connected.',
   generator: 'v0.app',
   icons: {
     icon: [

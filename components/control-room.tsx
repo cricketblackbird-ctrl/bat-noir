@@ -11,6 +11,7 @@ import { PlatformConsole } from '@/components/platform-console'
 import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
 import { HeartbeatReadinessPanel } from '@/components/heartbeat-readiness-panel'
+import { LinkHealthPanel } from '@/components/link-health-panel'
 import { HEARTBEAT_CONFIG } from '@/lib/heartbeat-config'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
@@ -56,8 +57,8 @@ type Operations = {
   observedAt: string
 }
 
-type DashboardView = 'dashboard' | 'tester' | 'intel' | 'cloudflare'
-const dashboardViews: DashboardView[] = ['dashboard', 'tester', 'intel', 'cloudflare']
+type DashboardView = 'dashboard' | 'links' | 'tester' | 'intel' | 'cloudflare'
+const dashboardViews: DashboardView[] = ['dashboard', 'links', 'tester', 'intel', 'cloudflare']
 
 const fetcher = async (url: string) => {
   const response = await fetch(url, { cache: 'no-store' })
@@ -259,6 +260,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
 
       <nav className="dashboard-nav" role="tablist" aria-label="Defense dashboard views">
         <button id="view-tab-dashboard" className={`view-tab${activeView === 'dashboard' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'dashboard'} aria-controls="view-panel-dashboard" tabIndex={activeView === 'dashboard' ? 0 : -1} onClick={() => selectDashboardView('dashboard')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'dashboard')}>Dashboard</button>
+        <button id="view-tab-links" className={`view-tab${activeView === 'links' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'links'} aria-controls="view-panel-links" tabIndex={activeView === 'links' ? 0 : -1} onClick={() => selectDashboardView('links')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'links')}>Links &amp; account health</button>
         <button id="view-tab-tester" className={`view-tab${activeView === 'tester' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'tester'} aria-controls="view-panel-tester" tabIndex={activeView === 'tester' ? 0 : -1} onClick={() => selectDashboardView('tester')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'tester')}>Tester &amp; capabilities</button>
         <button id="view-tab-intel" className={`view-tab${activeView === 'intel' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'intel'} aria-controls="view-panel-intel" tabIndex={activeView === 'intel' ? 0 : -1} onClick={() => selectDashboardView('intel')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'intel')}>Intel &amp; activity</button>
         <button id="view-tab-cloudflare" className={`view-tab${activeView === 'cloudflare' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'cloudflare'} aria-controls="view-panel-cloudflare" tabIndex={activeView === 'cloudflare' ? 0 : -1} onClick={() => selectDashboardView('cloudflare')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'cloudflare')}>Cloudflare</button>
@@ -330,6 +332,10 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         </section>
 
           </div>
+        </section>
+
+        <section id="view-panel-links" className="view-panel links-view" role="tabpanel" aria-labelledby="view-tab-links" tabIndex={0} hidden={activeView !== 'links'}>
+          <LinkHealthPanel guardians={guards.map(({ id, name, listenerStatus, stopped }) => ({ id, name, listenerStatus, stopped }))} />
         </section>
 
         <section id="view-panel-tester" className="view-panel tester-view" role="tabpanel" aria-labelledby="view-tab-tester" tabIndex={0} hidden={activeView !== 'tester'}>
