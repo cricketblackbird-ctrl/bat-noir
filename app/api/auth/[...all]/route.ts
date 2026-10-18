@@ -20,8 +20,8 @@ export async function POST(request: Request) {
     const email = body && typeof body === 'object' && 'email' in body && typeof body.email === 'string'
       ? body.email.trim().toLowerCase()
       : ''
-    if (!email.endsWith('@cricketblackbird.com')) {
-      return Response.json({ message: 'Use an @cricketblackbird.com email address.' }, { status: 400 })
+    if (email !== 'cricketblackbird@gmail.com') {
+      return Response.json({ message: 'Use the configured account email.' }, { status: 400 })
     }
 
     const [accountCount] = await db.select({ total: count() }).from(user)

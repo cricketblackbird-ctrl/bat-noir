@@ -31,8 +31,8 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
     try {
       if (mode === 'forgot-password') {
         const email = String(formData.get('email') ?? '').trim()
-        if (!email.toLowerCase().endsWith('@cricketblackbird.com')) {
-          setError('For your privacy, reset emails can only be sent to an @cricketblackbird.com address.')
+        if (email.toLowerCase() !== 'cricketblackbird@gmail.com') {
+          setError('Use cricketblackbird@gmail.com for password recovery.')
           return
         }
         const result = await authClient.requestPasswordReset({
@@ -61,8 +61,8 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
       const username = String(formData.get('username') ?? '').trim()
       const password = String(formData.get('password') ?? '')
       const email = String(formData.get('email') ?? '').trim()
-      if (mode === 'sign-up' && !email.toLowerCase().endsWith('@cricketblackbird.com')) {
-        setError('Use an @cricketblackbird.com email so account recovery stays within your allowed domain.')
+      if (mode === 'sign-up' && email.toLowerCase() !== 'cricketblackbird@gmail.com') {
+        setError('Use cricketblackbird@gmail.com for this account.')
         return
       }
       const result = mode === 'sign-up'
@@ -115,9 +115,9 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
           </h1>
           <p className="auth-description">
             {isCreatingFirstAccount
-              ? 'Set a username and password. Use an @cricketblackbird.com email for password recovery. First-account setup closes after this.'
+              ? 'Use cricketblackbird@gmail.com, then choose a username and password. First-account setup closes after this.'
               : isResetRequest
-                ? 'Reset links are only sent to @cricketblackbird.com addresses. If the address is registered, we will send a link.'
+                ? 'Reset links are sent only to cricketblackbird@gmail.com, and only if an account is registered with it.'
                 : isChoosingPassword
                   ? 'Choose a new password for your account.'
                   : 'Good to have you back.'}
@@ -130,14 +130,14 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
               {isCreatingFirstAccount && (
                 <div className="auth-field">
                   <label htmlFor="email">Email</label>
-                  <input id="email" type="email" name="email" autoComplete="email" required maxLength={254} />
+                  <input id="email" type="email" name="email" autoComplete="email" required maxLength={254} defaultValue="cricketblackbird@gmail.com" />
                 </div>
               )}
 
               {isResetRequest && (
                 <div className="auth-field">
                   <label htmlFor="reset-email">Account email</label>
-                  <input id="reset-email" type="email" name="email" autoComplete="email" required maxLength={254} />
+                  <input id="reset-email" type="email" name="email" autoComplete="email" required maxLength={254} defaultValue="cricketblackbird@gmail.com" />
                 </div>
               )}
 

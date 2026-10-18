@@ -28,8 +28,7 @@ export const auth = betterAuth({
     enabled: true,
     disableSignUp: process.env.NODE_ENV !== 'development',
     sendResetPassword: async ({ user, url, token }) => {
-      const recipient = user.email.trim().toLowerCase()
-      if (!recipient.endsWith('@cricketblackbird.com')) return
+      if (user.email.trim().toLowerCase() !== 'cricketblackbird@gmail.com') return
 
       const apiKey = process.env.RESEND_API_KEY
       const emailDomain = process.env.RESEND_EMAIL_DOMAIN
