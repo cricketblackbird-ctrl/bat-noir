@@ -615,7 +615,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .intel-view { display: block; }
 .dashboard-grid, .intel-grid { grid-template-rows: auto; grid-auto-rows: minmax(240px, auto); flex: 0 0 auto; }
 .dashboard-grid { grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr); }
- .mm-live-indicator { display: flex; min-width: 0; align-items: center; gap: 12px; border: 1px solid rgb(123 63 158 / 32%); border-radius: 9px; padding: 9px 12px; background: rgb(16 8 23 / 75%); }
+ .mm-live-indicator { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; border: 1px solid rgb(123 63 158 / 32%); border-radius: 9px; padding: 9px 12px; background: rgb(16 8 23 / 75%); }
  .mm-live-button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 9px; border: 1px solid rgb(199 75 158 / 40%); border-radius: 7px; padding: 5px 9px; background: #21132b; box-shadow: 0 3px 0 #100a16; }
  .mm-live-word { color: #86efac; font-size: 11px; font-weight: 700; letter-spacing: .08em; animation: mm-live-pulse 3s ease-in-out infinite; }
  .mm-live-indicator p { margin: 0; color: #b9a9bf; font-size: 11px; line-height: 1.4; }
