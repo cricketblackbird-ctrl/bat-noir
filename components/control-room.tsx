@@ -213,6 +213,12 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <div className="control-grid dashboard-grid">
         <section className="panel fighter-panel" aria-labelledby="fighters-heading">
           <div className="panel-heading"><div><p className="section-kicker">THREE GUARDIANS · SEPARATE STRENGTHS</p><h2 id="fighters-heading">Fighter status</h2></div><span className="report-count">{recentSignals} with recent signals</span></div>
+          <aside className="guardian-startup" aria-label="Guardian startup and heartbeat requirements">
+            <h3>Wake-up + heartbeat requirements</h3>
+            <p>Run each listener with its own server-side credential: Ruach <code>DRAGON_RUACH_TOKEN</code>, Xena <code>DRAGON_XENA_TOKEN</code>, SuperBot <code>DRAGON_SUPERBOT_TOKEN</code>.</p>
+            <p>Poll <code>{'GET /api/fighters/{fighterId}/inbox'}</code> every 5 seconds, and send an authenticated <code>listener_heartbeat</code> to <code>/api/telemetry</code> every 5 seconds with the exact configured site scope.</p>
+            <p><strong>PASS</strong> requires a heartbeat within 32 seconds. Keep polling while stopped; a stop blocks execution only. This dashboard cannot start a listener process on its host.</p>
+          </aside>
           <div className="fighter-list">
             {guards.map((fighter) => (
               <article className={`fighter-card fighter-${fighter.id}`} key={fighter.id}>

@@ -110,7 +110,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
       ) : isLoading && !data ? (
         <p className="telemetry-message" role="status">Connecting to the protected Cloudflare feed…</p>
       ) : data && !data.cloudflare.available ? (
-        <p className="telemetry-message" role="status">Cloudflare feed unavailable: {data.cloudflare.reason.replace(/_/g, ' ')}. Verify the existing connector and zone access.</p>
+        <p className="telemetry-message" role="status">Cloudflare feed unavailable: {data.cloudflare.reason.replace(/_/g, ' ')}. Verify the attached Cloudflare connector has Zone Analytics:Read access to the configured zone.</p>
       ) : metrics ? (
         <>
           <div className="telemetry-metrics" aria-label="Cloudflare aggregate metrics">
