@@ -66,7 +66,7 @@ export function SiteHealthPanel() {
           <span className="health-help">HTTP is the site&apos;s status code. Response time in ms means milliseconds; lower is usually faster.</span>
         </div>
       </div>
-      <p className="health-description">Cloudflare zone analytics when connected, plus a direct HTTPS check of {data?.domain ?? 'montemader.com'}. Aggregate request data only; no visitor IP history.</p>
+      <p className="health-description">Cloudflare zone analytics when connected, plus a direct HTTPS check of the configured site. Aggregate request data only; no visitor IP history.</p>
       {error ? (
         error instanceof HealthRequestError && error.status === 401 ? (
           <div className="health-auth-state" role="status">

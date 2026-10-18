@@ -28,7 +28,7 @@ export const auth = betterAuth({
         : '<p>A password reset was requested in a non-production environment.</p><p>The live reset link is intentionally omitted from preview email.</p>'
       const result = await sendOwnerEmail({
         sender: 'security',
-        subject: 'Reset your Montemader Defense Command password',
+        subject: 'Reset your account password',
         text: resetMessage,
         html: resetHtml,
         idempotencyKey: `password-reset/${createHash('sha256').update(token).digest('hex')}`,

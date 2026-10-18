@@ -227,7 +227,8 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
                 <p className="signal-age">Report {formatAge(fighter.lastSeen)} · inbox poll {formatAge(fighter.lastInboxPoll)}</p>
                 <div className="fighter-strike-row">
-                  <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped || !data?.activeAttack} aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} on montemader.com only when an active attack report is available`}>
+                  <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped || !data?.activeAttack}  aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} only when an active attack report is available`}
+>
                     {isPending ? 'Queuing…' : !data?.activeAttack ? 'Waiting for attack report' : strikeLabels[fighter.id as FighterId]}
                   </button>
                   {strikeToast?.fighterId === fighter.id && <span key={strikeToast.key} className={`strike-ack strike-ack-${strikeToast.side}`} role="status" aria-live="polite" onAnimationEnd={() => setStrikeToast(null)}>Defensive directive queued.</span>}
@@ -240,7 +241,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
 
         <section className="panel directives-panel" aria-labelledby="directives-heading">
           <div className="panel-heading"><div><p className="section-kicker">MM · DEFENSIVE PLAYBOOK</p><h2 id="directives-heading">Issue a directive</h2></div><span className="panel-sigil" aria-hidden="true">✦</span></div>
-          {operator.isMm && <p className="directive-authorization">MM is authorized to direct Ruach, Xena, and SuperBot with defensive actions for montemader.com. Choose a response and assignment below; attack-report gates and emergency stops remain in force. Nothing is queued until you submit.</p>}
+          {operator.isMm && <p className="directive-authorization">The authorized operator may direct designated responders with defensive actions for the configured site. Choose a response and assignment below; attack-report gates and emergency stops remain in force. Nothing is queued until you submit.</p>}
           <form className="directive-form" onSubmit={onRunbook}>
             <label className="control-label" htmlFor="strategy">Response</label>
             <select id="strategy" value={strategy} onChange={(event) => setStrategy(event.target.value as Strategy)} disabled={!operator.isMm || isPending}>

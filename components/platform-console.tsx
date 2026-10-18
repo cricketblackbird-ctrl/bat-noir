@@ -251,7 +251,7 @@ export function PlatformConsole() {
           <p className="map-intro">Each dropdown selection controls the text captured in column one. Missing or expired heartbeats stay visible as waiting or stale; they are never shown as live.</p>
           <div className="guide-block">
             <h4>Queue a defensive combo</h4>
-            <p>Choose one fighter to queue its assigned response for montemader.com. A queued combo is not proof that traffic was blocked; verify a completion report and edge controls separately.</p>
+            <p>Choose one fighter to queue its assigned response for the configured site. A queued combo is not proof that traffic was blocked; verify a completion report and edge controls separately.</p>
           </div>
           <div className="guide-block">
             <h4>Protect the site</h4>

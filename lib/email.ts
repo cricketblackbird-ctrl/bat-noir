@@ -66,8 +66,8 @@ export async function sendOwnerEmail(email: TransactionalEmail) {
     const { data, error } = await new Resend(apiKey).emails.send(
       {
         from: productionMail
-          ? `Montemader ${email.sender === 'alerts' ? 'Alerts' : 'Security'} <${email.sender}@${emailDomain}>`
-          : 'Montemader Preview <onboarding@resend.dev>',
+          ? `Security ${email.sender === 'alerts' ? 'Alerts' : 'Notifications'} <${email.sender}@${emailDomain}>`
+          : 'Security Preview <onboarding@resend.dev>',
         to: [routing.recipient],
         subject: email.subject,
         text: email.text,

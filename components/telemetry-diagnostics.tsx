@@ -153,7 +153,7 @@ export function TelemetryDiagnostics({ operatorName }: { operatorName: string })
       <div className="diagnostics-shell">
         <header className="diagnostics-header">
           <a className="diagnostics-back" href="/" aria-label="Back to dashboard"><ArrowLeft aria-hidden="true" /> Dashboard</a>
-          <span className="diagnostics-brand"><span aria-hidden="true">MM</span> MONTEMADER</span>
+          <span className="diagnostics-brand"><span aria-hidden="true">SC</span> SECURITY CONSOLE</span>
         </header>
 
         <section className="diagnostics-hero" aria-labelledby="diagnostics-title">

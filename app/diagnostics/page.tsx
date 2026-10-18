@@ -7,8 +7,8 @@ import { auth } from '@/lib/auth'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Telemetry Diagnostics · Montemader',
-  description: 'Authenticated connection checks for Montemader security and telemetry endpoints.',
+  title: 'Telemetry Diagnostics',
+  description: 'Authenticated connection checks for security and telemetry endpoints.',
 }
 
 export default async function DiagnosticsPage() {
