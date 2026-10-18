@@ -524,6 +524,20 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .mail-sorter-remove { flex: 0 0 auto; border: 0; padding: 4px; background: transparent; color: #c7a5c4; cursor: pointer; font-size: 9px; text-decoration: underline; }
 .mail-sorter-footer { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 3px; border-top: 1px solid #412850; padding-top: 10px; color: #b8a3c5; font-size: 11px; }
 .mail-sorter-footer span:last-child { color: #34d399; font-weight: 600; }
+.credential-scope-audit { display: grid; gap: 16px; margin-top: 16px; border: 1px solid #412850; border-radius: 14px; padding: clamp(18px, 4vw, 32px); background: linear-gradient(145deg, #1b1023, #100b16); box-shadow: 0 16px 40px rgb(0 0 0 / 38%); color: #f7f0f9; }
+.credential-scope-header { border-bottom: 1px solid #412850; padding-bottom: 14px; }
+.credential-scope-header h2 { margin: 0; font-size: clamp(18px, 3vw, 23px); font-weight: 700; }
+.credential-scope-kicker { margin: 0 0 6px; color: #34d399; font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+.credential-scope-notice { border-left: 4px solid #fbbf24; border-radius: 0 10px 10px 0; padding: 14px 16px; background: #09050d; color: #e2d4e8; font-size: 13px; line-height: 1.6; }
+.credential-scope-notice strong { color: #fcd34d; }
+.credential-scope-list h3 { margin: 0 0 8px; color: #c084fc; font-size: 15px; }
+.credential-scope-list ul { display: grid; gap: 10px; margin: 0; padding-left: 20px; color: #b8a3c5; font-size: 13px; line-height: 1.6; }
+.credential-scope-list li { padding-left: 3px; }
+.credential-scope-list li span { display: block; }
+.credential-scope-list code { color: #34d399; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.credential-scope-list li strong { color: #f7f0f9; }
+.credential-scope-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid #412850; padding-top: 12px; color: #b8a3c5; font-size: 11px; }
+.credential-scope-status { color: #fcd34d; font-weight: 600; }
 
 @media (max-width: 760px) {
   .mail-sorter-workspace { grid-template-columns: minmax(0, 1fr); }
