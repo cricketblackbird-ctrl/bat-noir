@@ -16,6 +16,14 @@ export async function POST(request: Request) {
       return Response.json({ message: 'Account setup is unavailable.' }, { status: 403 })
     }
 
+    const body = await request.clone().json().catch(() => null)
+    const email = body && typeof body === 'object' && 'email' in body && typeof body.email === 'string'
+      ? body.email.trim().toLowerCase()
+      : ''
+    if (!email.endsWith('@cricketblackbird.com')) {
+      return Response.json({ message: 'Use an @cricketblackbird.com email address.' }, { status: 400 })
+    }
+
     const [accountCount] = await db.select({ total: count() }).from(user)
     if ((accountCount?.total ?? 0) > 0) {
       return Response.json({ message: 'Initial account setup is closed.' }, { status: 403 })
