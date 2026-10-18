@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { dragonTelemetryRecords } from '@/lib/db/schema'
 import { readJsonBody } from '@/lib/read-json-body'
 import { SITE_SCOPE } from '@/lib/site-scope'
+import { verifyIncomingOidcToken } from '@/lib/verify-oidc'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -32,7 +33,13 @@ export async function POST(request: Request) {
   const rawDragonId = typeof value.dragonId === 'string' ? value.dragonId.toLowerCase() : ''
   const fighterId = normalizeFighterId(rawDragonId)
   if (!fighterId) return telemetryJson({ error: 'Unknown fighter' }, 400)
-  if (authorizeFighter(request, rawDragonId) !== fighterId) return telemetryJson({ error: 'Unauthorized' }, 401)
+  if (authorizeFighter(request, rawDragonId) !== fighterId) {
+    try {
+      await verifyIncomingOidcToken(request.headers.get('authorization'))
+    } catch {
+      return telemetryJson({ error: 'Unauthorized' }, 401)
+    }
+  }
   if (value.siteScope !== SITE_SCOPE) return telemetryJson({ error: `Telemetry must be scoped to ${SITE_SCOPE}` }, 403)
 
   const eventType = typeof value.eventType === 'string' ? value.eventType.trim().toLowerCase() : ''
