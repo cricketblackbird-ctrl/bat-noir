@@ -1,6 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
+import { Activity, LockKeyhole, Network, Shield, Terminal } from 'lucide-react'
 import { DnsHistoryPanel } from '@/components/dns-history-panel'
 
 type FighterHeartbeat = {
@@ -96,20 +97,56 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
       </div>
 
       <section className="origin-isolation-card" aria-labelledby="origin-isolation-heading">
-        <div className="origin-isolation-heading">
-          <div>
-            <p className="section-kicker">ORIGIN PRIVACY · TUNNEL STATUS</p>
-            <h3 id="origin-isolation-heading">Origin isolation is not verified</h3>
+        <header className="origin-isolation-topbar">
+          <div className="origin-isolation-brand">
+            <span className="origin-isolation-icon" aria-hidden="true"><Network /></span>
+            <div>
+              <p className="section-kicker">MONTEMADER.COM · ORIGIN CONTROL</p>
+              <h3 id="origin-isolation-heading">Cloudflare Tunnel <code>cloudflared</code></h3>
+              <p className="origin-isolation-subtitle">Origin isolation: <strong>unverified</strong> · no tunnel health source connected</p>
+            </div>
           </div>
-          <span className="origin-isolation-state"><span aria-hidden="true" />Not configured</span>
-        </div>
-        <p className="origin-isolation-description">This app runs on Vercel&apos;s serverless runtime. No persistent <code>cloudflared</code> connector or origin firewall state is available to this dashboard, so it cannot confirm that a server origin IP is hidden or unreachable.</p>
+          <span className="origin-isolation-state"><span aria-hidden="true" />Tunnel not connected</span>
+        </header>
+
         <div className="origin-isolation-metrics">
-          <article><span>Cloudflare Tunnel</span><strong>Not detected</strong><small>No connector health source is configured</small></article>
-          <article><span>Origin reachability</span><strong>Unverified</strong><small>No origin network policy is reported here</small></article>
-          <article><span>Dashboard data</span><strong>Aggregated</strong><small>Cloudflare feed omits raw visitor IPs</small></article>
+          <article>
+            <span>Connector health</span>
+            <strong>Not reported</strong>
+            <small>No persistent <code>cloudflared</code> health source</small>
+          </article>
+          <article>
+            <span>Origin exposure</span>
+            <strong>Unverified</strong>
+            <small>No origin firewall state available to this app</small>
+          </article>
+          <article>
+            <span>Cloudflare edge feed</span>
+            <strong className={metrics ? 'is-feed-connected' : 'is-feed-unavailable'}>{metrics ? 'Connected' : isLoading ? 'Connecting' : 'Unavailable'}</strong>
+            <small>Aggregate security metrics only</small>
+          </article>
         </div>
-        <p className="origin-isolation-caveat">A tunnel must run on a persistent origin host; it cannot run as a long-lived process inside this Vercel deployment. To isolate a separate origin, route it through a Cloudflare Tunnel and restrict direct origin access. This dashboard status is informational—not proof that the origin is protected.</p>
+
+        <section className="origin-diagnostics" aria-labelledby="origin-diagnostics-heading">
+          <header className="origin-diagnostics-heading">
+            <div className="origin-diagnostics-title">
+              <Terminal aria-hidden="true" />
+              <div>
+                <h4 id="origin-diagnostics-heading">Tunnel diagnostics</h4>
+                <p>Connection telemetry · not a live daemon log</p>
+              </div>
+            </div>
+            <span className="origin-diagnostics-state"><Activity aria-hidden="true" />No connector telemetry</span>
+          </header>
+          <div className="origin-diagnostics-log" role="group" aria-label="Tunnel diagnostic status">
+            <p><span>[INFO]</span> No Cloudflare Tunnel connector is reporting to this dashboard.</p>
+            <p><span>[INFO]</span> This dashboard runs on Vercel and does not host a persistent <code>cloudflared</code> daemon.</p>
+            <p><span>[WARN]</span> Origin IP visibility and inbound firewall rules cannot be verified here.</p>
+            <p><span>[DATA]</span> Cloudflare edge feed: {metrics ? 'aggregate metrics received; raw visitor IPs are not displayed.' : 'no current aggregate metrics available.'}</p>
+          </div>
+        </section>
+
+        <p className="origin-isolation-caveat"><LockKeyhole aria-hidden="true" /> This status is informational—not proof that the origin is hidden. A separate persistent origin must run the tunnel and restrict direct access; no tunnel or firewall configuration was changed.</p>
       </section>
 
       <p className="telemetry-description">Live data from the connected Cloudflare zone, alongside verified operations heartbeats. This view shows aggregate security details only—not visitor IP addresses or per-person histories.</p>

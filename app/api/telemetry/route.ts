@@ -1,5 +1,4 @@
 import { randomInt, timingSafeEqual } from 'node:crypto'
-import { isIP } from 'node:net'
 import { sql } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { authorizeFighter, fighterStorageId, normalizeFighterId } from '@/lib/bot-auth'
@@ -60,9 +59,6 @@ export async function POST(request: Request) {
   const actionType = typeof value.actionType === 'string' ? value.actionType : eventType
   const threatSignature = typeof value.threatSignature === 'string' ? value.threatSignature : ''
   const status = typeof value.status === 'string' ? value.status : 'ACTIVE'
-  const forwardedIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  const suppliedIp = typeof value.clientIp === 'string' ? value.clientIp.trim() : ''
-  const clientIp = forwardedIp && isIP(forwardedIp) ? forwardedIp : suppliedIp && isIP(suppliedIp) ? suppliedIp : ''
   const nodeId = typeof value.nodeId === 'string'
     ? value.nodeId.replace(/[\u0000-\u001f\u007f]/g, '').trim()
     : ''
@@ -87,7 +83,6 @@ export async function POST(request: Request) {
     status: status.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 40),
   }
   if (threatSignature) boundedMetadata.threatSignature = threatSignature.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 120)
-  if (clientIp) boundedMetadata.clientIp = clientIp
   Object.assign(payload, boundedMetadata)
   if (value.payload && typeof value.payload === 'object' && !Array.isArray(value.payload)) {
     for (const key of allowedPayloadKeys) {

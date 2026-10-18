@@ -12,6 +12,7 @@ type DnsHistoryItem = {
   source: string
   status: string
   answers: DnsAnswer[]
+  redactedAddressCount: number
   error: string | null
 }
 type DnsSnapshot = { hostname: string; enabled: boolean; updatedAt: string | null; history: DnsHistoryItem[] }
@@ -95,7 +96,7 @@ export function DnsHistoryPanel() {
         </button>
       </div>
 
-      <p className="dns-history-explanation">When on, this panel checks DNS answers about once a minute while the dashboard is open. It stores the A and nameserver results—not WAF visitor IPs—and never changes your DNS or firewall settings.</p>
+      <p className="dns-history-explanation">When on, this panel checks DNS about once a minute while the dashboard is open. A-record addresses stay server-side and are withheld from browser responses; nameserver results remain visible. This does not change your DNS or firewall settings.</p>
 
       {error ? (
         <p className="dns-history-state" role="alert">DNS history is unavailable. Check your signed-in operator access and try again.</p>
@@ -114,9 +115,11 @@ export function DnsHistoryPanel() {
                 <time dateTime={item.observedAt}>{formatTime(item.observedAt)}</time>
                 <span className={`dns-history-result is-${item.status}`}>{item.status}</span>
                 <div className="dns-history-answers">
-                  {item.answers.length ? item.answers.map((answer) => (
+                  {item.redactedAddressCount > 0 && <span><b>A</b> {item.redactedAddressCount} address{item.redactedAddressCount === 1 ? '' : 'es'} withheld</span>}
+                  {item.answers.map((answer) => (
                     <span key={`${answer.type}-${answer.value}`}><b>{answer.type}</b> {answer.value}{answer.ttl ? ` · TTL ${answer.ttl}s` : ''}</span>
-                  )) : <span>{item.error ?? 'No DNS answers returned.'}</span>}
+                  ))}
+                  {!item.redactedAddressCount && item.answers.length === 0 && <span>{item.error ?? 'No DNS answers returned.'}</span>}
                 </div>
               </li>
             )) : <li className="dns-history-empty">No checks yet. Turn capture on to start a timestamped history.</li>}

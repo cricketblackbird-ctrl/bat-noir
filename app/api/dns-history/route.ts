@@ -101,7 +101,16 @@ export async function GET() {
       .limit(30),
   ])
 
-  return json({ hostname, enabled: setting[0]?.enabled ?? false, updatedAt: setting[0]?.updatedAt ?? null, history })
+  return json({
+    hostname,
+    enabled: setting[0]?.enabled ?? false,
+    updatedAt: setting[0]?.updatedAt ?? null,
+    history: history.map(({ answers, ...item }) => ({
+      ...item,
+      redactedAddressCount: answers.filter((answer) => answer.type === 'A').length,
+      answers: answers.filter((answer) => answer.type !== 'A'),
+    })),
+  })
 }
 
 export async function POST(request: Request) {

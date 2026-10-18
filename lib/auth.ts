@@ -67,14 +67,15 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
   },
-  ...(process.env.NODE_ENV === 'development'
-    ? {
-        advanced: {
+  advanced: {
+    ipAddress: { disableIpTracking: true },
+    ...(process.env.NODE_ENV === 'development'
+      ? {
           defaultCookieAttributes: {
             sameSite: 'none' as const,
             secure: true,
           },
-        },
-      }
-    : {}),
+        }
+      : {}),
+  },
 })
