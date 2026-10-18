@@ -67,6 +67,15 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
     dedupingInterval: 10_000,
   })
   const metrics = data?.cloudflare.available ? data.cloudflare.metrics : null
+  const feedStatus = error
+    ? 'REQUEST FAILED'
+    : isLoading && !data
+      ? 'CONNECTING'
+      : !data
+        ? 'STATUS UNKNOWN'
+        : !data.cloudflare.available
+          ? `OFFLINE · ${data.cloudflare.reason.replace(/_/g, ' ')}`
+          : 'LIVE · ACTIVE DATA RECON'
 
   return (
     <section className="panel telemetry-panel" aria-labelledby="telemetry-heading">
@@ -76,8 +85,8 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
           <h2 id="telemetry-heading">Cloudflare security telemetry</h2>
         </div>
         <div className="telemetry-controls">
-          <span className={`telemetry-feed-state ${metrics ? 'is-connected' : ''}`} role="status">
-            <span aria-hidden="true" />{error ? 'Feed unavailable' : isLoading ? 'Connecting' : metrics ? 'Cloudflare connected' : 'Waiting for feed'}
+          <span className={`telemetry-feed-state ${metrics ? 'is-connected' : data?.cloudflare.available === false ? 'is-offline' : ''}`} role="status">
+            <span aria-hidden="true" />{feedStatus}
           </span>
           <button className="telemetry-refresh" type="button" onClick={() => void mutate()} disabled={isValidating}>
             {isValidating ? 'Refreshing…' : 'Refresh data'}
@@ -131,8 +140,8 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
             </section>
           </div>
 
-          {data.activeIncident && <p className="telemetry-incident"><strong>Active incident:</strong> {data.activeIncident.blockedCount.toLocaleString()} blocked or challenged requests; detected {formatCapturedAt(data.activeIncident.detectedAt)}.</p>}
-          <p className="telemetry-updated">Cloudflare snapshot captured {formatCapturedAt(data.capturedAt)} · refreshes automatically every 30 seconds.</p>
+          {data?.activeIncident && <p className="telemetry-incident"><strong>Active incident:</strong> {data.activeIncident.blockedCount.toLocaleString()} blocked or challenged requests; detected {formatCapturedAt(data.activeIncident.detectedAt)}.</p>}
+          <p className="telemetry-updated">Cloudflare snapshot captured {data ? formatCapturedAt(data.capturedAt) : 'time unavailable'} · refreshes automatically every 30 seconds.</p>
         </>
       ) : null}
 

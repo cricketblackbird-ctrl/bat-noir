@@ -113,13 +113,13 @@ export function SiteHealthPanel() {
             </>}
           </div>
           <section className="health-live-feed" aria-labelledby="health-live-feed-heading">
-            <div className="health-live-feed-heading"><h3 id="health-live-feed-heading">Cloudflare activity feed</h3><span className={`health-feed-live ${data.cloudflare.available ? '' : 'is-unavailable'}`}><span aria-hidden="true" />{data.cloudflare.available ? 'LIVE · aggregated · last 60s' : 'UNAVAILABLE'}</span></div>
+            <div className="health-live-feed-heading"><h3 id="health-live-feed-heading">Cloudflare activity feed</h3><span className={`health-feed-live ${data.cloudflare.available ? '' : 'is-unavailable'}`} role="status"><span aria-hidden="true" />{data.cloudflare.available ? 'LIVE · aggregated · last 60s' : `OFFLINE · ${data.cloudflare.reason.replace(/_/g, ' ')}`}</span></div>
             {data.cloudflare.available ? data.cloudflare.metrics.firewallActions.length > 0 ? (
               <ul className="health-live-feed-list">{data.cloudflare.metrics.firewallActions.map((event) => <li key={`${event.action}-${event.source}`}><span>{event.action.replace(/_/g, ' ')} · {event.source.replace(/_/g, ' ')}</span><strong>{event.count.toLocaleString()}</strong></li>)}</ul>
             ) : (
               <p className="health-feed-empty">No firewall events reported in the last 60 seconds.</p>
             ) : (
-              <p className="health-feed-empty">Restore Cloudflare access to see aggregate firewall activity here.</p>
+              <p className="health-feed-empty">Cloudflare activity is offline: {cloudflareIssueMessage(data.cloudflare.reason)}</p>
             )}
             <p className="health-feed-updated">{data.cloudflare.available ? 'Updated' : 'Checked'} {formatCentralTime(data.capturedAt)} · refreshes every 30 seconds</p>
           </section>
@@ -135,7 +135,7 @@ export function SiteHealthPanel() {
           {data.activeIncident && <p className="health-incident"><strong>Active incident:</strong> detected {formatCentralDateTime(data.activeIncident.detectedAt)} · {data.activeIncident.blockedCount.toLocaleString()} recent blocked/challenged requests.</p>}
         </>
       )}
-      <p className="health-caveat">The alert is based on Cloudflare-reported blocked/challenged events, not proof of attacker identity. Defensive containment is only Cloudflare’s existing edge action; this dashboard does not retaliate or destroy systems.</p>
+      <p className="health-caveat">The alert is based on Cloudflare-reported blocked/challenged events, not proof of attacker identity. Defensive containment is only Cloudflare’s existing edge action.</p>
     </section>
   )
 }

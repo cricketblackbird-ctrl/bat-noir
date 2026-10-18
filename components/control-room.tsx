@@ -193,13 +193,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
   return (
     <main className="command-page">
       <header className="topbar">
-        <div className="brand-lockup">
-          <span className="brand-mm-mark" aria-hidden="true">MM</span>
-          <div>
-            <h1 className="brand-name">Montemader.com</h1>
-            <p className="brand-subtitle">DEFENSE COMMAND GRID</p>
-          </div>
-        </div>
+        <a className="website-destination-link" href="https://montemader.com" target="_blank" rel="noopener noreferrer">Go to my website <span aria-hidden="true">↗</span></a>
         <div className="topbar-right">
           <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
         </div>
@@ -259,7 +253,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
               return <button key={id} className={`stop-button stop-${id}${stopped ? ' stop-active' : ''}`} type="button" onClick={() => onStop(id, !stopped)} disabled={!operator.isMm || isPending} aria-pressed={stopped}>{stopped ? `Release ${id === 'all' ? 'all' : id === 'xena' ? 'Xena' : id === 'superbot' ? 'SuperBot' : 'Ruach'}` : label}</button>
             })}
           </div></div>
-          <p className="stop-caveat">A stop blocks new queued actions only; it does not terminate a running process or stop an offline bot. Keep polling MM while stopped. Defensive controls never authorize retaliation against third-party systems.</p>
+          <p className="stop-caveat">A stop blocks new queued actions only; it does not terminate a running process or stop an offline bot. Keep polling MM while stopped.</p>
           {feedback && <p className="action-feedback" role="status">{feedback}</p>}
         </section>
 
