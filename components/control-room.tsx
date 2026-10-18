@@ -2,7 +2,7 @@
 
 import { Shield } from 'lucide-react'
 import dynamic from 'next/dynamic'
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { FormEvent, KeyboardEvent, PointerEvent, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
@@ -120,6 +120,10 @@ function GuardianStatusWidget({ fighters, isLoading, hasError }: { fighters: Fig
   const pausedCount = fighters.filter((fighter) => fighter.stopped).length
   const allLive = !isLoading && !hasError && liveCount === 3
   const isHealthy = allLive && pausedCount === 0
+  const [isFloating, setIsFloating] = useState(false)
+  const [floatingPosition, setFloatingPosition] = useState({ left: 16, top: 96 })
+  const widgetRef = useRef<HTMLElement>(null)
+  const dragRef = useRef<{ pointerId: number; pointerX: number; pointerY: number; left: number; top: number } | null>(null)
   const heading = hasError
     ? 'Guardian reports unavailable'
     : isLoading
@@ -135,10 +139,72 @@ function GuardianStatusWidget({ fighters, isLoading, hasError }: { fighters: Fig
     ? 'Checking authenticated heartbeat status'
     : `${liveCount} of 3 listeners live${pausedCount > 0 ? ` · ${pausedCount} execution${pausedCount === 1 ? '' : 's'} paused` : ''}`
 
+  function clampPosition(left: number, top: number) {
+    const bounds = widgetRef.current?.getBoundingClientRect()
+    const maxLeft = Math.max(8, window.innerWidth - (bounds?.width ?? 360) - 8)
+    const maxTop = Math.max(8, window.innerHeight - (bounds?.height ?? 100) - 8)
+    return { left: Math.min(maxLeft, Math.max(8, left)), top: Math.min(maxTop, Math.max(8, top)) }
+  }
+
+  function toggleFloating() {
+    if (isFloating) {
+      setIsFloating(false)
+      return
+    }
+    const bounds = widgetRef.current?.getBoundingClientRect()
+    setFloatingPosition(clampPosition(bounds?.left ?? 16, bounds?.top ?? 96))
+    setIsFloating(true)
+  }
+
+  function handleMoveStart(event: PointerEvent<HTMLButtonElement>) {
+    if (!isFloating) return
+    event.preventDefault()
+    const bounds = widgetRef.current?.getBoundingClientRect()
+    dragRef.current = {
+      pointerId: event.pointerId,
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      left: bounds?.left ?? floatingPosition.left,
+      top: bounds?.top ?? floatingPosition.top,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  function handleMove(event: PointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    setFloatingPosition(clampPosition(drag.left + event.clientX - drag.pointerX, drag.top + event.clientY - drag.pointerY))
+  }
+
+  function handleMoveEnd(event: PointerEvent<HTMLButtonElement>) {
+    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null
+  }
+
+  function handleMoveKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    const offsets: Record<string, [number, number]> = {
+      ArrowUp: [0, -16], ArrowDown: [0, 16], ArrowLeft: [-16, 0], ArrowRight: [16, 0],
+    }
+    const offset = offsets[event.key]
+    if (!offset || !isFloating) return
+    event.preventDefault()
+    setFloatingPosition(clampPosition(floatingPosition.left + offset[0], floatingPosition.top + offset[1]))
+  }
+
   return (
-    <aside className={`guardian-status-widget${isHealthy ? ' is-live' : ' is-attention'}`} role="status" aria-live="polite" aria-label={`${heading}. ${detail}.`}>
+    <aside
+      ref={widgetRef}
+      className={`guardian-status-widget${isHealthy ? ' is-live' : ' is-attention'}${isFloating ? ' is-floating' : ''}`}
+      style={isFloating ? { left: floatingPosition.left, top: floatingPosition.top } : undefined}
+      role="status"
+      aria-live="polite"
+      aria-label={`${heading}. ${detail}.`}
+    >
       <span className="guardian-status-mark" aria-hidden="true"><Shield /><span className="guardian-status-light" /></span>
       <div className="guardian-status-copy"><strong>{heading}</strong><p>{detail}. Heartbeat monitoring continues while stopped.</p></div>
+      <div className="guardian-status-actions">
+        {isFloating && <button className="guardian-status-move" type="button" aria-label="Move guardian status panel; use arrow keys to reposition" title="Drag to move, or use arrow keys" onPointerDown={handleMoveStart} onPointerMove={handleMove} onPointerUp={handleMoveEnd} onPointerCancel={handleMoveEnd} onLostPointerCapture={handleMoveEnd} onKeyDown={handleMoveKeyDown}>Move</button>}
+        <button className="guardian-status-toggle" type="button" onClick={toggleFloating} aria-label={isFloating ? 'Place guardian status panel in the page' : 'Float guardian status panel'}>{isFloating ? 'Dock' : 'Float'}</button>
+      </div>
     </aside>
   )
 }
@@ -274,6 +340,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <div className="control-grid dashboard-grid">
         <section className="panel fighter-panel" aria-labelledby="fighters-heading">
           <div className="panel-heading"><div><p className="section-kicker">THREE GUARDIANS · SEPARATE STRENGTHS</p><h2 id="fighters-heading">Fighter status</h2></div><span className="report-count">{recentSignals} with recent signals</span></div>
+          <GuardianStatusWidget fighters={guards} isLoading={!data && !error} hasError={Boolean(error)} />
           <aside className="guardian-startup" aria-label="Guardian startup and heartbeat requirements">
             <h3>Wake-up + heartbeat requirements</h3>
             <p>Run each listener with its own server-side credential: Ruach <code>DRAGON_RUACH_TOKEN</code>, Xena <code>DRAGON_XENA_TOKEN</code>, SuperBot <code>DRAGON_SUPERBOT_TOKEN</code>.</p>
@@ -388,7 +455,6 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         <span className="footer-thread footer-thread-right" aria-hidden="true" />
         <span className="footer-star footer-star-right" aria-hidden="true">★</span>
       </footer>
-      <GuardianStatusWidget fighters={guards} isLoading={!data && !error} hasError={Boolean(error)} />
     </main>
   )
 }
