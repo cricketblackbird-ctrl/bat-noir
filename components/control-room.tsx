@@ -71,7 +71,6 @@ const stopTargets: Array<{ id: StopTarget; label: string; flag: keyof NonNullabl
   { id: 'ruach', label: 'Stop Ruach', flag: 'stopRuach' },
   { id: 'xena', label: 'Stop Xena', flag: 'stopXena' },
   { id: 'superbot', label: 'Stop SuperBot', flag: 'stopSuperbot' },
-  { id: 'all', label: 'Stop all', flag: 'stopAll' },
 ]
 
 const strategyNames: Record<Strategy, string> = {
@@ -249,6 +248,9 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <a className="website-destination-link" href="/rules">Rules &amp; reports</a>
           <a className="website-destination-link" href="/diagnostics">Connection diagnostics</a>
           <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
+          <button className={`stop-button stop-all topbar-stop-all${stoppedAll ? ' stop-active' : ''}`} type="button" onClick={() => onStop('all', !stoppedAll)} disabled={!operator.isMm || isPending} aria-pressed={stoppedAll} aria-label={stoppedAll ? 'Release global guardian stop' : 'Guardian all stop: immediately block new queued actions for all assigned guardians'} title="STOP-ALL immediately blocks new queued actions for all assigned guardians; already-running processes continue.">
+            {stoppedAll ? 'RELEASE ALL STOP' : 'GUARDIAN ALL STOP'}
+          </button>
         </div>
       </header>
 
@@ -313,10 +315,10 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
             {formation === 'all_three' && !data?.activeAttack ? <p className="attack-gate-status" role="status">All-guardian directives unlock only after this site receives an authenticated guardian <code>hit</code> report; the report expires after 60 seconds. Heartbeats do not count.</p> : <button className="button button-primary issue-button" type="submit" disabled={!operator.isMm || isPending || stoppedAll}>{isPending ? 'Updating…' : stoppedAll ? 'All fighters stopped' : 'PROTECT THIS SITE'}</button>}
           </form>
           <p className="directive-note">The default assignment uses all 3 defenders. Every defensive directive requires a fresh authenticated attack report and stops are respected. Directives queue to the authenticated bot inboxes; they do not block traffic or terminate an invasion by themselves.</p>
-          <div className="stop-block"><div className="stop-heading"><p className="section-kicker">MM · EMERGENCY OVERRIDE</p><span>{stoppedAll ? 'GLOBAL STOP ACTIVE' : 'Four stop controls'}</span></div><div className="stop-grid">
+          <div className="stop-block"><div className="stop-heading"><p className="section-kicker">MM · EMERGENCY OVERRIDE</p><span>{stoppedAll ? 'GLOBAL STOP ACTIVE' : 'Three individual stops'}</span></div><div className="stop-grid">
             {stopTargets.map(({ id, label, flag }) => {
               const stopped = Boolean(data?.stops[flag])
-              return <button key={id} className={`stop-button stop-${id}${stopped ? ' stop-active' : ''}`} type="button" onClick={() => onStop(id, !stopped)} disabled={!operator.isMm || isPending} aria-pressed={stopped}>{stopped ? id === 'all' ? 'RELEASE STOP' : `Release ${id === 'xena' ? 'Xena' : id === 'superbot' ? 'SuperBot' : 'Ruach'}` : id === 'all' ? <>GUARDIAN<br />STOP!</> : label}</button>
+              return <button key={id} className={`stop-button stop-${id}${stopped ? ' stop-active' : ''}`} type="button" onClick={() => onStop(id, !stopped)} disabled={!operator.isMm || isPending} aria-pressed={stopped}>{stopped ? `Release ${id === 'xena' ? 'Xena' : id === 'superbot' ? 'SuperBot' : 'Ruach'}` : label}</button>
             })}
           </div></div>
           <p className="stop-caveat">A stop blocks new queued actions only; it does not terminate a running process or stop an offline bot. Keep polling MM while stopped.</p>
