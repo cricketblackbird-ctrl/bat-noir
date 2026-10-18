@@ -23,6 +23,15 @@ type DiagnosticsSnapshot = {
 
 type EndpointPayload = {
   error?: string
+  success?: boolean
+  status?: number | null
+  target?: string
+  data?: {
+    domain?: string
+    capturedAt?: string
+    site?: { ok?: boolean; statusCode?: number | null; latencyMs?: number | null } | null
+    cloudflare?: { available?: boolean; reason?: string } | null
+  }
   site?: { ok?: boolean; statusCode?: number | null }
   cloudflare?: { available?: boolean; reason?: string }
   fighters?: Array<{ name?: string; listenerStatus?: string }>
@@ -37,6 +46,7 @@ const targets = [
   { id: 'security', title: 'Website security & Cloudflare', route: '/api/security/health' },
   { id: 'operations', title: 'Operations telemetry', route: '/api/operations' },
   { id: 'insights', title: 'Aggregate visit insights', route: '/api/magic-dragons' },
+  { id: 'preview', title: 'Protected preview deployment', route: '/api/internal-probe' },
 ]
 
 async function getProbe(target: (typeof targets)[number]): Promise<Probe> {
@@ -59,6 +69,26 @@ async function getProbe(target: (typeof targets)[number]): Promise<Probe> {
         cloudflareAvailable ? 'Cloudflare analytics: connected' : `Cloudflare analytics: ${String(payload.cloudflare?.reason ?? 'unavailable').replace(/_/g, ' ')}`,
       ]
       return { ...target, state: cloudflareAvailable && siteReachable ? 'online' : 'attention', httpStatus: response.status, summary: cloudflareAvailable && siteReachable ? 'Live site and Cloudflare checks responded.' : 'The route responded; one or more upstream checks need attention.', details, checkedAt }
+    }
+
+    if (target.id === 'preview') {
+      const site = payload.data?.site
+      const cloudflare = payload.data?.cloudflare
+      const isVerified = payload.success === true
+      const details = [
+        `Protected preview response: HTTP ${payload.status ?? 'unavailable'}`,
+        `Website check: ${site?.ok ? 'reachable' : 'unavailable'}${site?.statusCode ? ` · HTTP ${site.statusCode}` : ''}`,
+        `Cloudflare analytics: ${cloudflare?.available ? 'connected' : String(cloudflare?.reason ?? 'unavailable').replace(/_/g, ' ')}`,
+        `Target: ${payload.target ?? 'project preview'}`,
+      ]
+      return {
+        ...target,
+        state: isVerified ? 'online' : payload.status === 401 ? 'attention' : 'unreachable',
+        httpStatus: payload.status ?? response.status,
+        summary: isVerified ? 'Server-side probe passed Vercel protection and read the signed-in preview health endpoint.' : payload.error ?? 'Protected preview health check did not complete.',
+        details,
+        checkedAt,
+      }
     }
 
     if (target.id === 'operations') {
@@ -144,7 +174,7 @@ export function TelemetryDiagnostics({ operatorName }: { operatorName: string })
           <div className="diagnostics-overview-copy">
             <span>Authenticated session</span>
             <strong>{error ? 'Live checks could not complete' : isLoading && !data ? 'Running endpoint checks…' : allVerified ? 'All endpoints verified' : 'Session verified · endpoint attention'}</strong>
-            <small>Server-verified session for {operatorName} · session required by all three API routes</small>
+            <small>Server-verified session for {operatorName} · required by each checked endpoint</small>
           </div>
           <div className={`diagnostics-count${allVerified ? ' is-good' : ''}`}>
             <strong>{verifiedCount}<span> / {targets.length}</span></strong>
