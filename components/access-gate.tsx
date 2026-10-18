@@ -125,7 +125,6 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
                   ? 'Choose a new password for your account.'
                   : 'Good to have you back.'}
           </p>
-          <p className="auth-privacy-notice">Site health uses aggregate Cloudflare request analytics and a direct HTTPS check. No visitor IP history is stored.</p>
 
           {!isChoosingPassword && (
             <div className="auth-tabs" role="tablist" aria-label="Account access">
