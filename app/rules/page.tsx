@@ -16,5 +16,5 @@ export default async function RulesPage() {
   if (!session?.user) redirect('/')
   const isMm = await claimOrReadMmAuthority(session.user.id)
 
-  return <DragonRulesPage operator={{ name: session.user.name, isMm }} />
+  return <DragonRulesPage operator={{ isMm }} />
 }

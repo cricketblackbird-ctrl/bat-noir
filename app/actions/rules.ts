@@ -7,7 +7,10 @@ import { dragonRuleRevisions } from '@/lib/db/schema'
 import { requireMm } from '@/lib/operator'
 import { SITE_SCOPE } from '@/lib/site-scope'
 
-function decodeRules(value: string) {
+function decodeRules(value: unknown): string[] {
+  if (Array.isArray(value) && value.every((item) => typeof item === 'string')) return value
+  if (typeof value !== 'string') return []
+
   try {
     const parsed: unknown = JSON.parse(value)
     if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) return parsed
@@ -27,9 +30,6 @@ export async function appendRule(input: { rule: string }) {
       id: dragonRuleRevisions.id,
       revision: dragonRuleRevisions.revision,
       rules: dragonRuleRevisions.rules,
-      cooperativeAssignment: dragonRuleRevisions.cooperativeAssignment,
-      groundRuach: dragonRuleRevisions.groundRuach,
-      groundXena: dragonRuleRevisions.groundXena,
     }).from(dragonRuleRevisions)
       .where(eq(dragonRuleRevisions.siteScope, SITE_SCOPE))
       .orderBy(desc(dragonRuleRevisions.revision))
@@ -44,10 +44,7 @@ export async function appendRule(input: { rule: string }) {
       id: Number(idRow?.nextId ?? 1),
       siteScope: SITE_SCOPE,
       revision: (latest?.revision ?? 0) + 1,
-      rules: JSON.stringify([...rules, rule]),
-      cooperativeAssignment: latest?.cooperativeAssignment ?? true,
-      groundRuach: latest?.groundRuach ?? false,
-      groundXena: latest?.groundXena ?? false,
+      rules: [...rules, rule],
       createdBy: operator.id,
     }).returning({ id: dragonRuleRevisions.id, revision: dragonRuleRevisions.revision, rules: dragonRuleRevisions.rules, createdAt: dragonRuleRevisions.createdAt })
   })

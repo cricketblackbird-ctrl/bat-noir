@@ -139,7 +139,7 @@ function StateIcon({ state }: { state: ProbeState }) {
   return <CircleAlert aria-hidden="true" />
 }
 
-export function TelemetryDiagnostics({ operatorName }: { operatorName: string }) {
+export function TelemetryDiagnostics() {
   const { data, error, isLoading, mutate } = useSWR<DiagnosticsSnapshot>('/api/telemetry-diagnostics', fetchDiagnostics, {
     refreshInterval: 32_000,
     revalidateOnFocus: true,
@@ -174,7 +174,7 @@ export function TelemetryDiagnostics({ operatorName }: { operatorName: string })
           <div className="diagnostics-overview-copy">
             <span>Authenticated session</span>
             <strong>{error ? 'Live checks could not complete' : isLoading && !data ? 'Running endpoint checks…' : allVerified ? 'All endpoints verified' : 'Session verified · endpoint attention'}</strong>
-            <small>Server-verified session for {operatorName} · required by each checked endpoint</small>
+            <small>Server-verified session · required by each checked endpoint</small>
           </div>
           <div className={`diagnostics-count${allVerified ? ' is-good' : ''}`}>
             <strong>{verifiedCount}<span> / {targets.length}</span></strong>

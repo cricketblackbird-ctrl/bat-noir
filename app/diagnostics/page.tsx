@@ -15,5 +15,5 @@ export default async function DiagnosticsPage() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/')
 
-  return <TelemetryDiagnostics operatorName={session.user.name || 'signed-in operator'} />
+  return <TelemetryDiagnostics />
 }

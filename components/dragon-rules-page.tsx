@@ -8,7 +8,7 @@ import { authClient } from '@/lib/auth-client'
 
 type SupportKind = 'update' | 'repair' | 'source' | 'support'
 type RulesSnapshot = {
-  rules: { revision: number; rules: string[]; createdAt: string; cooperativeAssignment: boolean; groundRuach: boolean; groundXena: boolean } | null
+  rules: { revision: number; rules: string[]; createdAt: string } | null
   reports: Array<{
     id: string
     name: string
@@ -33,7 +33,7 @@ function formatTimestamp(value: string | null) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
-export function DragonRulesPage({ operator }: { operator: { name: string; isMm: boolean } }) {
+export function DragonRulesPage({ operator }: { operator: { isMm: boolean } }) {
   const { data, error, mutate } = useSWR<RulesSnapshot>('/api/operations', fetcher, { refreshInterval: 5000, revalidateOnFocus: true })
   const [draft, setDraft] = useState('')
   const [feedback, setFeedback] = useState('')
@@ -69,7 +69,6 @@ export function DragonRulesPage({ operator }: { operator: { name: string; isMm: 
           <h2 id="rules-title">Rules &amp; reports</h2>
           <p>One durable, append-only rules history. Add a rule to create a new revision; older versions stay available in Neon.</p>
           <div className="rules-meta"><span><ShieldCheck aria-hidden="true" /> {operator.isMm ? 'MM can add rules' : 'Read-only account'}</span><span>{data?.rules ? `Revision ${data.rules.revision}` : 'Loading saved revision…'}</span></div>
-          {data?.rules && <div className="rules-policy-flags" aria-label="Saved assignment policy"><span>Cooperation {data.rules.cooperativeAssignment ? 'on' : 'off'}</span><span>Ruach {data.rules.groundRuach ? 'grounded' : 'not grounded'}</span><span>Xena {data.rules.groundXena ? 'grounded' : 'not grounded'}</span></div>}
         </section>
 
         <section className="rules-section" aria-labelledby="report-title">
@@ -89,7 +88,7 @@ export function DragonRulesPage({ operator }: { operator: { name: string; isMm: 
 
         <section className="rules-section" aria-labelledby="saved-rules-title">
           <div className="rules-section-heading"><div><p className="section-kicker">SAVED IN THE APP DATABASE</p><h3 id="saved-rules-title">Current rules</h3></div>{data?.rules && <span className="rules-revision">Revision {data.rules.revision}</span>}</div>
-          {error ? <p className="rules-error" role="alert">The saved rule revision could not be loaded.</p> : <ol className="saved-rules-list">{rules.map((rule, index) => <li key={`${data?.rules?.revision ?? 0}-${index}`}><span className="saved-rule-index">{String(index + 1).padStart(2, '0')}</span><p>{rule}</p></li>)}</ol>}
+          {error ? <p className="rules-error" role="alert">The saved rule revision could not be loaded.</p> : <ul className="saved-rules-list">{rules.map((rule, index) => <li key={`${data?.rules?.revision ?? 0}-${index}`}><p>{rule}</p></li>)}</ul>}
           {data?.rules && <p className="rules-updated">Last saved {formatTimestamp(data.rules.createdAt)}</p>}
           {operator.isMm ? <form className="add-rule-form" onSubmit={addRule}>
             <label htmlFor="new-rule">Add a rule</label>
@@ -100,7 +99,7 @@ export function DragonRulesPage({ operator }: { operator: { name: string; isMm: 
         </section>
 
         <aside className="rules-safety-note"><CircleAlert aria-hidden="true" /><p><strong>Safety boundary:</strong> human takeover is independent for each bot. Ruach and Xena are limited to verified, site-scoped defensive mitigation; SuperBot can never strike. Outage recovery means safe monitoring, authorized backup, and human escalation—not irreversible or third-party action.</p></aside>
-        <p className="rules-page-footnote"><Clock3 aria-hidden="true" />{operator.name} · Rules and telemetry are scoped to this site. A saved policy records intent; it does not override the authenticated bot runtime or emergency stops.</p>
+        <p className="rules-page-footnote"><Clock3 aria-hidden="true" />Rules and telemetry are scoped to this site. A saved policy records intent; it does not override the authenticated bot runtime or emergency stops.</p>
       </div>
     </main>
   )

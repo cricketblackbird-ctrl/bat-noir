@@ -11,7 +11,7 @@ import { PlatformConsole } from '@/components/platform-console'
 import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
-const SiteHealthPanel = dynamic(() => import('@/components/site-health-panel').then((module) => module.SiteHealthPanel), { ssr: false })
+const MMLiveIndicator = dynamic(() => import('@/components/mm-live-indicator').then((module) => module.MMLiveIndicator), { ssr: false })
 
 type Fighter = {
   id: string
@@ -33,7 +33,7 @@ type Fighter = {
 }
 
 type Operations = {
-  operator: { name: string; email: string; isMm: boolean }
+  operator: { isMm: boolean }
   activeAttack: { expiresAt: string; reportCount: number; sources: Array<{ id: string; name: string }> } | null
   fighters: Fighter[]
   stops: { stopRuach?: boolean; stopXena?: boolean; stopSuperbot?: boolean; stopAll?: boolean; updatedAt?: string | null }
@@ -214,7 +214,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
 
       <div className="dashboard-views">
         <section id="view-panel-dashboard" className="view-panel dashboard-view" role="tabpanel" aria-labelledby="view-tab-dashboard" tabIndex={0} hidden={activeView !== 'dashboard'}>
-          <SiteHealthPanel />
+          <MMLiveIndicator />
           {!operator.isMm && <div className="readonly-notice" role="status">This account can read live reports. MM alone can issue or stop directives.</div>}
           <TelemetryPipelineCard snapshot={data} isLoading={!data && !error} hasError={Boolean(error)} />
           <div className="control-grid dashboard-grid">

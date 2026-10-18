@@ -20,5 +20,5 @@ export default async function Page() {
     )
   }
   const isMm = await claimOrReadMmAuthority(session.user.id)
-  return <ControlRoom operator={{ id: session.user.id, name: session.user.name, email: session.user.email, isMm }} />
+  return <ControlRoom operator={{ id: session.user.id, isMm }} />
 }

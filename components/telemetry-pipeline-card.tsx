@@ -35,13 +35,6 @@ function eventTime(value: string) {
     : new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(date)
 }
 
-function isReceiving(events: TelemetryEvent[]) {
-  const latestEvent = events[0]
-  if (!latestEvent) return false
-  const age = Date.now() - new Date(latestEvent.receivedAt).getTime()
-  return Number.isFinite(age) && age >= 0 && age <= 60_000
-}
-
 export function TelemetryPipelineCard({
   snapshot,
   isLoading,
@@ -52,38 +45,43 @@ export function TelemetryPipelineCard({
   hasError: boolean
 }) {
   const events = snapshot?.recentTelemetry ?? []
-  const receiving = isReceiving(events)
   const onlineHeartbeats = snapshot?.fighters.filter((fighter) => fighter.listenerStatus === 'PASS').length ?? 0
   const status = hasError
     ? 'UNAVAILABLE'
     : isLoading
       ? 'CONNECTING'
-      : receiving
-        ? 'RECEIVING'
-        : 'CONNECTED · QUIET'
+      : 'AUTHENTICATED'
 
   return (
     <section className="panel telemetry-pipeline-panel" aria-labelledby="pipeline-heading">
       <div className="panel-heading pipeline-heading">
         <div>
-          <p className="section-kicker">AUTHENTICATED BOT REPORTS · SITE-SCOPED</p>
+          <p className="section-kicker">AUTHENTICATED DATA FLOW</p>
           <h2 id="pipeline-heading">Live telemetry pipeline</h2>
         </div>
-        <span className={`pipeline-status${hasError ? ' is-unavailable' : !receiving && !isLoading ? ' is-quiet' : ''}`} role="status">
+        <span className={`pipeline-status${hasError ? ' is-attention' : ''}`} role="status">
           <span aria-hidden="true" />{status}
         </span>
       </div>
 
-      <p className="pipeline-description">Validated bot reports flow into the operations database and refresh here every five seconds. No sample events are shown.</p>
+      <p className="pipeline-description">Bot data flows through the authenticated feed into the operations database. Heartbeats and events refresh here every five seconds; no sample data is shown.</p>
+
+      <div className="pipeline-flow" aria-label="Pipeline connection stages">
+        <div className="pipeline-flow-step"><span>01</span><div><strong>Access</strong><small>{hasError ? 'Check unavailable' : isLoading ? 'Checking' : 'Authenticated'}</small></div></div>
+        <span className="pipeline-flow-arrow" aria-hidden="true">→</span>
+        <div className="pipeline-flow-step"><span>02</span><div><strong>Operations data</strong><small>{hasError ? 'Unavailable' : isLoading ? 'Connecting' : 'Connected'}</small></div></div>
+        <span className="pipeline-flow-arrow" aria-hidden="true">→</span>
+        <div className="pipeline-flow-step"><span>03</span><div><strong>Heartbeats</strong><small>{hasError ? 'Unavailable' : isLoading ? 'Checking' : `${onlineHeartbeats}/${snapshot?.fighters.length ?? 0} live`}</small></div></div>
+      </div>
 
       <div className="pipeline-summary" aria-label="Telemetry pipeline summary">
-        <div className="pipeline-metric"><span>Reports · 24h</span><strong>{snapshot ? snapshot.telemetryCount24h.toLocaleString() : '—'}</strong></div>
-        <div className="pipeline-metric"><span>Recent events</span><strong>{snapshot ? events.length.toLocaleString() : '—'}</strong></div>
+        <div className="pipeline-metric"><span>Events · 24h</span><strong>{snapshot ? snapshot.telemetryCount24h.toLocaleString() : '—'}</strong></div>
+        <div className="pipeline-metric"><span>Latest events</span><strong>{snapshot ? events.length.toLocaleString() : '—'}</strong></div>
         <div className="pipeline-metric"><span>Live heartbeats</span><strong>{snapshot ? `${onlineHeartbeats}/${snapshot.fighters.length}` : '—'}</strong></div>
       </div>
 
       <div className="pipeline-events-heading">
-        <h3>Latest authenticated reports</h3>
+        <h3>Latest events</h3>
         <span>Newest first</span>
       </div>
 
@@ -104,7 +102,7 @@ export function TelemetryPipelineCard({
           ))}
         </ul>
       ) : (
-        <p className="pipeline-empty">No authenticated telemetry was received in the last 24 hours.</p>
+        <p className="pipeline-empty">No telemetry events were received in the last 24 hours.</p>
       )}
     </section>
   )

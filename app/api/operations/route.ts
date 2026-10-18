@@ -6,7 +6,6 @@ import { getFighterCredentialStatus, type FighterId } from '@/lib/bot-auth'
 import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonControlState, dragonEmergencyStop, dragonRuleRevisions, dragonTelemetryRecords } from '@/lib/db/schema'
-import { claimOrReadMmAuthority } from '@/lib/operator'
 import { SITE_SCOPE } from '@/lib/site-scope'
 
 export const runtime = 'nodejs'
@@ -21,7 +20,10 @@ const fighterRoles: Record<FighterId, string> = {
 const fighters: FighterId[] = ['ruach', 'xena', 'superbot']
 const listenerFreshnessMs = 32_000
 
-function decodeRuleText(value: string) {
+function decodeRuleText(value: unknown): string[] {
+  if (Array.isArray(value) && value.every((item) => typeof item === 'string')) return value
+  if (typeof value !== 'string') return []
+
   try {
     const parsed: unknown = JSON.parse(value)
     if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) return parsed
@@ -50,7 +52,6 @@ export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'Cache-Control': 'private, no-store' } })
 
-  const isMm = await claimOrReadMmAuthority(session.user.id)
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
   const [events, heartbeats, commands, combatEvents, recentTelemetry, controls, stops, telemetryTotals, activeAttack, ruleRows] = await Promise.all([
     db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
@@ -87,7 +88,7 @@ export async function GET() {
         sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
       )),
     getActiveAttack(),
-    db.select({ revision: dragonRuleRevisions.revision, rules: dragonRuleRevisions.rules, createdAt: dragonRuleRevisions.createdAt, cooperativeAssignment: dragonRuleRevisions.cooperativeAssignment, groundRuach: dragonRuleRevisions.groundRuach, groundXena: dragonRuleRevisions.groundXena })
+    db.select({ revision: dragonRuleRevisions.revision, rules: dragonRuleRevisions.rules, createdAt: dragonRuleRevisions.createdAt })
       .from(dragonRuleRevisions)
       .where(eq(dragonRuleRevisions.siteScope, SITE_SCOPE))
       .orderBy(desc(dragonRuleRevisions.revision))
@@ -147,7 +148,6 @@ export async function GET() {
   const systemHealth = fighterRows.every((fighter) => fighter.listenerStatus === 'PASS') ? 'PASS' : 'ATTENTION'
 
   return NextResponse.json({
-    operator: { name: session.user.name, email: session.user.email, isMm },
     domain: SITE_SCOPE,
     timestamp: observedAt.toISOString(),
     rules: ruleRows[0] ? {

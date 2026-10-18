@@ -147,10 +147,7 @@ export const dragonRuleRevisions = pgTable('dragon_rule_revisions', {
   id: bigint('id', { mode: 'number' }).primaryKey().notNull(),
   siteScope: text('site_scope').notNull(),
   revision: integer('revision').notNull(),
-  rules: text('rules').notNull(),
-  cooperativeAssignment: boolean('cooperative_assignment').notNull().default(true),
-  groundRuach: boolean('ground_ruach').notNull().default(false),
-  groundXena: boolean('ground_xena').notNull().default(false),
+  rules: jsonb('rules').$type<string[]>().notNull().default([]),
   createdBy: text('created_by').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
