@@ -193,8 +193,12 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
   return (
     <main className="command-page">
       <header className="topbar">
-        <a className="website-destination-link" href="https://montemader.com" target="_blank" rel="noopener noreferrer">Go to my website <span aria-hidden="true">↗</span></a>
+        <div className="brand-lockup">
+          <span className="brand-mm-mark" aria-hidden="true">MM</span>
+          <h1 className="brand-name">MASTER CONTROL</h1>
+        </div>
         <div className="topbar-right">
+          <a className="website-destination-link" href="https://montemader.com" target="_blank" rel="noopener noreferrer">Go to my website <span aria-hidden="true">↗</span></a>
           <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
         </div>
       </header>

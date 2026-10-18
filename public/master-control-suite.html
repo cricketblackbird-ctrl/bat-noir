@@ -36,8 +36,9 @@
     .shell { width: min(1320px, calc(100% - 32px)); margin: 0 auto; padding: 22px 0 40px; }
     .topbar, .section-head, .actions, .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .topbar { margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
-    .brand { margin: 0; color: var(--text); font: 600 clamp(23px, 4vw, 34px)/1.15 Georgia, serif; letter-spacing: -.02em; }
-    .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .brand-lockup { display: flex; min-width: 0; align-items: center; gap: 10px; }
+    .brand-mark { display: grid; flex: 0 0 38px; width: 38px; height: 38px; place-items: center; border: 1px solid rgb(244 114 182 / 62%); border-radius: 50%; background: #21132b; color: #f7dff0; box-shadow: 0 3px 0 #100a16; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+    .brand { margin: 0; color: var(--text); font: 700 clamp(19px, 3.4vw, 30px)/1.15 Georgia, serif; letter-spacing: .04em; }
     .button, .tab {
       min-height: 38px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 13px;
       background: var(--raised); color: var(--text); cursor: pointer; text-decoration: none;
@@ -96,9 +97,9 @@
 <body>
   <main class="shell">
     <header class="topbar">
-      <div>
-        <h1 class="brand">Montemader Master Control</h1>
-        <p class="subtitle">Authenticated system health · operations reports · aggregate security telemetry</p>
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">MM</span>
+        <h1 class="brand">MASTER CONTROL</h1>
       </div>
       <a class="button button-primary" href="https://montemader.com" target="_blank" rel="noopener noreferrer">Go to my website <span aria-hidden="true">↗</span></a>
     </header>
