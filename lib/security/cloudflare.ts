@@ -68,6 +68,7 @@ export async function getCloudflareSnapshot(now = new Date()): Promise<Cloudflar
   try {
     token = await getToken(cloudflareConnector, {
       subject: { type: 'app' },
+      scopes: ['Zone.Analytics:Read'],
     })
   } catch {
     throw new CloudflareAnalyticsError('connect_token_unavailable')

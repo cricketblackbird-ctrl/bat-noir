@@ -132,7 +132,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .button:disabled { cursor: not-allowed; opacity: .55; }
 .button-primary { border-color: rgb(216 122 190 / 50%); background: linear-gradient(110deg, #7b3f9e, #a3488c); color: #fff7fc; box-shadow: 0 3px 14px rgb(123 63 158 / 23%); }
 .button-primary:hover:not(:disabled) { background: linear-gradient(110deg, #8b4bab, #bb579e); }
-.issue-button { margin-top: 4px; }
+.issue-button { position: relative; isolation: isolate; min-height: 64px; margin: 14px 10px 12px; border: 1px solid #efc8e8; border-radius: 11px; padding: 12px 16px; background: linear-gradient(110deg, #7b3f9e, #a3488c); color: #fff; font-size: clamp(16px, 2vw, 20px); font-weight: 700; letter-spacing: .09em; box-shadow: 0 9px 0 #442253, 0 12px 20px rgb(0 0 0 / 30%), 0 0 0 5px #fff; transform: translateY(-2px); animation: protect-site-pulse 1.8s ease-in-out infinite; }
+.issue-button::before { position: absolute; z-index: -1; inset: -9px; border-radius: 16px; background: #fff; content: ""; opacity: .16; filter: blur(8px); animation: protect-site-halo 1.8s ease-in-out infinite; }
+.issue-button:not(:disabled):hover { transform: translateY(-4px); box-shadow: 0 11px 0 #442253, 0 16px 24px rgb(0 0 0 / 34%), 0 0 0 5px #fff; }
+.issue-button:not(:disabled):active { transform: translateY(2px); box-shadow: inset 0 2px 4px rgb(0 0 0 / 42%), 0 0 0 5px #fff; }
+.issue-button:disabled { transform: translateY(-2px); box-shadow: 0 9px 0 #442253, 0 12px 20px rgb(0 0 0 / 30%), 0 0 0 5px #fff; }
+@keyframes protect-site-pulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.16); } }
+@keyframes protect-site-halo { 0%, 100% { opacity: .16; transform: scale(.97); } 50% { opacity: .5; transform: scale(1.04); } }
 .directive-note { flex: 0 0 auto; margin: 6px 0; color: #93869e; font-size: 10px; line-height: 1.35; }
 .directive-authorization { flex: 0 0 auto; margin: 0 0 7px; border-left: 2px solid var(--ruach-gold); border-radius: 0 5px 5px 0; padding: 6px 8px; background: linear-gradient(100deg, rgb(229 189 104 / 9%), rgb(123 63 158 / 5%)); color: #e8d8b5; font-size: 10px; line-height: 1.45; }
 .stop-block { margin-top: auto; border-top: 1px solid rgb(199 75 158 / 20%); padding-top: 7px; }
@@ -316,7 +322,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .console-description { flex: 0 0 auto; margin: 0; color: #aa9bb3; font-size: 10px; line-height: 1.4; }
 .console-record-actions { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 7px; min-height: 18px; }
   .console-stream-state { color: #c6a5c9; font-size: 9px; }
-.attack-report { display: flex; flex: 0 0 auto; flex-direction: column; gap: 6px; border: 1px solid rgb(170 155 179 / 30%); border-radius: 7px; padding: 8px; background: rgb(9 6 13 / 48%); }
+.attack-report { display: flex; flex: 0 0 auto; flex-direction: column; gap: 6px; margin-top: 12px; border: 1px solid rgb(170 155 179 / 30%); border-radius: 7px; padding: 8px; background: rgb(9 6 13 / 48%); }
 .attack-report.is-active { border-color: rgb(220 142 88 / 65%); }
 .attack-report-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .attack-report-heading h3 { margin: 0; color: #f1dff0; font-family: Georgia, serif; font-size: 14px; font-weight: 400; }
@@ -328,7 +334,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .attack-report-facts div { min-width: 0; border: 1px solid rgb(199 75 158 / 17%); border-radius: 5px; padding: 5px 6px; }
 .attack-report-facts dt { color: #aa9cad; font-size: 9px; text-transform: uppercase; letter-spacing: .04em; }
 .attack-report-facts dd { margin: 2px 0 0; color: #f4eaf2; font-size: 10px; overflow-wrap: anywhere; }
-.attack-report-list { display: grid; max-height: 112px; gap: 4px; overflow: auto; margin: 0; padding: 0; list-style: none; }
+.attack-report-list { display: grid; max-height: 176px; gap: 4px; overflow: auto; margin: 0; padding: 0; list-style: none; }
 .attack-report-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: 6px; border-top: 1px solid rgb(199 75 158 / 14%); padding-top: 4px; color: #c3b3cb; font-size: 9px; }
 .attack-report-list strong { color: #e7b9df; }
 .attack-report-list span { min-width: 0; overflow-wrap: anywhere; }
@@ -388,7 +394,8 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 }
 
 .site-health-panel { flex: 0 0 auto; gap: 12px; }
-.health-actions { display: flex; align-items: center; gap: 8px; }
+.health-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.health-help { max-width: 210px; color: #aa9cad; font-size: 10px; line-height: 1.35; text-align: right; }
 
 .health-description, .health-loading, .health-unavailable, .health-details p, .health-caveat { margin: 0; color: #c3b3cb; font-size: 13px; line-height: 1.5; }
 .health-unavailable { border: 1px solid rgb(239 68 68 / 40%); border-radius: 7px; padding: 10px; color: #ffc2cc; }
@@ -397,6 +404,9 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .health-attention { color: #e7bd83; }
 .health-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .health-status { border: 1px solid currentColor; border-radius: 999px; padding: 3px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.health-status-button { background: transparent; cursor: pointer; font-family: inherit; transition: background .15s ease, box-shadow .15s ease; }
+.health-status-button:hover:not(:disabled), .health-status-button:focus-visible { background: rgb(231 189 131 / 12%); box-shadow: 0 0 0 2px rgb(231 189 131 / 18%); }
+.health-status-button:disabled { cursor: wait; opacity: .65; }
 .health-good { color: #8ce0b0; }
 .health-bad { color: #ff9aa5; }
 .health-observed { margin-left: auto; color: #aa9cad; font-size: 11px; }
@@ -434,7 +444,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .view-tab:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgb(0 0 0 / 42%); }
 .view-tab:focus-visible { outline: 2px solid #e79bcd; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .view-tab, .status-dot.is-pass > span, .footer-star { transition: none; animation: none; }
+  .view-tab, .status-dot.is-pass > span, .footer-star, .issue-button, .issue-button::before { transition: none; animation: none; }
 }
 .dashboard-views { display: flex; flex: 1 0 auto; flex-direction: column; gap: 9px; min-height: 0; }
 .view-panel[hidden] { display: none !important; }
@@ -456,6 +466,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .browser-data-note { margin: 0; color: #a99bad; font-size: 10px; line-height: 1.45; }
 .cloudflare-emergency { border-top: 1px solid rgb(199 75 158 / 22%); padding-top: 8px; }
 .cloudflare-live-message { margin: 0; border: 1px solid rgb(123 63 158 / 34%); border-radius: 7px; padding: 8px; color: #d9cadd; font-size: 11px; line-height: 1.45; }
+.cloudflare-explainer { margin: -2px 0 0; color: #c3b3cb; font-size: 12px; line-height: 1.45; }
 .cloudflare-live-message.is-clear { border-color: rgb(140 224 176 / 38%); color: #bfe9cf; }
 .cloudflare-live-message.is-alert { border-color: rgb(255 106 133 / 64%); background: rgb(91 21 43 / 20%); color: #ffc1cc; }
 .cloudflare-live-message.is-unavailable { border-color: rgb(231 189 131 / 44%); color: #e2d2b8; }

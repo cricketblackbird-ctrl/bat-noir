@@ -222,7 +222,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
               <article className={`fighter-card fighter-${fighter.id}`} key={fighter.id}>
                 <div className="fighter-topline"><div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? <Shield className="xena-shield-icon" aria-hidden="true" /> : 'S'}</div><div className="fighter-heading"><h3>{fighter.name}</h3><StatusDot stopped={fighter.stopped} listenerStatus={fighter.listenerStatus} heartbeatAgeMs={fighter.heartbeatAgeMs} /></div></div>
                 <p className="fighter-role">{fighter.role}</p>
-                {fighter.health === null ? <p className="health-reading">Awaiting a signed report</p> : <p className="health-reading"><span>{fighter.health}%</span> health · {fighter.hitsTaken}/{fighter.hitCapacity} hits</p>}
+                {fighter.health === null ? <p className="health-reading">Waiting for authenticated health report</p> : <p className="health-reading"><span>{fighter.health}%</span> health · {fighter.hitsTaken}/{fighter.hitCapacity} hits</p>}
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
                 <p className="signal-age">Report {formatAge(fighter.lastSeen)} · inbox poll {formatAge(fighter.lastInboxPoll)}</p>
                 <div className="fighter-strike-row">
@@ -249,7 +249,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
             <select id="formation" value={formation} onChange={(event) => setFormation(event.target.value as Formation)} disabled={!operator.isMm || isPending}>
               {(Object.entries(formationNames) as [Formation, string][]).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
-            <button className="button button-primary issue-button" type="submit" disabled={!operator.isMm || isPending || stoppedAll || (formation === 'all_three' && !data?.activeAttack)}>{isPending ? 'Updating…' : stoppedAll ? 'All fighters stopped' : formation === 'all_three' && !data?.activeAttack ? 'Waiting for active attack report' : 'Queue defensive response'}</button>
+            <button className="button button-primary issue-button" type="submit" disabled={!operator.isMm || isPending || stoppedAll || (formation === 'all_three' && !data?.activeAttack)}>{isPending ? 'Updating…' : stoppedAll ? 'All fighters stopped' : formation === 'all_three' && !data?.activeAttack ? 'Waiting for active attack report' : 'PROTECT THIS SITE'}</button>
           </form>
           <p className="directive-note">The default assignment uses all 3 defenders. Every defensive directive requires a fresh authenticated attack report and stops are respected. Directives queue to the authenticated bot inboxes; they do not block traffic or terminate an invasion by themselves.</p>
           <div className="stop-block"><div className="stop-heading"><p className="section-kicker">MM · EMERGENCY OVERRIDE</p><span>{stoppedAll ? 'GLOBAL STOP ACTIVE' : 'Four stop controls'}</span></div><div className="stop-grid">

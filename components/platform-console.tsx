@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
+import { formatCentralDateTime, formatCentralTime } from '@/lib/format-time'
 
 type StreamTopic = 'all' | 'health' | 'safety' | 'security' | 'clarity'
 
@@ -84,13 +85,13 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
   const lines = [
     `BOT🍓CONTROL · ${topicLabels[topic].toUpperCase()}`,
     `Domain: ${snapshot.domain}`,
-    `Observed: ${new Date(snapshot.observedAt).toISOString()}`,
+    `Observed: ${formatCentralDateTime(snapshot.observedAt)}`,
     `Listener contract status: ${snapshot.systemHealth}`,
     `Authenticated telemetry reports in the last 24 hours: ${snapshot.telemetryCount24h}`,
     '',
     '[ATTACK-GATED INBOX ROUTING]',
     snapshot.activeAttack
-      ? `Active attack report until ${new Date(snapshot.activeAttack.expiresAt).toISOString()}; ${snapshot.activeAttack.reportCount} correlated report(s) from ${snapshot.activeAttack.sources.map((source) => source.name).join(', ')}.`
+      ? `Active attack report until ${formatCentralDateTime(snapshot.activeAttack.expiresAt)}; ${snapshot.activeAttack.reportCount} correlated report(s) from ${snapshot.activeAttack.sources.map((source) => source.name).join(', ')}.`
       : 'No fresh authenticated hit report; no attack packet is available in fighter inboxes.',
     'Only authenticated bot hit reports activate this 60-second window. This app inbox is not a network tunnel, does not proxy website traffic, and does not hide the hosting origin.',
   ]
@@ -102,7 +103,7 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
     )
     for (const report of snapshot.activeAttack.reports) {
       const classification = [report.category, report.vector, report.signature].filter(Boolean).join(' · ') || 'no classification metadata supplied'
-      lines.push(`${report.fighterName} reported ${classification} at ${new Date(report.receivedAt).toISOString()} · health ${report.healthPercent}% · hits ${report.hitsTaken}/${report.hitCapacity}.`)
+      lines.push(`${report.fighterName} reported ${classification} at ${formatCentralDateTime(report.receivedAt)} · health ${report.healthPercent}% · hits ${report.hitsTaken}/${report.hitCapacity}.`)
     }
   }
 
@@ -113,7 +114,7 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
       const hits = fighter.hitsTaken === null || fighter.hitCapacity === null
         ? 'hit count unavailable'
         : `${fighter.hitsTaken}/${fighter.hitCapacity} hits`
-      const inboxPoll = fighter.lastInboxPoll ? new Date(fighter.lastInboxPoll).toISOString() : 'never verified'
+      const inboxPoll = fighter.lastInboxPoll ? formatCentralDateTime(fighter.lastInboxPoll) : 'never verified'
       lines.push(`${fighter.name} · ${fighter.role}: ${health}; ${hits}; inbox polling ${fighter.listenerStatus}; last poll ${inboxPoll}`)
     }
   }
@@ -125,7 +126,7 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
       `Emergency stops: all=${Boolean(snapshot.stops.stopAll)}, Ruach=${Boolean(snapshot.stops.stopRuach)}, Xena=${Boolean(snapshot.stops.stopXena)}, SuperBot=${Boolean(snapshot.stops.stopSuperbot)}`,
     )
     for (const fighter of snapshot.fighters) lines.push(`${fighter.name}: MM inbox listening ${fighter.listenerStatus}; execution ${fighter.stopped ? 'stopped' : 'not stopped'}`)
-    lines.push('PASS means a signed listener_heartbeat arrived within 15 seconds. WAITING means none was observed in the last 24 hours; STALE means the last heartbeat is older than 15 seconds.')
+    lines.push('PASS means an authenticated listener_heartbeat arrived within 15 seconds. WAITING means none was observed in the last 24 hours; STALE means the last heartbeat is older than 15 seconds.')
   }
 
   if (topic === 'all' || topic === 'security') {
@@ -138,10 +139,10 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
 
   if (topic === 'all' || topic === 'clarity') {
     lines.push('', '[CLARITY & DIRECTIVES]')
-    lines.push(`Source: authenticated agent reports and the command queue; observed ${new Date(snapshot.observedAt).toISOString()}.`)
+    lines.push(`Source: authenticated agent reports and the command queue; observed ${formatCentralDateTime(snapshot.observedAt)}.`)
     lines.push(`Recent directives returned: ${snapshot.commands.length}`)
     for (const command of snapshot.commands) {
-      lines.push(`${command.fighterName}: ${command.threatType.replace(/_/g, ' ')} · ${command.strategy.replace(/_/g, ' ')} · ${command.status} · ${new Date(command.createdAt).toISOString()}`)
+      lines.push(`${command.fighterName}: ${command.threatType.replace(/_/g, ' ')} · ${command.strategy.replace(/_/g, ' ')} · ${command.status} · ${formatCentralDateTime(command.createdAt)}`)
     }
     lines.push('Interpretations marked heuristic are pattern hints, not confirmed incidents. No simulated events are added.')
   }
@@ -166,7 +167,7 @@ export function PlatformConsole() {
     if (!isRecording || !data || lastRecordedAt.current === data.observedAt) return
     lastRecordedAt.current = data.observedAt
     setRecords((current) => [formatSnapshot(data, topic), ...current].slice(0, 20))
-    setNotice(`Live text record captured at ${new Date(data.observedAt).toLocaleTimeString()}.`)
+    setNotice(`Live text record captured at ${formatCentralTime(data.observedAt)}.`)
   }, [data, isRecording, topic])
 
   function toggleRecording() {
@@ -203,17 +204,17 @@ export function PlatformConsole() {
           <section className={`attack-report${data?.activeAttack ? ' is-active' : ''}`} aria-labelledby="attack-report-heading" aria-live="polite">
             <div className="attack-report-heading">
               <h3 id="attack-report-heading">Real-time attack report</h3>
-              <span>{data ? `Server update ${new Date(data.observedAt).toLocaleTimeString()}` : 'Waiting for server'}</span>
+              <span>{data ? `Server update ${formatCentralTime(data.observedAt)}` : 'Waiting for server'}</span>
             </div>
             {error && (!data || !snapshotIsFresh) ? (
-              <p className="attack-report-state is-unavailable" role="alert">Live report feed unavailable{data ? ` · last server observation ${new Date(data.observedAt).toLocaleTimeString()}` : ''}. No sample or simulated attack is displayed.</p>
+              <p className="attack-report-state is-unavailable" role="alert">Live report feed unavailable{data ? ` · last server observation ${formatCentralTime(data.observedAt)}` : ''}. No sample or simulated attack is displayed.</p>
             ) : isLoading && !data ? (
               <p className="attack-report-state" role="status">Connecting to authenticated telemetry…</p>
             ) : !data || !snapshotIsFresh ? (
               <p className="attack-report-state" role="status">Waiting for a fresh server observation. Stale reports are not presented as active.</p>
             ) : data.activeAttack ? (
               <>
-                <p className="attack-report-state is-active" role="status">Authenticated hit report active · {data.activeAttack.reportCount} correlated report{data.activeAttack.reportCount === 1 ? '' : 's'} from {data.activeAttack.sourceCount} source{data.activeAttack.sourceCount === 1 ? '' : 's'} · expires {new Date(data.activeAttack.expiresAt).toLocaleTimeString()}</p>
+                <p className="attack-report-state is-active" role="status">Authenticated hit report active · {data.activeAttack.reportCount} correlated report{data.activeAttack.reportCount === 1 ? '' : 's'} from {data.activeAttack.sourceCount} source{data.activeAttack.sourceCount === 1 ? '' : 's'} · expires {formatCentralTime(data.activeAttack.expiresAt)}</p>
                 <dl className="attack-report-facts">
                   <div><dt>Assessment</dt><dd>{data.activeAttack.confidence.replace(/_/g, ' ')}</dd></div>
                   <div><dt>Evidence</dt><dd>{data.activeAttack.evidence.replace(/_/g, ' ')}</dd></div>
@@ -225,7 +226,7 @@ export function PlatformConsole() {
                     <li key={`${report.fighterId}-${report.receivedAt}`}>
                       <strong>{report.fighterName}</strong>
                       <span>{[report.category, report.vector, report.signature].filter(Boolean).join(' · ') || 'No classification metadata supplied'}</span>
-                      <time dateTime={report.receivedAt}>{new Date(report.receivedAt).toLocaleTimeString()}</time>
+                      <time dateTime={report.receivedAt}>{formatCentralTime(report.receivedAt)}</time>
                     </li>
                   ))}
                 </ul>

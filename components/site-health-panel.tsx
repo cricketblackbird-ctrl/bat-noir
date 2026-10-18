@@ -1,6 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
+import { formatCentralDateTime, formatCentralTime } from '@/lib/format-time'
 
 type HealthSnapshot = {
   domain: string
@@ -79,6 +80,7 @@ export function SiteHealthPanel() {
         <div><p className="section-kicker">LIVE · CLOUDFLARE + SITE CHECK</p><h2 id="site-health-heading">Website health &amp; security</h2></div>
         <div className="health-actions">
           <button className="text-button" type="button" onClick={() => void mutate()} disabled={isLoading}>Refresh data</button>
+          <span className="health-help">HTTP is the site&apos;s status code. Response time in ms means milliseconds; lower is usually faster.</span>
         </div>
       </div>
       <p className="health-description">Verified Cloudflare zone analytics and a direct HTTPS check of {data?.domain ?? 'montemader.com'}. Aggregate request data only; no visitor IP history.</p>
@@ -91,11 +93,11 @@ export function SiteHealthPanel() {
           <div className="health-status-row">
             <span className={`health-status ${data.site.ok ? 'health-good' : 'health-bad'}`}>Website {data.site.ok ? 'reachable' : 'unavailable'}</span>
             {data.cloudflare.available ? (
-              <span className={`health-status ${data.cloudflare.metrics.thresholdMet ? 'health-bad' : 'health-good'}`}>{data.cloudflare.metrics.thresholdMet ? 'Attack threshold met' : 'Cloudflare live · no threshold met'}</span>
+              <span className={`health-status ${data.cloudflare.metrics.thresholdMet ? 'health-bad' : 'health-good'}`}>{data.cloudflare.metrics.thresholdMet ? 'Security alert · traffic threshold reached' : 'Cloudflare live · below alert threshold'}</span>
             ) : (
-              <span className="health-status health-attention">Cloudflare analytics unavailable</span>
+              <button className="health-status health-attention health-status-button" type="button" onClick={() => void mutate()} disabled={isLoading} aria-label="Retry the website and Cloudflare connection checks" title="Retry both the website reachability check and Cloudflare analytics.">Cloudflare unavailable · retry</button>
             )}
-            <span className="health-observed">Checked {new Date(data.capturedAt).toLocaleTimeString()}</span>
+            <span className="health-observed">Checked {formatCentralTime(data.capturedAt)}</span>
           </div>
           <div className="health-metrics">
             <article><span>HTTP status</span><strong>{data.site.statusCode ?? 'No response'}</strong></article>
@@ -117,7 +119,7 @@ export function SiteHealthPanel() {
           ) : (
             <div className="health-diagnostic" role="status"><strong>Live Cloudflare analytics unavailable:</strong> {cloudflareIssueMessage(data.cloudflare.reason)} No sample values are shown.</div>
           )}
-          {data.activeIncident && <p className="health-incident"><strong>Active incident:</strong> detected {new Date(data.activeIncident.detectedAt).toLocaleString()} · {data.activeIncident.blockedCount.toLocaleString()} recent blocked/challenged requests.</p>}
+          {data.activeIncident && <p className="health-incident"><strong>Active incident:</strong> detected {formatCentralDateTime(data.activeIncident.detectedAt)} · {data.activeIncident.blockedCount.toLocaleString()} recent blocked/challenged requests.</p>}
         </>
       )}
       <p className="health-caveat">The alert is based on Cloudflare-reported blocked/challenged events, not proof of attacker identity. Defensive containment is only Cloudflare’s existing edge action; this dashboard does not retaliate or destroy systems.</p>

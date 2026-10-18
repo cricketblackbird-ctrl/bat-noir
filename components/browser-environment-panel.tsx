@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import useSWR from 'swr'
+import { formatCentralTime } from '@/lib/format-time'
 
 type CloudflareSnapshot = {
   domain: string
@@ -105,9 +106,9 @@ export function BrowserEnvironmentPanel() {
     ? 'Waiting for live Cloudflare status'
     : data.cloudflare.metrics.thresholdMet
       ? data.activeIncident
-        ? `Emergency incident active · ${data.activeIncident.blockedCount.toLocaleString()} blocked/challenged requests`
-        : 'Emergency threshold reached · incident check pending'
-      : 'No emergency threshold reached'
+        ? `Security alert: ${data.cloudflare.metrics.blocked60s + data.cloudflare.metrics.challenged60s} requests blocked or challenged in 60 seconds; incident active.`
+        : `Security alert: ${data.cloudflare.metrics.blocked60s + data.cloudflare.metrics.challenged60s} requests blocked or challenged in 60 seconds; incident check pending.`
+      : `No security alert: ${data.cloudflare.metrics.blocked60s + data.cloudflare.metrics.challenged60s} blocked or challenged in 60 seconds, below the ${data.cloudflare.metrics.threshold} alert threshold.`
 
   return (
     <section className="panel browser-data-panel" aria-labelledby="browser-data-heading">
@@ -117,7 +118,7 @@ export function BrowserEnvironmentPanel() {
       </div>
 
       <section className="browser-data-section" aria-labelledby="browser-hints-heading">
-        <div className="browser-data-subheading"><h3 id="browser-hints-heading">This browser</h3><span>Local · not uploaded{browserHints ? ` · checked ${new Date(browserHints.checkedAt).toLocaleTimeString()}` : ''}</span></div>
+        <div className="browser-data-subheading"><h3 id="browser-hints-heading">This browser</h3><span>Local · not uploaded{browserHints ? ` · checked ${formatCentralTime(browserHints.checkedAt)}` : ''}</span></div>
         <div className="browser-signal-grid">
           <article className="browser-signal"><span>Connection</span><strong>{browserHints ? browserHints.online ? 'Browser reports online' : 'Browser reports offline' : 'Checking browser'}</strong></article>
           <article className="browser-signal"><span>Page visibility</span><strong>{browserHints ? browserHints.visible ? 'Visible' : 'Backgrounded' : 'Checking browser'}</strong></article>
@@ -131,7 +132,7 @@ export function BrowserEnvironmentPanel() {
       </section>
 
       <section className="browser-data-section cloudflare-emergency" aria-labelledby="cloudflare-live-heading" aria-live="polite">
-        <div className="browser-data-subheading"><h3 id="cloudflare-live-heading">Live Cloudflare emergency status</h3><span>{data ? `Updated ${new Date(data.capturedAt).toLocaleTimeString()}` : 'Live connection'}</span></div>
+        <div className="browser-data-subheading"><h3 id="cloudflare-live-heading">Live Cloudflare emergency status</h3><span>{data ? `Updated ${formatCentralTime(data.capturedAt)}` : 'Live connection'}</span></div>
         {error ? (
           <p className="cloudflare-live-message is-unavailable" role="alert">{error.message} No sample values are shown.</p>
         ) : isLoading || !data ? (
@@ -141,13 +142,14 @@ export function BrowserEnvironmentPanel() {
         ) : (
           <>
             <p className={`cloudflare-live-message ${data.cloudflare.metrics.thresholdMet ? 'is-alert' : 'is-clear'}`} role="status">{alertLabel}</p>
+            <p className="cloudflare-explainer">This is Cloudflare&apos;s blocked/challenged traffic count, not proof of a breach. Website reachability and response time are shown separately.</p>
             <div className="browser-signal-grid cloudflare-metrics">
               <article className="browser-signal"><span>Requests · 24h</span><strong>{data.cloudflare.metrics.requests24h.toLocaleString()}</strong></article>
               <article className="browser-signal"><span>Blocked · 60s</span><strong>{data.cloudflare.metrics.blocked60s.toLocaleString()}</strong></article>
               <article className="browser-signal"><span>Challenged · 60s</span><strong>{data.cloudflare.metrics.challenged60s.toLocaleString()}</strong></article>
               <article className="browser-signal"><span>Emergency threshold</span><strong>{data.cloudflare.metrics.threshold.toLocaleString()} blocked/challenged per 60s</strong></article>
               <article className="browser-signal"><span>Website reachability</span><strong>{data.site.ok ? 'Reachable' : 'Unavailable'}</strong></article>
-              {data.activeIncident && <article className="browser-signal"><span>Incident detected</span><strong>{new Date(data.activeIncident.detectedAt).toLocaleTimeString()} · {data.activeIncident.blockedCount.toLocaleString()} requests</strong></article>}
+              {data.activeIncident && <article className="browser-signal"><span>Incident detected</span><strong>{formatCentralTime(data.activeIncident.detectedAt)} · {data.activeIncident.blockedCount.toLocaleString()} requests</strong></article>}
             </div>
           </>
         )}
