@@ -848,6 +848,29 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .website-privacy-metric > strong { color: #f4c7ef; font-family: inherit; font-size: 18px; }
 .website-data-footnote { margin: 0; color: #ad9cb7; font-size: 12px; line-height: 1.6; }
 .website-data-footnote strong { color: #dfc3ea; font-weight: 600; }
+.vercel-usage-heading { align-items: center; }
+.vercel-usage-heading > div { align-items: center; }
+.vercel-usage-heading > div > div { display: flex; flex-direction: column; gap: 4px; }
+.vercel-usage-heading .section-kicker { margin: 0; color: #c9a9d8; font-size: 10px; letter-spacing: .12em; }
+.vercel-source-links { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.vercel-source-links a, .vercel-path-list a { color: #ecd3f3; text-decoration: underline; text-decoration-color: rgb(236 211 243 / 45%); text-underline-offset: 3px; }
+.vercel-source-links a:hover, .vercel-path-list a:hover { color: #fff; text-decoration-color: currentColor; }
+.vercel-path-section { display: flex; flex-direction: column; gap: 10px; }
+.vercel-path-section .browser-data-subheading h4 { margin: 0; color: #f1e3f4; font-size: 14px; font-weight: 600; }
+.vercel-path-list, .vercel-currency-list { display: flex; flex-direction: column; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.vercel-path-list li, .vercel-currency-list li { display: flex; min-width: 0; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid rgb(184 145 196 / 16%); padding: 8px 0; }
+.vercel-path-list a, .vercel-path-list li > span { min-width: 0; overflow-wrap: anywhere; }
+.vercel-path-list strong, .vercel-currency-list strong { flex: 0 0 auto; color: #fff4ff; font-size: 13px; font-weight: 600; }
+.vercel-currency-list li > span { color: #c9b6cf; font-size: 13px; }
+.vercel-provenance { border-top: 1px solid rgb(184 145 196 / 20%); padding-top: 12px; color: #c9b6cf; font-size: 12px; line-height: 1.6; }
+.vercel-provenance summary { width: fit-content; color: #ecd3f3; cursor: pointer; font-weight: 600; }
+.vercel-provenance p { margin: 10px 0 0; }
+.vercel-provenance code { display: block; margin-top: 10px; color: #dbc0e5; overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .vercel-usage-heading { align-items: flex-start; flex-direction: column; }
+  .vercel-usage-heading > div { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .vercel-path-list li, .vercel-currency-list li { align-items: flex-start; }
+}
 .console-controls { display: grid; grid-template-columns: minmax(200px, .36fr) minmax(220px, .64fr); gap: 10px; max-width: 680px; }
 .console-controls select { min-height: 48px; border-color: #624375; border-radius: 8px; padding: 10px 13px; color: #f2e6f5; background: #110d12; font-family: inherit; font-size: 15px; }
 .platform-console .button.live-capture-button { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 8px; padding: 10px 16px; background: linear-gradient(#1b1120, #1b1120) padding-box, conic-gradient(from var(--capture-ring-angle), #fff3ff 0deg, #d06fc0 70deg, #7b4aa0 150deg, #f6e7fc 210deg, #a977d6 290deg, #fff3ff 360deg) border-box; color: #fff2ff; font-family: inherit; font-size: 15px; font-weight: 650; letter-spacing: .01em; animation: capture-ring-orbit 24s linear infinite; box-shadow: 0 0 18px rgb(207 120 196 / 13%), inset 0 0 12px rgb(207 120 196 / 6%); }
