@@ -1,7 +1,6 @@
 'use client'
 
 import useSWR from 'swr'
-import { MailSorter } from '@/components/mail-sorter'
 import { formatCentralDateTime, formatCentralTime } from '@/lib/format-time'
 
 type HealthSnapshot = {
@@ -60,13 +59,13 @@ export function SiteHealthPanel() {
   return (
     <section className="panel site-health-panel" aria-labelledby="site-health-heading">
       <div className="panel-heading">
-        <div><p className="section-kicker">AUTOMATIC · CLOUDFLARE + LIVE WEBSITE</p><h2 id="site-health-heading">Website protection</h2></div>
+        <div><p className="section-kicker">LIVE WEBSITE STATUS</p><h2 id="site-health-heading">Website status</h2></div>
         <div className="health-actions">
           <a className="text-button" href="https://montemader.com/" target="_blank" rel="noreferrer">Open website</a>
           <button className="text-button" type="button" onClick={() => void mutate()} disabled={isLoading || isValidating}>{isValidating ? 'Refreshing…' : 'Refresh from website'}</button>
         </div>
       </div>
-      <p className="health-description">Automatic Cloudflare analytics and live page data from montemader.com. The refresh checks the page itself and current Cloudflare feed.</p>
+      <p className="health-description">Live response status and page metadata from montemader.com. Refresh checks the current webpage.</p>
       {error ? (
         error instanceof HealthRequestError && error.status === 401 ? (
           <div className="health-auth-state" role="status">
@@ -89,10 +88,8 @@ export function SiteHealthPanel() {
         <>
           <div className="health-status-row">
             <span className={`health-status ${data.site.ok ? 'health-good' : 'health-bad'}`}>Website {data.site.ok ? 'reachable' : 'unavailable'}</span>
-            {data.cloudflare.available
-              ? <span className={`health-status ${data.cloudflare.metrics.thresholdMet ? 'health-bad' : 'health-good'}`}>{data.cloudflare.metrics.thresholdMet ? 'Cloudflare alert threshold reached' : 'Cloudflare analytics connected'}</span>
-              : <span className="health-status health-attention">Cloudflare feed needs connection</span>}
-            <span className="health-observed">Checked {formatCentralTime(data.capturedAt)}</span>
+            {data.cloudflare.available && <span className={`health-status ${data.cloudflare.metrics.thresholdMet ? 'health-bad' : 'health-good'}`}>{data.cloudflare.metrics.thresholdMet ? 'Cloudflare alert threshold reached' : 'Cloudflare analytics connected'}</span>}
+            <span className="health-observed">Checked {formatCentralTime(data.cloudflare.available ? data.capturedAt : data.site.contentFetchedAt)}</span>
           </div>
           <div className="website-current-content">
             <p className="section-kicker">LIVE PAGE DATA · {formatCentralTime(data.site.contentFetchedAt)}</p>
@@ -109,11 +106,10 @@ export function SiteHealthPanel() {
               <article><span>Challenged · 60s</span><strong>{data.cloudflare.metrics.challenged60s.toLocaleString()}</strong></article>
             </>}
           </div>
-          <MailSorter />
-          {data.activeIncident && <p className="health-incident"><strong>Active incident:</strong> detected {formatCentralDateTime(data.activeIncident.detectedAt)} · {data.activeIncident.blockedCount.toLocaleString()} recent blocked/challenged requests.</p>}
+          {data.cloudflare.available && data.activeIncident && <p className="health-incident"><strong>Active incident:</strong> detected {formatCentralDateTime(data.activeIncident.detectedAt)} · {data.activeIncident.blockedCount.toLocaleString()} recent blocked/challenged requests.</p>}
         </>
       )}
-      <p className="health-caveat">This feed is read-only analytics; it does not enable WAF rules. Active Cloudflare firewall configuration is not verified here. The refresh pulls the live page and current aggregate Cloudflare data.</p>
+      {data?.cloudflare.available && <p className="health-caveat">Cloudflare data is read-only analytics and does not change firewall configuration. Refresh pulls the live page and current aggregate analytics.</p>}
     </section>
   )
 }
