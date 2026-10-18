@@ -398,6 +398,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
               <h3 id="attack-report-heading">Live attack reports</h3>
               <span>{data ? `Updated ${formatCentralTime(data.observedAt)}` : 'Waiting'}</span>
             </div>
+            <p className="attack-report-explainer">The gate needs a guardian-authenticated <code>hit</code> sent to <code>/api/telemetry</code> with this site&apos;s exact scope. A listener heartbeat only proves the listener is alive; it does not count as an attack report. Reports expire after 60 seconds, so a new valid hit is needed to enable report-gated actions.</p>
             {error && (!data || !snapshotIsFresh) ? (
               <p className="attack-report-state is-unavailable" role="alert">Page reports unavailable{data ? ` · last update ${formatCentralTime(data.observedAt)}` : ''}.</p>
             ) : !data || !snapshotIsFresh ? (
