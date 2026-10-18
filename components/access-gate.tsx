@@ -33,22 +33,20 @@ export function AccessGate() {
   return (
     <main className="auth-screen">
       <div className="auth-card" aria-labelledby="auth-title">
-        <header className="auth-brand">
-          <div className="auth-brand-mark" aria-hidden="true">M</div>
-        </header>
-
-        <div className="auth-divider" aria-hidden="true"><span /></div>
-
         <section className="auth-content">
           <h1 id="auth-title">Sign in</h1>
           <p className="auth-description">Good to have you back.</p>
 
           <form className="auth-form" onSubmit={submit}>
-            <label htmlFor="username">Sign in</label>
-            <input id="username" type="text" name="username" autoComplete="username" autoCapitalize="none" required minLength={3} maxLength={30} />
+            <div className="auth-field">
+              <label htmlFor="username">Sign in</label>
+              <input id="username" type="text" name="username" autoComplete="username" autoCapitalize="none" required minLength={3} maxLength={30} />
+            </div>
 
-            <label htmlFor="password">Password</label>
-            <input id="password" type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={128} />
+            <div className="auth-field">
+              <label htmlFor="password">Password</label>
+              <input id="password" type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={128} />
+            </div>
 
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button-primary auth-submit" type="submit" disabled={busy}>
