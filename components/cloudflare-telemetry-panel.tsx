@@ -61,7 +61,7 @@ function heartbeatLabel(fighter: FighterHeartbeat) {
 }
 
 export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartbeat[] }) {
-  const { data, error, isLoading, isValidating, mutate } = useSWR<HealthSnapshot>('/api/security/health', fetcher, {
+  const { data, error, isLoading } = useSWR<HealthSnapshot>('/api/security/health', fetcher, {
     refreshInterval: 30_000,
     revalidateOnFocus: true,
     dedupingInterval: 10_000,
@@ -88,9 +88,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
           <span className={`telemetry-feed-state ${metrics ? 'is-connected' : data?.cloudflare.available === false ? 'is-offline' : ''}`} role="status">
             <span aria-hidden="true" />{feedStatus}
           </span>
-          <button className="telemetry-refresh" type="button" onClick={() => void mutate()} disabled={isValidating}>
-            {isValidating ? 'Refreshing…' : 'Refresh data'}
-          </button>
+
         </div>
       </div>
 

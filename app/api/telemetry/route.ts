@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       .slice(0, 12)
       .map((skill) => skill.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 40))
     : []
-  const allowedPayloadKeys = ['signature', 'vector', 'category']
+  const allowedPayloadKeys = ['signature', 'vector', 'category', 'supportRequest', 'supportType']
   const payload: Record<string, string> = { siteScope: SITE_SCOPE }
   const boundedMetadata: Record<string, string> = {
     actionType: actionType.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 80),
@@ -92,7 +92,9 @@ export async function POST(request: Request) {
   if (value.payload && typeof value.payload === 'object' && !Array.isArray(value.payload)) {
     for (const key of allowedPayloadKeys) {
       const field = (value.payload as Record<string, unknown>)[key]
-      if (typeof field === 'string') payload[key] = field.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 80)
+      if (typeof field !== 'string') continue
+      if (key === 'supportType' && !['update', 'repair', 'source', 'support'].includes(field)) continue
+      payload[key] = field.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, key === 'supportRequest' ? 240 : 80)
     }
   }
 

@@ -5,7 +5,7 @@ import { auth } from '@/lib/auth'
 import { getFighterCredentialStatus, type FighterId } from '@/lib/bot-auth'
 import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
-import { dragonCommandQueue, dragonControlState, dragonEmergencyStop, dragonTelemetryRecords } from '@/lib/db/schema'
+import { dragonCommandQueue, dragonControlState, dragonEmergencyStop, dragonRuleRevisions, dragonTelemetryRecords } from '@/lib/db/schema'
 import { claimOrReadMmAuthority } from '@/lib/operator'
 import { SITE_SCOPE } from '@/lib/site-scope'
 
@@ -20,6 +20,14 @@ const fighterRoles: Record<FighterId, string> = {
 }
 const fighters: FighterId[] = ['ruach', 'xena', 'superbot']
 const listenerFreshnessMs = 32_000
+
+function decodeRuleText(value: string) {
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) return parsed
+  } catch {}
+  return value.trim() ? [value.trim()] : []
+}
 
 function canonicalFighterId(value: string) {
   return value.toLowerCase() === 'zena' ? 'xena' : value.toLowerCase()
@@ -44,7 +52,7 @@ export async function GET() {
 
   const isMm = await claimOrReadMmAuthority(session.user.id)
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  const [events, heartbeats, commands, combatEvents, recentTelemetry, controls, stops, telemetryTotals, activeAttack] = await Promise.all([
+  const [events, heartbeats, commands, combatEvents, recentTelemetry, controls, stops, telemetryTotals, activeAttack, ruleRows] = await Promise.all([
     db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
       .where(and(
         gte(dragonTelemetryRecords.receivedAt, cutoff),
@@ -79,6 +87,11 @@ export async function GET() {
         sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
       )),
     getActiveAttack(),
+    db.select({ revision: dragonRuleRevisions.revision, rules: dragonRuleRevisions.rules, createdAt: dragonRuleRevisions.createdAt, cooperativeAssignment: dragonRuleRevisions.cooperativeAssignment, groundRuach: dragonRuleRevisions.groundRuach, groundXena: dragonRuleRevisions.groundXena })
+      .from(dragonRuleRevisions)
+      .where(eq(dragonRuleRevisions.siteScope, SITE_SCOPE))
+      .orderBy(desc(dragonRuleRevisions.revision))
+      .limit(1),
   ])
 
   const observedAt = new Date()
@@ -137,6 +150,29 @@ export async function GET() {
     operator: { name: session.user.name, email: session.user.email, isMm },
     domain: SITE_SCOPE,
     timestamp: observedAt.toISOString(),
+    rules: ruleRows[0] ? {
+      ...ruleRows[0],
+      rules: decodeRuleText(ruleRows[0].rules),
+      createdAt: ruleRows[0].createdAt.toISOString(),
+    } : null,
+    reports: fighterRows.map((fighter) => {
+      const event = latestByFighter.get(fighter.id)
+      const supportType = event?.payload.supportType
+      const requestType = supportType === 'update' || supportType === 'repair' || supportType === 'source' || supportType === 'support'
+        ? supportType
+        : null
+      const reportAge = event ? observedAt.getTime() - event.receivedAt.getTime() : null
+      return {
+        id: fighter.id,
+        name: fighter.name,
+        status: reportAge === null ? 'awaiting' : reportAge >= 0 && reportAge <= listenerFreshnessMs ? 'reporting' : 'stale',
+        detail: event ? event.payload.status ?? event.eventType.replace(/_/g, ' ') : null,
+        health: event?.healthPercent ?? null,
+        reportedAt: event?.receivedAt.toISOString() ?? null,
+        requestType,
+        request: requestType ? event?.payload.supportRequest ?? null : null,
+      }
+    }),
     systemHealth,
     activeAttack,
     wafStatus: 'UNVERIFIED · no WAF integration is connected to this console',

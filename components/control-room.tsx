@@ -7,8 +7,6 @@ import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
 import { ActivityArchivePanel } from '@/components/activity-archive'
 import { PlatformConsole } from '@/components/platform-console'
-import { BrowserEnvironmentPanel } from '@/components/browser-environment-panel'
-import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
 import { SiteHealthPanel } from '@/components/site-health-panel'
 import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
@@ -60,10 +58,9 @@ const fetcher = async (url: string) => {
   return response.json()
 }
 
-const strikeLabels: Record<FighterId, string> = {
+const strikeLabels: Partial<Record<FighterId, string>> = {
   ruach: 'Defend · scraper',
   xena: 'Defend · traffic surge',
-  superbot: 'Defend · credential probe',
 }
 
 const stopTargets: Array<{ id: StopTarget; label: string; flag: keyof NonNullable<Operations['stops']> }> = [
@@ -201,6 +198,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <h1 className="brand-name">MASTER CONTROL</h1>
         </div>
         <div className="topbar-right">
+          <a className="website-destination-link" href="/rules">Rules &amp; reports</a>
           <a className="website-destination-link" href="/diagnostics">Connection diagnostics</a>
           <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
         </div>
@@ -229,10 +227,9 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
                 <p className="signal-age">Report {formatAge(fighter.lastSeen)} · inbox poll {formatAge(fighter.lastInboxPoll)}</p>
                 <div className="fighter-strike-row">
-                  <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped || !data?.activeAttack}  aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} only when an active attack report is available`}
->
+                  {fighter.id === 'superbot' ? <span className="strike-disabled" role="note">No strike permission</span> : <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped || !data?.activeAttack} aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} only when an active attack report is available`}>
                     {isPending ? 'Queuing…' : !data?.activeAttack ? 'Waiting for attack report' : strikeLabels[fighter.id as FighterId]}
-                  </button>
+                  </button>}
                   {strikeToast?.fighterId === fighter.id && <span key={strikeToast.key} className={`strike-ack strike-ack-${strikeToast.side}`} role="status" aria-live="polite" onAnimationEnd={() => setStrikeToast(null)}>Defensive directive queued.</span>}
                 </div>
               </article>
@@ -271,17 +268,15 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
 
         <section id="view-panel-tester" className="view-panel tester-view" role="tabpanel" aria-labelledby="view-tab-tester" tabIndex={0} hidden={activeView !== 'tester'}>
           <PlatformConsole onOpenSecurityView={() => {
-            selectDashboardView('intel')
+            selectDashboardView('dashboard')
             requestAnimationFrame(() => {
-              requestAnimationFrame(() => document.getElementById('cloudflare-security-view')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+              requestAnimationFrame(() => document.getElementById('site-health-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
             })
           }} />
         </section>
 
         <section id="view-panel-intel" className="view-panel intel-view" role="tabpanel" aria-labelledby="view-tab-intel" tabIndex={0} hidden={activeView !== 'intel'}>
           <div className="control-grid intel-grid">
-        <CloudflareTelemetryPanel fighters={data?.fighters ?? []} />
-        <BrowserEnvironmentPanel />
         <ActivityArchivePanel />
         <section className="panel magic-panel" aria-labelledby="magic-heading">
           <div className="panel-heading"><div><p className="section-kicker">SEPARATE · AGGREGATE ONLY</p><h2 id="magic-heading">Magic Dragons</h2></div><span className="panel-sigil magic-sigil" aria-hidden="true">✧</span></div>

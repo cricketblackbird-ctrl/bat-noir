@@ -13,7 +13,6 @@ const fighters = ['ruach', 'xena', 'superbot'] as const
 const strikePresets = {
   ruach: { strategy: 'isolate_recover', threatType: 'scraper' },
   xena: { strategy: 'shield_restore', threatType: 'traffic_surge' },
-  superbot: { strategy: 'inspect_verify', threatType: 'credential_probe' },
 } as const
 
 export type FighterId = (typeof fighters)[number]
@@ -78,13 +77,15 @@ export async function issueDefenseRunbook(input: { strategy: string; formation: 
 
 export async function issueStrike(input: { fighterId: string }) {
   const mm = await requireMm()
-  if (!fighters.includes(input.fighterId as FighterId)) throw new Error('Choose one assigned fighter.')
+  if (input.fighterId !== 'ruach' && input.fighterId !== 'xena') {
+    throw new Error('Only Ruach and Xena may receive site-scoped defensive strike directives.')
+  }
 
-  const fighterId = input.fighterId as FighterId
+  const fighterId = input.fighterId
   const activeAttack = await getActiveAttack()
   if (!activeAttack) throw new Error('Defensive directives are only available while a recent authenticated attack report is active.')
 
-  const fighterKey = fighterId === 'xena' ? 'zena' : fighterId
+  const fighterKey = fighterId
   const preset = strikePresets[fighterId]
 
   const [queued] = await db.transaction(async (tx) => {

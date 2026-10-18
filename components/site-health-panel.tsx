@@ -28,7 +28,7 @@ type HealthSnapshot = {
         available: false
         reason: 'zone_not_configured' | 'connect_token_unavailable' | 'permission_denied' | 'query_rejected' | 'zone_not_found' | 'rate_limited' | 'request_timeout' | 'upstream_unavailable' | 'unknown_error'
       }
-  site: { ok: boolean; statusCode: number | null; latencyMs: number | null }
+  site: { ok: boolean; statusCode: number | null; latencyMs: number | null; pageTitle: string | null; pageDescription: string | null; contentFetchedAt: string }
   activeIncident: { detectedAt: string; lastTriggeredAt: string; blockedCount: number } | null
 }
 
@@ -52,7 +52,7 @@ function formatBytes(bytes: number) {
 }
 
 export function SiteHealthPanel() {
-  const { data, error, isLoading, mutate } = useSWR<HealthSnapshot>('/api/security/health', fetcher, {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<HealthSnapshot>('/api/security/health', fetcher, {
     refreshInterval: 30_000,
     revalidateOnFocus: true,
     dedupingInterval: 10_000,
@@ -60,13 +60,13 @@ export function SiteHealthPanel() {
   return (
     <section className="panel site-health-panel" aria-labelledby="site-health-heading">
       <div className="panel-heading">
-        <div><p className="section-kicker">LIVE · CLOUDFLARE + SITE CHECK</p><h2 id="site-health-heading">Website health &amp; security</h2></div>
+        <div><p className="section-kicker">AUTOMATIC · CLOUDFLARE + LIVE WEBSITE</p><h2 id="site-health-heading">Website protection</h2></div>
         <div className="health-actions">
-          <button className="text-button" type="button" onClick={() => void mutate()} disabled={isLoading}>Refresh data</button>
-          <span className="health-help">Response time: under 500 ms is fast; 500–2,000 ms is typical; over 2,000 ms is slow. Lower is faster.</span>
+          <a className="text-button" href="https://montemader.com/" target="_blank" rel="noreferrer">Open website</a>
+          <button className="text-button" type="button" onClick={() => void mutate()} disabled={isLoading || isValidating}>{isValidating ? 'Refreshing…' : 'Refresh from website'}</button>
         </div>
       </div>
-      <p className="health-description">Cloudflare zone analytics when connected, plus a direct HTTPS check of the configured site. Aggregate request data only; no visitor IP history.</p>
+      <p className="health-description">Automatic Cloudflare analytics and live page data from montemader.com. The refresh checks the page itself and current Cloudflare feed.</p>
       {error ? (
         error instanceof HealthRequestError && error.status === 401 ? (
           <div className="health-auth-state" role="status">
@@ -89,15 +89,15 @@ export function SiteHealthPanel() {
         <>
           <div className="health-status-row">
             <span className={`health-status ${data.site.ok ? 'health-good' : 'health-bad'}`}>Website {data.site.ok ? 'reachable' : 'unavailable'}</span>
-            {data.cloudflare.available ? (
-              <a className={`health-status health-status-link ${data.cloudflare.metrics.thresholdMet ? 'health-bad' : 'health-good'}`} href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">{data.cloudflare.metrics.thresholdMet ? 'Security alert · open Cloudflare' : 'Cloudflare online · open dashboard'}</a>
-            ) : (
-              <>
-                <span className="health-status health-attention">Cloudflare unavailable</span>
-                <a className="health-status health-status-link health-attention" href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">Open Cloudflare</a>
-              </>
-            )}
+            {data.cloudflare.available
+              ? <span className={`health-status ${data.cloudflare.metrics.thresholdMet ? 'health-bad' : 'health-good'}`}>{data.cloudflare.metrics.thresholdMet ? 'Cloudflare alert threshold reached' : 'Cloudflare analytics connected'}</span>
+              : <span className="health-status health-attention">Cloudflare feed needs connection</span>}
             <span className="health-observed">Checked {formatCentralTime(data.capturedAt)}</span>
+          </div>
+          <div className="website-current-content">
+            <p className="section-kicker">LIVE PAGE DATA · {formatCentralTime(data.site.contentFetchedAt)}</p>
+            <h3>{data.site.pageTitle ?? 'Page title not available from the live response'}</h3>
+            <p>{data.site.pageDescription ?? 'No meta description was present in the fetched page.'}</p>
           </div>
           <div className="health-metrics">
             <article><span>HTTP status</span><strong>{data.site.statusCode ?? 'No response'}</strong></article>
@@ -113,7 +113,7 @@ export function SiteHealthPanel() {
           {data.activeIncident && <p className="health-incident"><strong>Active incident:</strong> detected {formatCentralDateTime(data.activeIncident.detectedAt)} · {data.activeIncident.blockedCount.toLocaleString()} recent blocked/challenged requests.</p>}
         </>
       )}
-      <p className="health-caveat">The alert is based on Cloudflare-reported blocked/challenged events, not proof of attacker identity. Defensive containment is only Cloudflare’s existing edge action.</p>
+      <p className="health-caveat">This feed is read-only analytics; it does not enable WAF rules. Active Cloudflare firewall configuration is not verified here. The refresh pulls the live page and current aggregate Cloudflare data.</p>
     </section>
   )
 }
