@@ -20,6 +20,28 @@ This runbook records how the usage panel is connected, where its credentials are
 
 **Last observed status:** the variable was present in the project runtime, but calls to both Vercel endpoints returned HTTP 403 (`invalidToken`). No live analytics or billing values were confirmed at that time. Recheck after replacing the token; do not treat an unavailable value as zero.
 
+## Domain DNS and Cloudflare edge
+
+The operator supplied a `dig montemader.com` answer showing two A records with a 300-second TTL:
+
+| Host | Type | Value | TTL |
+| --- | --- | --- | --- |
+| `montemader.com` | A | `104.21.52.12` | 300 seconds |
+| `montemader.com` | A | `172.67.180.44` | 300 seconds |
+
+These are Cloudflare proxy/anycast addresses, consistent with the domain being proxied through Cloudflare. This confirms the DNS answer observed in that capture; by itself, it does not establish that the origin is healthy, the desired Vercel route is configured, or that firewall rules permit the intended traffic. Verify those independently with an HTTPS response and the relevant Cloudflare/Vercel domain and firewall configuration. The capture was supplied in chat, so its observation time and resolver were not independently recorded here.
+
+## Latest independent verification
+
+Checks run on 2026-10-18:
+
+- The operator-provided DNS capture earlier in chat showed `104.21.52.12` and `172.67.180.44`; that capture's time and resolver are unknown.
+- A fresh lookup from this environment and independent Google and Cloudflare DNS-over-HTTPS resolvers returned only `162.254.39.118` for `montemader.com`. The current delegated nameservers resolved to `dns1.namecheaphosting.com` and `dns2.namecheaphosting.com`.
+- HTTPS HEAD requests returned `200` for both `https://montemader.com` and `https://mastercontrolsuite.vercel.app`. The former identified a LiteSpeed/WordPress response; the latter is a Vercel response.
+- The deployed `https://mastercontrolsuite.vercel.app/api/vercel-usage` returned `404 NOT_FOUND`. The checked-out app builds successfully, but the current production deployment does not serve this route. The local preview is gated by its sign-in screen.
+
+**Recovery caution:** do not set `104.21.52.12` and `172.67.180.44` as ordinary A records at Namecheap. Those are Cloudflare proxy IPs, not the site origin, and the current delegation is not to Cloudflare. To restore Cloudflare proxying, first confirm the correct Cloudflare zone, assigned Cloudflare nameservers, and the actual origin record; then update registrar delegation and proxy settings through the authoritative account. No DNS or registrar changes were made during these checks.
+
 ## Firewall IP Access Rules
 
 These are the rule details supplied for documentation. They have **not** been verified against or applied to Vercel Firewall settings by this code change.
