@@ -31,9 +31,16 @@ type HealthSnapshot = {
   activeIncident: { detectedAt: string; lastTriggeredAt: string; blockedCount: number } | null
 }
 
+class HealthRequestError extends Error {
+  constructor(public status: number) {
+    super('Live security data is unavailable.')
+    this.name = 'HealthRequestError'
+  }
+}
+
 const fetcher = async (url: string) => {
   const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin' })
-  if (!response.ok) throw new Error('Live security data is unavailable.')
+  if (!response.ok) throw new HealthRequestError(response.status)
   return response.json()
 }
 
@@ -85,7 +92,21 @@ export function SiteHealthPanel() {
       </div>
       <p className="health-description">Cloudflare zone analytics when connected, plus a direct HTTPS check of {data?.domain ?? 'montemader.com'}. Aggregate request data only; no visitor IP history.</p>
       {error ? (
-        <div className="health-unavailable" role="alert">The live health snapshot could not be loaded. Verify your session and database connection, then refresh. No sample values are shown.</div>
+        error instanceof HealthRequestError && error.status === 401 ? (
+          <div className="health-auth-state" role="status">
+            <div className="health-auth-callout">
+              <strong>Confirmed: authenticated security view required</strong>
+              <p>A 401 Unauthorized response is expected without an active signed-in app session. The Cloudflare connector and requested <code>Zone.Analytics:Read</code> scope were not altered; this response does not verify the live grant.</p>
+            </div>
+            <div className="health-auth-details">
+              <strong>Next verification</strong>
+              <p>Open this security dashboard in an active signed-in session and refresh to see the live Cloudflare feed status. No sample values are shown.</p>
+            </div>
+            <div className="health-auth-footer"><span>Session state: 401 Unauthorized · unauthenticated view</span><strong>Status: Sign-in required for verification</strong></div>
+          </div>
+        ) : (
+          <div className="health-unavailable" role="alert">The live health snapshot could not be loaded. Verify your session and database connection, then refresh. No sample values are shown.</div>
+        )
       ) : isLoading || !data ? (
         <p className="health-loading" role="status">Connecting to live security data…</p>
       ) : (

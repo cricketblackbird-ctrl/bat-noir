@@ -453,6 +453,13 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 
 .health-description, .health-loading, .health-unavailable, .health-details p, .health-caveat { margin: 0; color: #c3b3cb; font-size: 13px; line-height: 1.5; }
 .health-unavailable { border: 1px solid rgb(239 68 68 / 40%); border-radius: 7px; padding: 10px; color: #ffc2cc; }
+.health-auth-state { display: grid; gap: 14px; border: 1px solid rgb(251 191 36 / 38%); border-radius: 10px; padding: 16px; background: #09050d; }
+.health-auth-callout { border-left: 4px solid #fbbf24; padding: 10px 12px; background: #140c1b; color: #f7f0f9; }
+.health-auth-callout > strong, .health-auth-details > strong { display: block; margin-bottom: 5px; color: #fbbf24; }
+.health-auth-callout p, .health-auth-details p { margin: 0; color: #c3b3cb; font-size: 13px; line-height: 1.6; }
+.health-auth-callout code, .health-auth-details code { color: #f472b6; }
+.health-auth-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 14px; border-top: 1px solid #412850; padding-top: 12px; color: #a794b2; font-size: 12px; }
+.health-auth-footer strong { color: #fbbf24; }
 .health-diagnostic { border: 1px solid rgb(214 166 210 / 44%); border-radius: 7px; padding: 10px; color: #e3d3e5; font-size: 13px; line-height: 1.5; }
 .health-diagnostic strong { color: #ecd0e8; }
 .health-attention { color: #d6a6d2; }
