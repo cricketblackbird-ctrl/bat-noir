@@ -7,7 +7,7 @@
 .chest-entry-form, .chest-unlock-form { display: flex; flex: 0 0 auto; flex-direction: column; gap: 6px; }
 .chest-entry-form input, .chest-entry-form select, .chest-entry-form textarea, .chest-unlock-form input { width: 100%; min-width: 0; border: 1px solid #553967; border-radius: 6px; padding: 8px 10px; background: #100a16; color: #f1e6f6; font-size: 14px; }
 .chest-entry-form textarea { min-height: 76px; resize: vertical; white-space: pre-wrap; }
-.chest-entry-form input:focus-visible, .chest-entry-form select:focus-visible, .chest-entry-form textarea:focus-visible, .chest-unlock-form input:focus-visible { border-color: #e5bd68; outline: 2px solid rgb(209 140 195 / 24%); outline-offset: 1px; }
+.chest-entry-form input:focus-visible, .chest-entry-form select:focus-visible, .chest-entry-form textarea:focus-visible, .chest-unlock-form input:focus-visible { border-color: #d6a6d2; outline: 2px solid rgb(209 140 195 / 24%); outline-offset: 1px; }
 .chest-entry-form .button, .chest-unlock-form .button { align-self: flex-start; min-width: 150px; }
 .key-chest-warning, .key-chest-state, .key-chest-empty, .key-chest-message { margin: 2px 0 0; color: #a99bad; font-size: 11px; line-height: 1.45; }
 .key-chest-warning { color: #e0c99b; }

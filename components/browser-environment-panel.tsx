@@ -132,16 +132,16 @@ export function BrowserEnvironmentPanel() {
       </section>
 
       <section className="browser-data-section cloudflare-emergency" aria-labelledby="cloudflare-live-heading" aria-live="polite">
-        <div className="browser-data-subheading"><h3 id="cloudflare-live-heading">Live Cloudflare emergency status</h3><span>{data ? `Updated ${formatCentralTime(data.capturedAt)}` : 'Live connection'}</span></div>
+        <div className="browser-data-subheading"><h3 id="cloudflare-live-heading">Cloudflare connection</h3><div className="cloudflare-heading-actions"><span className={`cloudflare-state ${data?.cloudflare.available ? 'is-online' : 'is-offline'}`} role="status"><span aria-hidden="true" />{data?.cloudflare.available ? 'ONLINE' : error ? 'CHECK CONNECTION' : isLoading || !data ? 'CONNECTING' : 'UNAVAILABLE'}</span><a className="cloudflare-dashboard-link" href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">Open dashboard ↗</a></div></div>
         {error ? (
           <p className="cloudflare-live-message is-unavailable" role="alert">{error.message} No sample values are shown.</p>
         ) : isLoading || !data ? (
           <p className="cloudflare-live-message" role="status">Connecting to authenticated Cloudflare analytics…</p>
         ) : !data.cloudflare.available ? (
-          <p className="cloudflare-live-message is-unavailable" role="status">Cloudflare analytics unavailable ({data.cloudflare.reason}). Check the existing Montemader Security Telemetry connection and zone permissions.</p>
+          <p className="cloudflare-live-message is-unavailable" role="status">Cloudflare could not provide live security data ({data.cloudflare.reason}). Use the dashboard link above to review your Cloudflare account and zone access.</p>
         ) : (
           <>
-            <p className={`cloudflare-live-message ${data.cloudflare.metrics.thresholdMet ? 'is-alert' : 'is-clear'}`} role="status">{alertLabel}</p>
+            <p className={`cloudflare-live-message ${data.cloudflare.metrics.thresholdMet ? 'is-alert' : 'is-clear'}`} role="status"><span className="cloudflare-status-light" aria-hidden="true" />{alertLabel}</p>
             <p className="cloudflare-explainer">This is Cloudflare&apos;s blocked/challenged traffic count, not proof of a breach. Website reachability and response time are shown separately.</p>
             <div className="browser-signal-grid cloudflare-metrics">
               <article className="browser-signal"><span>Requests · 24h</span><strong>{data.cloudflare.metrics.requests24h.toLocaleString()}</strong></article>

@@ -83,7 +83,7 @@ export function SiteHealthPanel() {
           <span className="health-help">HTTP is the site&apos;s status code. Response time in ms means milliseconds; lower is usually faster.</span>
         </div>
       </div>
-      <p className="health-description">Verified Cloudflare zone analytics and a direct HTTPS check of {data?.domain ?? 'montemader.com'}. Aggregate request data only; no visitor IP history.</p>
+      <p className="health-description">Cloudflare zone analytics when connected, plus a direct HTTPS check of {data?.domain ?? 'montemader.com'}. Aggregate request data only; no visitor IP history.</p>
       {error ? (
         <div className="health-unavailable" role="alert">The live health snapshot could not be loaded. Verify your session and database connection, then refresh. No sample values are shown.</div>
       ) : isLoading || !data ? (
@@ -93,9 +93,12 @@ export function SiteHealthPanel() {
           <div className="health-status-row">
             <span className={`health-status ${data.site.ok ? 'health-good' : 'health-bad'}`}>Website {data.site.ok ? 'reachable' : 'unavailable'}</span>
             {data.cloudflare.available ? (
-              <span className={`health-status ${data.cloudflare.metrics.thresholdMet ? 'health-bad' : 'health-good'}`}>{data.cloudflare.metrics.thresholdMet ? 'Security alert · traffic threshold reached' : 'Cloudflare live · below alert threshold'}</span>
+              <a className={`health-status health-status-link ${data.cloudflare.metrics.thresholdMet ? 'health-bad' : 'health-good'}`} href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">{data.cloudflare.metrics.thresholdMet ? 'Security alert · open Cloudflare' : 'Cloudflare online · open dashboard'}</a>
             ) : (
-              <button className="health-status health-attention health-status-button" type="button" onClick={() => void mutate()} disabled={isLoading} aria-label="Retry the website and Cloudflare connection checks" title="Retry both the website reachability check and Cloudflare analytics.">Cloudflare unavailable · retry</button>
+              <>
+                <span className="health-status health-attention">Cloudflare unavailable</span>
+                <a className="health-status health-status-link health-attention" href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">Open Cloudflare</a>
+              </>
             )}
             <span className="health-observed">Checked {formatCentralTime(data.capturedAt)}</span>
           </div>
@@ -109,15 +112,25 @@ export function SiteHealthPanel() {
               <article><span>Challenged · 60s</span><strong>{data.cloudflare.metrics.challenged60s.toLocaleString()}</strong></article>
             </>}
           </div>
+          <section className="health-live-feed" aria-labelledby="health-live-feed-heading">
+            <div className="health-live-feed-heading"><h3 id="health-live-feed-heading">Cloudflare activity feed</h3><span className={`health-feed-live ${data.cloudflare.available ? '' : 'is-unavailable'}`}><span aria-hidden="true" />{data.cloudflare.available ? 'LIVE · aggregated · last 60s' : 'UNAVAILABLE'}</span></div>
+            {data.cloudflare.available ? data.cloudflare.metrics.firewallActions.length > 0 ? (
+              <ul className="health-live-feed-list">{data.cloudflare.metrics.firewallActions.map((event) => <li key={`${event.action}-${event.source}`}><span>{event.action.replace(/_/g, ' ')} · {event.source.replace(/_/g, ' ')}</span><strong>{event.count.toLocaleString()}</strong></li>)}</ul>
+            ) : (
+              <p className="health-feed-empty">No firewall events reported in the last 60 seconds.</p>
+            ) : (
+              <p className="health-feed-empty">Restore Cloudflare access to see aggregate firewall activity here.</p>
+            )}
+            <p className="health-feed-updated">{data.cloudflare.available ? 'Updated' : 'Checked'} {formatCentralTime(data.capturedAt)} · refreshes every 30 seconds</p>
+          </section>
           {data.cloudflare.available ? (
             <div className="health-details">
               <p><strong>Alert rule:</strong> {data.cloudflare.metrics.threshold} blocked or challenged requests within 60 seconds. Automatic monitoring checks once per minute and records incidents on this dashboard.</p>
               <p><strong>Cloudflare threats · 24h:</strong> {data.cloudflare.metrics.threatRequests24h.toLocaleString()} <span aria-hidden="true">·</span> <strong>Cached requests:</strong> {data.cloudflare.metrics.cachedRequests24h.toLocaleString()}</p>
-              {data.cloudflare.metrics.firewallActions.length > 0 && <div><h3>Recent firewall activity</h3><ul className="health-event-list">{data.cloudflare.metrics.firewallActions.map((event) => <li key={`${event.action}-${event.source}`}><span>{event.action.replace(/_/g, ' ')} · {event.source.replace(/_/g, ' ')}</span><strong>{event.count.toLocaleString()}</strong></li>)}</ul></div>}
               {data.cloudflare.metrics.countries.length > 0 && <p><strong>Top firewall-event countries · 60s:</strong> {data.cloudflare.metrics.countries.map((entry) => `${entry.country} ${entry.count}`).join(' · ')}</p>}
             </div>
           ) : (
-            <div className="health-diagnostic" role="status"><strong>Live Cloudflare analytics unavailable:</strong> {cloudflareIssueMessage(data.cloudflare.reason)} No sample values are shown.</div>
+            <div className="health-diagnostic" role="status"><strong>Cloudflare connection unavailable:</strong> {cloudflareIssueMessage(data.cloudflare.reason)} No sample values are shown.</div>
           )}
           {data.activeIncident && <p className="health-incident"><strong>Active incident:</strong> detected {formatCentralDateTime(data.activeIncident.detectedAt)} · {data.activeIncident.blockedCount.toLocaleString()} recent blocked/challenged requests.</p>}
         </>
