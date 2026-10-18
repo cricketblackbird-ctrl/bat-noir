@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { deleteActivityArchive, getActivityArchive, putActivityArchive } from '@/lib/activity-archive'
 import { streamTopics, type ActivityArchiveInput, type BrowserHintSnapshot, type StreamTopic } from '@/lib/activity-archive-types'
+import { readJsonBody } from '@/lib/read-json-body'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,7 @@ function hasSameOrigin(request: Request) {
   const origin = request.headers.get('origin')
   if (!origin) return request.headers.get('sec-fetch-site') === 'same-origin'
   try {
-    return new URL(origin).host === new URL(request.url).host
+    return new URL(origin).origin === new URL(request.url).origin
   } catch {
     return false
   }
@@ -88,17 +89,10 @@ export async function POST(request: Request) {
   if (!hasSameOrigin(request)) return json({ error: 'Forbidden' }, 403)
   if (request.headers.get('content-type')?.split(';')[0] !== 'application/json') return json({ error: 'Unsupported content type' }, 415)
 
-  const body = await request.text()
-  if (Buffer.byteLength(body, 'utf8') > maximumRequestBytes) return json({ error: 'Payload too large' }, 413)
+  const parsed = await readJsonBody(request, maximumRequestBytes)
+  if (!parsed.ok) return json({ error: parsed.status === 413 ? 'Payload too large' : 'Invalid JSON' }, parsed.status)
 
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(body)
-  } catch {
-    return json({ error: 'Invalid JSON' }, 400)
-  }
-
-  const input = parseInput(parsed)
+  const input = parseInput(parsed.value)
   if (!input) return json({ error: 'Invalid archive record' }, 400)
 
   try {

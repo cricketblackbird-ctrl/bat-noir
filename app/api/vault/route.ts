@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { userSecretVaults } from '@/lib/db/schema'
+import { readJsonBody } from '@/lib/read-json-body'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,6 +12,16 @@ export const dynamic = 'force-dynamic'
 const responseHeaders = { 'Cache-Control': 'private, no-store' }
 const maximumBodyLength = 750_000
 const base64UrlPattern = /^[A-Za-z0-9_-]+$/
+
+function hasSameOrigin(request: Request) {
+  const origin = request.headers.get('origin')
+  if (!origin) return request.headers.get('sec-fetch-site') === 'same-origin'
+  try {
+    return new URL(origin).origin === new URL(request.url).origin
+  } catch {
+    return false
+  }
+}
 
 function isBase64Url(value: unknown, minimumLength: number, maximumLength: number) {
   if (typeof value !== 'string' || value.length < minimumLength || value.length > maximumLength) return false
@@ -39,21 +50,19 @@ export async function GET() {
 export async function PUT(request: Request) {
   const userId = await getUserId()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: responseHeaders })
+  if (!hasSameOrigin(request)) return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: responseHeaders })
   if (request.headers.get('content-type')?.split(';')[0] !== 'application/json') {
     return NextResponse.json({ error: 'Unsupported content type' }, { status: 415, headers: responseHeaders })
   }
 
-  const body = await request.text()
-  if (body.length > maximumBodyLength) {
-    return NextResponse.json({ error: 'Payload too large' }, { status: 413, headers: responseHeaders })
+  const parsed = await readJsonBody(request, maximumBodyLength)
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.status === 413 ? 'Payload too large' : 'Invalid encrypted vault payload' },
+      { status: parsed.status, headers: responseHeaders },
+    )
   }
-
-  let payload: unknown
-  try {
-    payload = JSON.parse(body)
-  } catch {
-    return NextResponse.json({ error: 'Invalid encrypted vault payload' }, { status: 400, headers: responseHeaders })
-  }
+  const payload = parsed.value
 
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return NextResponse.json({ error: 'Invalid encrypted vault payload' }, { status: 400, headers: responseHeaders })
