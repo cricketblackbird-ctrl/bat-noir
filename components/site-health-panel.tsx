@@ -63,7 +63,7 @@ export function SiteHealthPanel() {
         <div><p className="section-kicker">LIVE · CLOUDFLARE + SITE CHECK</p><h2 id="site-health-heading">Website health &amp; security</h2></div>
         <div className="health-actions">
           <button className="text-button" type="button" onClick={() => void mutate()} disabled={isLoading}>Refresh data</button>
-          <span className="health-help">HTTP is the site&apos;s status code. Response time in ms means milliseconds; lower is usually faster.</span>
+          <span className="health-help">Response time: under 500 ms is fast; 500–2,000 ms is typical; over 2,000 ms is slow. Lower is faster.</span>
         </div>
       </div>
       <p className="health-description">Cloudflare zone analytics when connected, plus a direct HTTPS check of the configured site. Aggregate request data only; no visitor IP history.</p>
@@ -101,7 +101,7 @@ export function SiteHealthPanel() {
           </div>
           <div className="health-metrics">
             <article><span>HTTP status</span><strong>{data.site.statusCode ?? 'No response'}</strong></article>
-            <article><span>Response time</span><strong>{data.site.latencyMs === null ? 'Unavailable' : `${data.site.latencyMs} ms`}</strong></article>
+            <article><span>Response time</span><strong>{data.site.latencyMs === null ? 'Unavailable' : `${data.site.latencyMs} ms`}</strong><small>&lt;500 fast · 500–2,000 typical · &gt;2,000 slow</small></article>
             {data.cloudflare.available && <>
               <article><span>Requests · 24h</span><strong>{data.cloudflare.metrics.requests24h.toLocaleString()}</strong></article>
               <article><span>Transfer · 24h</span><strong>{formatBytes(data.cloudflare.metrics.bytes24h)}</strong></article>

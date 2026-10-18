@@ -30,7 +30,7 @@
   --pink: #c74b9e;
   --status-ok: #e9a4cf;
   --ruach-orchid: #d6a6d2;
-  --ruach-crimson: #ff1a40;
+  --ruach-pink: #d06fc0;
   --radius: 0.8rem;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -108,7 +108,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .fighter-ruach .fighter-heading h3 { color: #f0d6ee; text-shadow: 0 0 11px rgb(214 166 210 / 22%); }
 .fighter-ruach .fighter-role { color: #d8b8e4; }
 .fighter-ruach .health-reading span { color: var(--ruach-orchid); }
-.fighter-ruach .strike-button { border-color: var(--ruach-orchid); background: linear-gradient(110deg, #7b3f9e 0%, #c74b9e 42%, #ff1a40 72%, #d6a6d2 100%); color: #fff8fd; }
+.fighter-ruach .strike-button { border-color: var(--ruach-orchid); background: linear-gradient(110deg, #7b3f9e 0%, #c74b9e 42%, #d06fc0 72%, #d6a6d2 100%); color: #fff8fd; }
 .fighter-topline { gap: 7px; }
 .fighter-glyph { display: grid; flex: 0 0 26px; width: 26px; height: 26px; place-items: center; border: 1px solid rgb(206 122 188 / 53%); border-radius: 50%; color: #e6a5d3; font-family: Georgia, serif; font-size: 15px; }
 .fighter-xena .fighter-glyph { color: #e6a5d3; }
@@ -389,7 +389,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .attack-report-heading span { color: #aa9bb3; font-size: 9px; text-align: right; }
 .attack-report-state, .attack-report-caveat { margin: 0; color: #c3b3cb; font-size: 10px; line-height: 1.4; }
 .attack-report-state.is-active { color: #dcaed6; }
-.attack-report-state.is-unavailable { color: #ff9aa5; }
+.attack-report-state.is-unavailable { color: #e3b1ee; }
 .attack-report-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 0; }
 .attack-report-facts div { min-width: 0; border: 1px solid rgb(199 75 158 / 17%); border-radius: 5px; padding: 5px 6px; }
 .attack-report-facts dt { color: #aa9cad; font-size: 9px; text-transform: uppercase; letter-spacing: .04em; }
@@ -488,6 +488,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .health-metrics article { display: flex; min-width: 0; flex-direction: column; gap: 4px; border: 1px solid rgb(199 75 158 / 20%); border-radius: 7px; padding: 9px; background: rgb(9 6 13 / 45%); }
 .health-metrics article span { color: #aa9cad; font-size: 13px; }
 .health-metrics article strong { overflow-wrap: anywhere; color: #f4eaf2; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 17px; font-weight: 600; }
+.health-metrics article small { color: #ad9cb7; font-size: 10px; line-height: 1.4; }
 .health-live-feed { display: grid; gap: 7px; border: 1px solid rgb(199 75 158 / 32%); border-radius: 8px; padding: 10px; background: linear-gradient(110deg, rgb(38 20 43 / 72%), rgb(15 10 21 / 88%)); }
 .health-live-feed-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .health-live-feed-heading h3 { margin: 0; color: #e7b9df; font-size: 15px; font-weight: 600; }
@@ -638,11 +639,11 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .cloudflare-live-message { display: flex; align-items: flex-start; gap: 8px; margin: 0; border: 1px solid rgb(123 63 158 / 34%); border-radius: 7px; padding: 10px; color: #d9cadd; font-size: 13px; line-height: 1.5; }
 .cloudflare-explainer { margin: -2px 0 0; color: #c3b3cb; font-size: 14px; line-height: 1.45; }
 .cloudflare-live-message.is-clear { border-color: rgb(214 166 210 / 48%); color: #f0d6ee; box-shadow: 0 0 14px rgb(214 166 210 / 14%); }
-.cloudflare-live-message.is-alert { border-color: rgb(255 106 133 / 70%); background: rgb(91 21 43 / 20%); color: #ffc1cc; box-shadow: 0 0 14px rgb(255 106 133 / 20%); }
+.cloudflare-live-message.is-alert { border-color: rgb(213 130 198 / 70%); background: rgb(54 24 61 / 24%); color: #efb7e5; box-shadow: 0 0 14px rgb(213 130 198 / 20%); }
 .cloudflare-live-message.is-unavailable { border-color: rgb(214 166 210 / 44%); color: #e3d3e5; }
 .cloudflare-status-light { margin-top: 5px; }
 .cloudflare-live-message.is-clear .cloudflare-status-light { color: #e6a5d3; box-shadow: 0 0 9px #e6a5d3; }
-.cloudflare-live-message.is-alert .cloudflare-status-light { color: #ff6a85; box-shadow: 0 0 9px #ff6a85; }
+.cloudflare-live-message.is-alert .cloudflare-status-light { color: #d678c5; box-shadow: 0 0 9px #d678c5; }
 @media (prefers-reduced-motion: reduce) { .cloudflare-state, .cloudflare-state > span, .health-feed-live > span { animation: none; } }
 .cloudflare-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 

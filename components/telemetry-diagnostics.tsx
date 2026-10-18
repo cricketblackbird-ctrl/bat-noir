@@ -65,7 +65,7 @@ async function getProbe(target: (typeof targets)[number]): Promise<Probe> {
       const cloudflareAvailable = payload.cloudflare?.available === true
       const siteReachable = payload.site?.ok === true
       const details = [
-        `Website check: ${siteReachable ? 'reachable' : 'unavailable'}${payload.site?.statusCode ? ` · HTTP ${payload.site.statusCode}` : ''}`,
+        `Website check: ${siteReachable ? 'responding' : 'unavailable'}`,
         cloudflareAvailable ? 'Cloudflare analytics: connected' : `Cloudflare analytics: ${String(payload.cloudflare?.reason ?? 'unavailable').replace(/_/g, ' ')}`,
       ]
       return { ...target, state: cloudflareAvailable && siteReachable ? 'online' : 'attention', httpStatus: response.status, summary: cloudflareAvailable && siteReachable ? 'Live site and Cloudflare checks responded.' : 'The route responded; one or more upstream checks need attention.', details, checkedAt }
@@ -77,7 +77,7 @@ async function getProbe(target: (typeof targets)[number]): Promise<Probe> {
       const isVerified = payload.success === true
       const details = [
         `Protected preview response: HTTP ${payload.status ?? 'unavailable'}`,
-        `Website check: ${site?.ok ? 'reachable' : 'unavailable'}${site?.statusCode ? ` · HTTP ${site.statusCode}` : ''}`,
+        `Website check: ${site?.ok ? 'responding' : 'unavailable'}`,
         `Cloudflare analytics: ${cloudflare?.available ? 'connected' : String(cloudflare?.reason ?? 'unavailable').replace(/_/g, ' ')}`,
         `Target: ${payload.target ?? 'project preview'}`,
       ]
