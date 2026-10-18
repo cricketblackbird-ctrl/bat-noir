@@ -531,6 +531,9 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .credential-scope-notice { border-left: 4px solid #34d399; border-radius: 0 14px 14px 0; padding: clamp(16px, 3vw, 24px); background: #09050d; color: #f7f0f9; font-size: 14px; line-height: 1.65; }
 .credential-scope-notice p { margin: 0; }
 .credential-scope-notice strong { color: #34d399; }
+.credential-scope-notice--warning { border-left-color: #f59e0b; }
+.credential-scope-notice--warning strong { color: #f59e0b; }
+.credential-scope-audit + .credential-scope-audit { margin-top: 1rem; }
 .credential-scope-list h3 { margin: 0 0 12px; color: #c084fc; font-size: 17px; }
 .credential-scope-intro { margin: -4px 0 12px; color: #b8a3c5; font-size: 13px; }
 .credential-scope-list ul { display: grid; gap: 8px; margin: 0; padding-left: 22px; color: #b8a3c5; font-size: 14px; line-height: 1.7; }
