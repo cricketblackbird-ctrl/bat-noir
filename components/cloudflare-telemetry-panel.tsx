@@ -79,7 +79,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
   const feedStatus = metrics ? 'PASS' : 'FAIL'
 
   return (
-    <section id="cloudflare-security-view" className="panel telemetry-panel" aria-labelledby="telemetry-heading">
+    <section id="cloudflare-security-view" className="panel telemetry-panel" aria-labelledby="telemetry-heading" tabIndex={-1}>
       <div className="panel-heading telemetry-heading">
         <div>
           <p className="section-kicker">MAGIC DRAGONS · LIVE AGGREGATE EDGE SIGNALS</p>
@@ -98,11 +98,11 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
       <p className="telemetry-description">Live data from the connected Cloudflare zone, alongside verified operations heartbeats. This view shows aggregate security details only—not visitor IP addresses or per-person histories.</p>
 
       {error ? (
-        <p className="telemetry-message" role="alert">The protected live security snapshot could not be loaded. No sample values are shown.</p>
+        <p className="telemetry-message" role="alert">Could not load live security data. Check the Cloudflare connection, then select Refresh feed.</p>
       ) : isLoading && !data ? (
         <p className="telemetry-message" role="status">Connecting to the protected Cloudflare feed…</p>
       ) : data && !data.cloudflare.available ? (
-        <p className="telemetry-message" role="status">Cloudflare check failed. Live security data was not returned. Use Refresh feed to try again.</p>
+        <p className="telemetry-message" role="status">No live security snapshot was returned. Check the Cloudflare connection, then select Refresh feed.</p>
       ) : metrics ? (
         <>
           <div className="telemetry-metrics" aria-label="Cloudflare aggregate metrics">

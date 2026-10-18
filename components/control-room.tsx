@@ -320,9 +320,13 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
 
         <section id="view-panel-tester" className="view-panel tester-view" role="tabpanel" aria-labelledby="view-tab-tester" tabIndex={0} hidden={activeView !== 'tester'}>
           <PlatformConsole onOpenSecurityView={() => {
-            selectDashboardView('dashboard')
+            selectDashboardView('intel')
             requestAnimationFrame(() => {
-              requestAnimationFrame(() => document.getElementById('site-health-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+              requestAnimationFrame(() => {
+                const securityView = document.getElementById('cloudflare-security-view')
+                securityView?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                securityView?.focus({ preventScroll: true })
+              })
             })
           }} />
         </section>

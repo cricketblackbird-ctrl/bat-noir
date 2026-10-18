@@ -104,7 +104,7 @@ function formatWebsiteSnapshot(health: WebsiteHealthSnapshot, browser: BrowserHi
     const metrics = health.cloudflare.metrics
     lines.push(
       'Cloudflare check: PASS',
-      `Cloudflare requests · 24h: ${metrics.requests24h.toLocaleString()}`}},{,
+      `Cloudflare requests · 24h: ${metrics.requests24h.toLocaleString()}`,
       `Threat requests · 24h: ${metrics.threatRequests24h.toLocaleString()}`,
       `Blocked / challenged · 60s: ${metrics.blocked60s.toLocaleString()} / ${metrics.challenged60s.toLocaleString()} (alert threshold ${metrics.threshold})`,
       `Data transfer · 24h: ${formatBytes(metrics.bytes24h)}`,
@@ -371,7 +371,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
                 <article className={`website-metric${website.site.ok ? ' is-good' : ' is-bad'}`}><span>Response time</span><strong>{website.site.latencyMs === null ? '—' : `${website.site.latencyMs} ms`}</strong><small>Fast &lt;500 ms · Typical 500–2,000 ms · Slow &gt;2,000 ms</small></article>
                 <article className="website-metric"><span>Cloudflare requests · 24h</span><strong>{cloudflareMetrics ? cloudflareMetrics.requests24h.toLocaleString() : '—'}</strong><small>Requests, not unique viewers</small></article>
                 <article className="website-metric"><span>Threat requests · 24h</span><strong>{cloudflareMetrics ? cloudflareMetrics.threatRequests24h.toLocaleString() : '—'}</strong><small>Cloudflare aggregate</small></article>
-                <article className="website-metric"><span>Blocked / challenged · 60s</span><strong>{cloudflareMetrics ? `${cloudflareMetrics.blocked60s.toLocaleString()} / ${cloudflareMetrics.challenged60s.toLocaleString()}` : '—'}</strong><small>{cloudflareMetrics ? `Alert threshold ${cloudflareMetrics.threshold}` : website.cloudflare.available ? 'No data returned' : 'Cloudflare check failed'}</small></article>
+                <article className="website-metric"><span>Blocked / challenged · 60s</span><strong>{cloudflareMetrics ? `${cloudflareMetrics.blocked60s.toLocaleString()} / ${cloudflareMetrics.challenged60s.toLocaleString()}` : '—'}</strong><small>{cloudflareMetrics ? `Alert threshold ${cloudflareMetrics.threshold}` : 'Snapshot not returned'}</small></article>
                 <article className="website-metric"><span>Data transfer · 24h</span><strong>{cloudflareMetrics ? formatBytes(cloudflareMetrics.bytes24h) : '—'}</strong><small>Aggregate response bytes</small></article>
                 <article className={`website-metric${browserHints?.online === false ? ' is-bad' : ' is-good'}`}><span>This computer</span><strong>{browserHints ? browserHints.online ? 'Browser online' : 'Browser offline' : 'Checking'}</strong><small>{browserHints?.connectionType ?? 'Connection hint unavailable'}{browserHints?.estimatedRttMs === null || !browserHints ? '' : ` · ~${browserHints.estimatedRttMs} ms RTT`}</small></article>
                 <article className="website-metric"><span>Device estimate</span><strong>{browserHints?.processorCount ? `${browserHints.processorCount} cores` : 'Unavailable'}</strong><small>{browserHints?.approximateMemoryGb ? `~${browserHints.approximateMemoryGb} GB memory` : 'Memory hint unavailable'}</small></article>
