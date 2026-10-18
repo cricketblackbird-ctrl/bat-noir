@@ -137,3 +137,12 @@ export const securityAlertIncidents = pgTable('security_alert_incidents', {
   smsProviderId: text('sms_provider_id'),
   smsError: text('sms_error'),
 })
+
+export const userSecretVaults = pgTable('user_secret_vaults', {
+  userId: text('user_id').primaryKey().notNull().references(() => user.id, { onDelete: 'cascade' }),
+  salt: text('salt').notNull(),
+  iv: text('iv').notNull(),
+  ciphertext: text('ciphertext').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})

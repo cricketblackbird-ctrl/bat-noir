@@ -13,7 +13,7 @@ export const auth = betterAuth({
         : process.env.V0_RUNTIME_URL),
   emailAndPassword: {
     enabled: true,
-    disableSignUp: true,
+    disableSignUp: process.env.NODE_ENV !== 'development',
   },
   plugins: [username()],
   trustedOrigins: [

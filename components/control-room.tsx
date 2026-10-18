@@ -4,6 +4,7 @@ import { Shield } from 'lucide-react'
 import { FormEvent, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
+import { KeyChest } from '@/components/key-chest'
 import { PlatformConsole } from '@/components/platform-console'
 import { SiteHealthPanel } from '@/components/site-health-panel'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
@@ -87,7 +88,7 @@ function StatusDot({ stopped, listenerStatus }: { stopped: boolean; listenerStat
   return <span className={`status-dot${listenerStatus === 'PASS' ? ' is-live' : ' is-stopped'}`}><span aria-hidden="true" />{label}</span>
 }
 
-export function ControlRoom({ operator }: { operator: Operations['operator'] }) {
+export function ControlRoom({ operator }: { operator: Operations['operator'] & { id: string } }) {
   const { data, error, mutate } = useSWR<Operations>('/api/operations', fetcher, { refreshInterval: 5000, revalidateOnFocus: true })
   const magic = useSWR<MagicInsights>('/api/magic-dragons', fetcher, { refreshInterval: 30000, revalidateOnFocus: true })
   const [strategy, setStrategy] = useState<Strategy>('inspect_verify')
@@ -225,6 +226,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] }) 
         </section>
 
         <section className="view-panel intel-view" aria-label="Intel and activity" hidden={activeView !== 'intel'}>
+          <KeyChest userId={operator.id} />
           <div className="control-grid intel-grid">
         <section className="panel magic-panel" aria-labelledby="magic-heading">
           <div className="panel-heading"><div><p className="section-kicker">SEPARATE · AGGREGATE ONLY</p><h2 id="magic-heading">Magic Dragons</h2></div><span className="panel-sigil magic-sigil" aria-hidden="true">✧</span></div>
