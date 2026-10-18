@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09050d">
+  <meta name="description" content="Authenticated Montemader system health, operations reports, and Cloudflare security telemetry.">
+  <title>Montemader · Master Control Suite</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #09050d;
+      --panel: #140c1b;
+      --raised: #1f1328;
+      --line: #493452;
+      --text: #f7f0f9;
+      --muted: #b6a5bd;
+      --pink: #f472b6;
+      --purple: #c084fc;
+      --good: #a8d7bf;
+      --warn: #f0c28f;
+      --bad: #ef9a9a;
+    }
+    * { box-sizing: border-box; }
+    html { min-width: 320px; scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: radial-gradient(ellipse at 50% 0%, #281733 0, var(--bg) 58%);
+      color: var(--text);
+      font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, a { font: inherit; }
+    a { color: var(--pink); }
+    button:focus-visible, a:focus-visible { outline: 2px solid var(--pink); outline-offset: 3px; }
+    .shell { width: min(1320px, calc(100% - 32px)); margin: 0 auto; padding: 22px 0 40px; }
+    .topbar, .section-head, .actions, .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .topbar { margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+    .brand { margin: 0; color: var(--text); font: 600 clamp(23px, 4vw, 34px)/1.15 Georgia, serif; letter-spacing: -.02em; }
+    .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .button, .tab {
+      min-height: 38px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 13px;
+      background: var(--raised); color: var(--text); cursor: pointer; text-decoration: none;
+      font-weight: 600; transition: border-color .15s ease, background .15s ease, transform .15s ease;
+    }
+    .button:hover, .tab:hover { border-color: var(--pink); transform: translateY(-1px); }
+    .button-primary, .tab[aria-selected="true"] { border-color: #db2777; background: linear-gradient(135deg, #701a75, #db2777); color: #fff; }
+    .button:disabled { cursor: wait; opacity: .65; transform: none; }
+    .tabs { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+    .tab { flex: 0 0 auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .panel { min-width: 0; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 13px; padding: 17px; background: linear-gradient(145deg, var(--raised), var(--panel)); box-shadow: 0 8px 24px rgb(0 0 0 / 32%); }
+    .panel h2 { margin: 0; font-size: 18px; }
+    .panel h3 { margin: 16px 0 9px; color: var(--purple); font-size: 14px; }
+    .section-head { align-items: flex-start; margin-bottom: 13px; }
+    .kicker { margin: 0 0 5px; color: var(--pink); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .status { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 20px; padding: 5px 10px; background: var(--bg); color: var(--muted); font-size: 11px; }
+    .status::before { width: 8px; height: 8px; border-radius: 50%; background: #a794b2; content: ""; }
+    .status.live::before { background: var(--good); box-shadow: 0 0 8px rgb(168 215 191 / 65%); }
+    .status.offline::before { background: var(--warn); }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 9px; margin: 10px 0; }
+    .metric { min-width: 0; border: 1px solid var(--line); border-radius: 10px; padding: 11px; background: var(--bg); }
+    .metric span { display: block; color: var(--muted); font-size: 11px; }
+    .metric strong { display: block; margin-top: 5px; color: var(--text); font-size: 20px; overflow-wrap: anywhere; }
+    .list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+    .list li, .fighter { min-width: 0; border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; background: var(--bg); }
+    .row { align-items: flex-start; }
+    .fighter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 9px; }
+    .fighter h3 { margin: 0 0 5px; color: var(--text); }
+    .fighter p { margin: 4px 0; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+    .message, .small { color: var(--muted); }
+    .message { margin: 8px 0; }
+    .small { margin: 12px 0 0; font-size: 11px; }
+    .error { color: var(--warn); }
+    .privacy-note { border-left: 2px solid var(--purple); padding-left: 10px; }
+    .specs { display: grid; gap: 7px; margin: 12px 0; padding: 0; list-style: none; }
+    .specs li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; background: var(--bg); }
+    .specs span { color: var(--muted); font-size: 12px; }
+    .specs strong, .specs code { font-size: 12px; text-align: right; }
+    .specs strong { color: var(--text); }
+    .specs code { color: var(--purple); overflow-wrap: anywhere; }
+    [hidden] { display: none !important; }
+    @media (max-width: 680px) {
+      .shell { width: calc(100% - 20px); padding-top: 14px; }
+      .topbar, .section-head { align-items: flex-start; flex-direction: column; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .actions { flex-wrap: wrap; justify-content: flex-start; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <h1 class="brand">Montemader Master Control</h1>
+        <p class="subtitle">Authenticated system health · operations reports · aggregate security telemetry</p>
+      </div>
+      <a class="button button-primary" href="https://montemader.com" target="_blank" rel="noopener noreferrer">Go to my website <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Dashboard pages">
+      <button class="tab" id="tab-dashboard" type="button" role="tab" aria-controls="page-dashboard" aria-selected="true">1. System Health</button>
+      <button class="tab" id="tab-tester" type="button" role="tab" aria-controls="page-tester" aria-selected="false" tabindex="-1">2. Operations &amp; Reports</button>
+      <button class="tab" id="tab-intel" type="button" role="tab" aria-controls="page-intel" aria-selected="false" tabindex="-1">3. Cloudflare &amp; Sentinels</button>
+    </nav>
+
+    <section class="page active" id="page-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" tabindex="0">
+      <section class="panel" aria-labelledby="health-heading">
+        <div class="section-head">
+          <div><p class="kicker">Live infrastructure check</p><h2 id="health-heading">Website health &amp; core telemetry</h2></div>
+          <div class="actions"><span class="status" id="health-status" role="status">Connecting</span><button class="button button-primary" type="button" data-refresh>Refresh data</button></div>
+        </div>
+        <p class="message" id="health-message">Loading authenticated site and Cloudflare status…</p>
+        <div class="metrics" id="health-metrics" aria-live="polite"></div>
+        <p class="message" id="incident-message"></p>
+      </section>
+      <section class="panel" aria-labelledby="fighters-heading">
+        <div class="section-head"><div><p class="kicker">Authenticated telemetry</p><h2 id="fighters-heading">Fighter &amp; listener status</h2></div></div>
+        <div class="fighter-grid" id="fighter-list" aria-live="polite"><p class="message">Waiting for authenticated telemetry…</p></div>
+      </section>
+    </section>
+
+    <section class="page" id="page-tester" role="tabpanel" aria-labelledby="tab-tester" tabindex="0" hidden>
+      <div class="grid-2">
+        <section class="panel" aria-labelledby="operations-heading">
+          <div class="section-head">
+            <div><p class="kicker">Authenticated operations API</p><h2 id="operations-heading">Operations &amp; capabilities</h2></div>
+            <div class="actions"><span class="status" id="operations-status" role="status">Connecting</span><button class="button button-primary" type="button" data-refresh>Refresh</button></div>
+          </div>
+          <div class="metrics" id="operations-metrics" aria-live="polite"></div>
+          <p class="small privacy-note">This page displays reports and current controls only. Bot command authorization remains server-side and restricted to the registered MM operator.</p>
+        </section>
+        <section class="panel" aria-labelledby="reports-heading">
+          <div class="section-head"><div><p class="kicker">Live incident stream</p><h2 id="reports-heading">Recent operational reports</h2></div></div>
+          <ul class="list" id="report-list" aria-live="polite"><li class="message">Waiting for authenticated reports…</li></ul>
+        </section>
+      </div>
+      <section class="panel" aria-labelledby="activity-heading">
+        <div class="section-head"><div><p class="kicker">Auditable records</p><h2 id="activity-heading">Combat &amp; directive activity</h2></div></div>
+        <ul class="list" id="activity-list" aria-live="polite"><li class="message">Loading recent authenticated activity…</li></ul>
+      </section>
+    </section>
+
+    <section class="page" id="page-intel" role="tabpanel" aria-labelledby="tab-intel" tabindex="0" hidden>
+      <section class="panel" aria-labelledby="cloudflare-heading">
+        <div class="section-head">
+          <div><p class="kicker">Aggregate edge firewall analytics</p><h2 id="cloudflare-heading">Cloudflare live traffic telemetry</h2></div>
+          <div class="actions"><span class="status" id="cloudflare-status" role="status">Connecting</span><button class="button button-primary" type="button" data-refresh>Refresh</button></div>
+        </div>
+        <div class="metrics" id="cloudflare-metrics" aria-live="polite"><p class="message">Loading live Cloudflare metrics…</p></div>
+        <h3>Firewall actions · last 60 seconds</h3>
+        <ul class="list" id="firewall-list" aria-live="polite"><li class="message">Loading authenticated Cloudflare events…</li></ul>
+        <p class="small" id="cloudflare-note">Cloudflare status is being checked.</p>
+      </section>
+      <div class="grid-2">
+        <section class="panel" aria-labelledby="countries-heading">
+          <p class="kicker">Separate · aggregate only</p><h2 id="countries-heading">Magic Dragons</h2>
+          <p class="small">An independent view of visit origins, kept separate from fighter telemetry. No Cloudflare aggregate feed is connected to this view; values below come only from the dedicated endpoint. Nothing is inferred or invented.</p>
+          <ul class="specs" aria-label="Magic Dragons data boundaries">
+            <li><span>Isolation boundary</span><strong>Strict · zero threat influence</strong></li>
+            <li><span>Data resolution</span><strong>Country-level aggregates only</strong></li>
+            <li><span>Endpoint source</span><code>/api/magic-dragons</code></li>
+          </ul>
+          <ul class="list" id="country-list" aria-live="polite"><li class="message">Loading country-level aggregates…</li></ul>
+          <p class="small privacy-note">This endpoint returns country/day counts only; no visitor IP addresses, identities, or per-visitor histories are displayed.</p>
+        </section>
+        <section class="panel" aria-labelledby="sentinels-heading">
+          <p class="kicker">From authenticated operations telemetry</p><h2 id="sentinels-heading">Ruach, Xena &amp; SuperBot listener status</h2>
+          <ul class="list" id="sentinel-list" aria-live="polite" style="margin-top:12px"><li class="message">Waiting for listener telemetry…</li></ul>
+        </section>
+      </div>
+    </section>
+
+    <p class="small" id="last-updated" aria-live="polite">Live data refreshes automatically every 30 seconds.</p>
+  </main>
+
+  <script>
+    (() => {
+      const $ = (selector) => document.querySelector(selector);
+      const element = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = String(text ?? '');
+        return node;
+      };
+      const number = (value) => Number(value ?? 0).toLocaleString();
+      const dateTime = (value) => {
+        if (!value) return 'Not reported';
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? 'Time unavailable' : date.toLocaleString();
+      };
+      let isRefreshing = false;
+
+      function setStatus(id, label, state = '') {
+        const node = document.getElementById(id);
+        node.textContent = label;
+        node.className = `status ${state}`;
+      }
+
+      function setMessage(id, text, isError = false) {
+        const node = document.getElementById(id);
+        node.textContent = text;
+        node.className = isError ? 'message error' : 'message';
+      }
+
+      function replaceChildren(id, nodes) {
+        document.getElementById(id).replaceChildren(...nodes);
+      }
+
+      function metric(label, value) {
+        const card = element('article', 'metric');
+        card.append(element('span', '', label), element('strong', '', value));
+        return card;
+      }
+
+      function listItem(label, value, detail) {
+        const item = element('li');
+        if (value === undefined) {
+          item.textContent = label;
+          return item;
+        }
+        const row = element('div', 'row');
+        const name = element('span', '', label);
+        const content = element('span', '', value);
+        row.append(name, content);
+        item.append(row);
+        if (detail) item.append(element('p', 'small', detail));
+        return item;
+      }
+
+      async function getJSON(path) {
+        const response = await fetch(path, {
+          method: 'GET',
+          cache: 'no-store',
+          credentials: 'same-origin',
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) {
+          if (response.status === 401) throw new Error('Sign in to view authenticated telemetry.');
+          if (response.status === 403) throw new Error('Your account is not authorized to view this report.');
+          throw new Error(`Live data request failed (${response.status}).`);
+        }
+        return response.json();
+      }
+
+      function renderHealth(data) {
+        const cf = data.cloudflare;
+        const metrics = [
+          metric('Monitored website', data.site.ok ? 'Reachable' : 'Unavailable'),
+          metric('HTTP status', data.site.statusCode ?? 'No response'),
+          metric('Response time', data.site.latencyMs == null ? 'Unavailable' : `${number(data.site.latencyMs)} ms`),
+        ];
+        if (cf.available) {
+          metrics.push(
+            metric('Requests · 24h', number(cf.metrics.requests24h)),
+            metric('Transfer · 24h', `${(Number(cf.metrics.bytes24h || 0) / 1_000_000).toFixed(1)} MB`),
+            metric('Blocked · 60s', number(cf.metrics.blocked60s)),
+            metric('Challenged · 60s', number(cf.metrics.challenged60s)),
+          );
+        }
+        replaceChildren('health-metrics', metrics);
+        setMessage('health-message', cf.available
+          ? `Health snapshot captured ${dateTime(data.capturedAt)}. Website reachability and Cloudflare analytics are reported separately.`
+          : `Cloudflare analytics offline: ${String(cf.reason || 'unknown_error').replace(/_/g, ' ')}. Website reachability is shown separately.`);
+        setStatus('health-status', cf.available ? 'Cloudflare analytics live' : `Cloudflare offline · ${String(cf.reason || 'unknown_error').replace(/_/g, ' ')}`, cf.available ? 'live' : 'offline');
+        setMessage('incident-message', data.activeIncident
+          ? `Active threshold incident: ${number(data.activeIncident.blockedCount)} blocked or challenged requests. Detected ${dateTime(data.activeIncident.detectedAt)}; last triggered ${dateTime(data.activeIncident.lastTriggeredAt)}.`
+          : 'No active threshold incident is recorded.');
+
+        if (cf.available) {
+          replaceChildren('cloudflare-metrics', [
+            metric('Requests · 24h', number(cf.metrics.requests24h)),
+            metric('Cached · 24h', number(cf.metrics.cachedRequests24h)),
+            metric('Threat requests · 24h', number(cf.metrics.threatRequests24h)),
+            metric('Blocked · 60s', number(cf.metrics.blocked60s)),
+            metric('Challenged · 60s', number(cf.metrics.challenged60s)),
+            metric('Alert threshold', `${number(cf.metrics.threshold)} / 60s`),
+          ]);
+          const actions = cf.metrics.firewallActions || [];
+          replaceChildren('firewall-list', actions.length
+            ? actions.map((item) => listItem(`${item.action} · ${item.source}`, number(item.count)))
+            : [listItem('No firewall events reported in the last 60 seconds.')]);
+          setMessage('cloudflare-note', `Cloudflare snapshot captured ${dateTime(cf.metrics.capturedAt)}. Counts are aggregated by action and source.`);
+          setStatus('cloudflare-status', 'Live · active data recon', 'live');
+        } else {
+          replaceChildren('cloudflare-metrics', [element('p', 'message error', `Live metrics unavailable: ${String(cf.reason || 'unknown_error').replace(/_/g, ' ')}. No sample data is shown.`)]);
+          replaceChildren('firewall-list', [listItem(`Cloudflare activity is offline: ${String(cf.reason || 'unknown_error').replace(/_/g, ' ')}`)]);
+          setMessage('cloudflare-note', 'Live Cloudflare analytics are not connected for this request.');
+          setStatus('cloudflare-status', `Offline · ${String(cf.reason || 'unknown_error').replace(/_/g, ' ')}`, 'offline');
+        }
+      }
+
+      function renderOperations(data) {
+        const fighters = data.fighters || [];
+        replaceChildren('operations-metrics', [
+          metric('Listener readiness', data.systemHealth || 'Not reported'),
+          metric('Authenticated reports · 24h', number(data.telemetryCount24h)),
+          metric('Active attack report', data.activeAttack ? `${number(data.activeAttack.reportCount)} report(s)` : 'None'),
+          metric('Recent directives', number((data.commands || []).length)),
+        ]);
+
+        replaceChildren('fighter-list', fighters.length ? fighters.map((fighter) => {
+          const card = element('article', 'fighter');
+          card.append(
+            element('h3', '', fighter.name),
+            element('p', '', `Role: ${fighter.role}`),
+            element('p', '', `Reported status: ${fighter.status}`),
+            element('p', '', `Health: ${fighter.health == null ? 'Not reported' : `${number(fighter.health)}%`}`),
+            element('p', '', `MM listener: ${fighter.listenerStatus || 'Unknown'}${fighter.lastInboxPoll ? ` · last poll ${dateTime(fighter.lastInboxPoll)}` : ''}`),
+            element('p', '', `Control state: ${fighter.stopped ? 'Stopped' : 'Not stopped'}`),
+            element('p', '', `Signal: ${fighter.signal?.label || 'No recent signal'}${fighter.signal?.confidence ? ` · ${fighter.signal.confidence}` : ''}`),
+          );
+          return card;
+        }) : [element('p', 'message', 'No authenticated fighter telemetry is available.')]);
+
+        const entries = [];
+        if (data.activeAttack) {
+          entries.push(listItem(
+            `Active attack report · ${number(data.activeAttack.reportCount)} correlated reports`,
+            `Expires ${dateTime(data.activeAttack.expiresAt)}`,
+          ));
+        }
+        for (const command of data.commands || []) {
+          entries.push(listItem(
+            `${command.fighterName} · ${command.threatType} · ${command.strategy}`,
+            command.status,
+            `Recorded ${dateTime(command.createdAt)}`,
+          ));
+        }
+        for (const event of data.combatEvents || []) {
+          entries.push(listItem(
+            `${event.fighterName} · ${event.actionType || event.eventType}`,
+            event.status || 'reported',
+            `Received ${dateTime(event.receivedAt)}`,
+          ));
+        }
+        const empty = [listItem('No recent authenticated reports or directives.')];
+        replaceChildren('report-list', entries.length ? entries : empty);
+        replaceChildren('activity-list', entries.length ? entries : [listItem('No signed combat reports or defensive directives have been received.')]);
+        setStatus('operations-status', 'API reachable', 'live');
+
+        const nodes = data.nodes || {};
+        const ids = ['ruach', 'xena', 'superbot'];
+        replaceChildren('sentinel-list', ids.map((id) => {
+          const node = nodes[id];
+          if (!node) return listItem(`${id} · No listener record returned by API`);
+          const detail = [
+            `Listener ${node.listenerStatus || 'unknown'}`,
+            `Reported status ${node.status || 'unknown'}`,
+            `Last inbox poll ${dateTime(node.lastInboxPoll)}`,
+            node.credentialBoundary ? `Credential ${node.credentialBoundary}` : '',
+          ].filter(Boolean).join(' · ');
+          return listItem(node.name || id, node.health == null ? 'Health not reported' : `${number(node.health)}% health`, detail);
+        }));
+      }
+
+      function renderMagicDragons(data) {
+        const insights = data.insights || [];
+        replaceChildren('country-list', insights.length
+          ? insights.map((item) => listItem(
+              `${item.country}${item.countryCode ? ` (${item.countryCode})` : ''}`,
+              `${number(item.visitors)} visits`,
+              `Date ${dateTime(item.date)} · source ${item.source || data.source || 'not reported'} · captured ${dateTime(item.capturedAt)}`,
+            ))
+          : [listItem(data.available ? 'No aggregate insights are available.' : 'No live aggregate insight records are available.')]);
+      }
+
+      async function refresh() {
+        if (isRefreshing) return;
+        isRefreshing = true;
+        const buttons = [...document.querySelectorAll('[data-refresh]')];
+        buttons.forEach((button) => { button.disabled = true; button.textContent = 'Refreshing…'; });
+        setStatus('health-status', 'Refreshing');
+        setStatus('operations-status', 'Refreshing');
+        setStatus('cloudflare-status', 'Refreshing');
+
+        try {
+          const results = await Promise.allSettled([
+            getJSON('/api/security/health'),
+            getJSON('/api/operations'),
+            getJSON('/api/magic-dragons'),
+          ]);
+          const [health, operations, magic] = results;
+
+          if (health.status === 'fulfilled') renderHealth(health.value);
+          else {
+            const message = health.reason?.message || 'Live health data unavailable.';
+            setMessage('health-message', message, true);
+            setMessage('incident-message', 'Incident status unavailable until the health API responds.', true);
+            replaceChildren('health-metrics', []);
+            replaceChildren('cloudflare-metrics', [element('p', 'message error', message)]);
+            replaceChildren('firewall-list', [listItem(message)]);
+            setMessage('cloudflare-note', message, true);
+            setStatus('health-status', 'Request failed', 'offline');
+            setStatus('cloudflare-status', 'Request failed', 'offline');
+          }
+
+          if (operations.status === 'fulfilled') renderOperations(operations.value);
+          else {
+            const message = operations.reason?.message || 'Operations data unavailable.';
+            replaceChildren('operations-metrics', []);
+            replaceChildren('fighter-list', [element('p', 'message error', message)]);
+            replaceChildren('report-list', [listItem(message)]);
+            replaceChildren('activity-list', [listItem('Activity data unavailable.')]);
+            replaceChildren('sentinel-list', [listItem('Listener status unavailable until the operations API responds.')]);
+            setStatus('operations-status', 'Request failed', 'offline');
+          }
+
+          if (magic.status === 'fulfilled') renderMagicDragons(magic.value);
+          else replaceChildren('country-list', [listItem(magic.reason?.message || 'Aggregate insight data unavailable.')]);
+
+          $('#last-updated').textContent = `Last checked ${dateTime(new Date().toISOString())}. Values come from authenticated application APIs.`;
+        } finally {
+          buttons.forEach((button) => { button.disabled = false; button.textContent = button.dataset.defaultLabel; });
+          isRefreshing = false;
+        }
+      }
+
+      function activateTab(tab, moveFocus = false) {
+        document.querySelectorAll('[role="tab"]').forEach((item) => {
+          const selected = item === tab;
+          item.setAttribute('aria-selected', String(selected));
+          item.tabIndex = selected ? 0 : -1;
+        });
+        document.querySelectorAll('[role="tabpanel"]').forEach((panel) => {
+          const selected = panel.id === tab.getAttribute('aria-controls');
+          panel.hidden = !selected;
+          panel.classList.toggle('active', selected);
+        });
+        history.replaceState(null, '', `#${tab.getAttribute('aria-controls')}`);
+        if (moveFocus) tab.focus();
+      }
+
+      const tabs = [...document.querySelectorAll('[role="tab"]')];
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activateTab(tab));
+        tab.addEventListener('keydown', (event) => {
+          let nextIndex = index;
+          if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+          else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+          else if (event.key === 'Home') nextIndex = 0;
+          else if (event.key === 'End') nextIndex = tabs.length - 1;
+          else return;
+          event.preventDefault();
+          activateTab(tabs[nextIndex], true);
+        });
+      });
+
+      document.querySelectorAll('[data-refresh]').forEach((button) => {
+        button.dataset.defaultLabel = button.textContent;
+        button.addEventListener('click', refresh);
+      });
+      const hashTab = tabs.find((tab) => `#${tab.getAttribute('aria-controls')}` === location.hash);
+      if (hashTab) activateTab(hashTab);
+      refresh();
+      window.setInterval(refresh, 30_000);
+    })();
+  </script>
+</body>
+</html>
