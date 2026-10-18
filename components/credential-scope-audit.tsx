@@ -28,7 +28,7 @@ export function CredentialScopeAudit() {
         </footer>
       </section>
 
-      <section className="credential-scope-audit" aria-labelledby="database-credential-heading">
+      <section className="credential-scope-audit credential-scope-audit--database" aria-labelledby="database-credential-heading">
         <header className="credential-scope-header">
           <p className="credential-scope-kicker">Credential scope audit</p>
           <h2 id="database-credential-heading">Default Vector / Database Credential Permissions</h2>
