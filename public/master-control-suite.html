@@ -38,7 +38,20 @@
     .topbar { margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
     .brand-lockup { display: flex; min-width: 0; align-items: center; gap: 10px; }
     .brand-mark { display: grid; flex: 0 0 38px; width: 38px; height: 38px; place-items: center; border: 1px solid rgb(244 114 182 / 62%); border-radius: 50%; background: #21132b; color: #f7dff0; box-shadow: 0 3px 0 #100a16; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
-    .brand { margin: 0; color: var(--text); font: 700 clamp(19px, 3.4vw, 30px)/1.15 Georgia, serif; letter-spacing: .04em; }
+    @property --stripe-gap-opacity {
+      syntax: "<number>";
+      inherits: false;
+      initial-value: 0;
+    }
+    .brand { --stripe-gap-opacity: 0; margin: 0; color: var(--text); font: 700 clamp(19px, 3.4vw, 30px)/1.15 Georgia, serif; letter-spacing: .04em; transform-origin: center; -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgb(0 0 0 / calc(1 - var(--stripe-gap-opacity))) 2px 4px); mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgb(0 0 0 / calc(1 - var(--stripe-gap-opacity))) 2px 4px); animation: master-control-swirl 15s linear 2 both; }
+    @keyframes master-control-swirl {
+      0% { --stripe-gap-opacity: 0; transform: translateX(0) scaleX(1); filter: blur(0); opacity: 1; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+      1.5% { --stripe-gap-opacity: 1; transform: translateX(0) scaleX(1); filter: blur(0); opacity: 1; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+      4.5% { --stripe-gap-opacity: 1; transform: translateX(-38px) scaleX(.02); filter: blur(1px); opacity: 0; }
+      7.5% { --stripe-gap-opacity: 1; transform: translateX(-38px) scaleX(.02); filter: blur(1px); opacity: 0; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+      9% { --stripe-gap-opacity: 0; transform: translateX(0) scaleX(1); filter: blur(0); opacity: 1; }
+      100% { --stripe-gap-opacity: 0; transform: translateX(0) scaleX(1); filter: blur(0); opacity: 1; }
+    }
     .button, .tab {
       min-height: 38px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 13px;
       background: var(--raised); color: var(--text); cursor: pointer; text-decoration: none;
@@ -91,6 +104,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      .brand { animation: none; }
     }
   </style>
 </head>
