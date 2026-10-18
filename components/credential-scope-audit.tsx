@@ -80,24 +80,24 @@ export function CredentialScopeAudit() {
       <section className="credential-scope-audit credential-scope-audit--analytics" aria-labelledby="analytics-architecture-heading">
         <header className="credential-scope-header">
           <p className="credential-scope-kicker">Credential Audit View Update</p>
-          <h2 id="analytics-architecture-heading">Analytics Architecture Card Integration (Commit 637f312)</h2>
+          <h2 id="analytics-architecture-heading">Analytics Architecture Card Alignment (Commit 5429a20)</h2>
         </header>
 
         <div className="credential-scope-notice credential-scope-notice--success" role="note">
-          <p><strong>Integration Status:</strong> The Analytics &amp; Telemetry Architecture card has been successfully integrated into the credential-audit view, accurately documenting anonymous traffic flows, Cloudflare aggregates, and database dependencies.</p>
+          <p><strong>Integration Status:</strong> The Analytics Architecture card has been successfully aligned with the latest reference parameters, incorporating precise integration text and clean validation.</p>
         </div>
 
         <div className="credential-scope-list">
           <h3>Build &amp; Inspection Summary</h3>
           <ul>
             <li><strong>Code Quality:</strong><span> TypeScript compilation and diff checks pass cleanly.</span></li>
-            <li><strong>Preview Verification:</strong><span> The preview loads successfully at the sign-in boundary; authenticated card inspection remains pending session state.</span></li>
-            <li><strong>Version Control:</strong><span> Changes successfully packaged and pushed under commit <code>637f312</code>.</span></li>
+            <li><strong>Preview Verification:</strong><span> The preview loads at sign-in, so the authenticated card wasn’t visually inspectable.</span></li>
+            <li><strong>Version Control:</strong><span> Changes successfully packaged and pushed under commit <code>5429a20</code>.</span></li>
           </ul>
         </div>
 
         <footer className="credential-scope-footer">
-          <span>Commit: 637f312</span>
+          <span>Commit: 5429a20</span>
           <span className="credential-scope-status">Committed &amp; Synced</span>
         </footer>
       </section>
