@@ -14,7 +14,7 @@ export function CredentialScopeAudit() {
         <h3>Scopes granted</h3>
         <p className="credential-scope-intro">Scopes granted to the Default AI gateway credential.</p>
         <ul>
-          <li><code>ai_gateway:invoke</code></li>
+          <li><code>ai_gateway: invoke</code></li>
           <li><strong>Call AI models</strong></li>
         </ul>
       </div>
