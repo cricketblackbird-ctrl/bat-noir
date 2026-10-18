@@ -6,10 +6,13 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
-import type { ActivityArchiveRecord } from '@/lib/activity-archive-types'
+import {
+  defaultActivityArchivePageSize,
+  type ActivityArchivePageSize,
+  type ActivityArchiveRecord,
+} from '@/lib/activity-archive-types'
 
 const maxRecordsPerUser = 200
-const visibleRecordsPerUser = 30
 const archivePrefix = 'private-activity'
 let client: S3Client | null = null
 
@@ -55,11 +58,11 @@ function isArchiveRecord(value: unknown): value is ActivityArchiveRecord {
     (record.kind === 'topic_selected' || record.kind === 'snapshot' || record.kind === 'browser_hints')
 }
 
-export async function getActivityArchive(userId: string) {
+export async function getActivityArchive(userId: string, limit: ActivityArchivePageSize = defaultActivityArchivePageSize) {
   const objects = (await listUserObjects(userId)).filter((object) => object.Key)
   objects.sort((a, b) => (b.Key ?? '').localeCompare(a.Key ?? ''))
   const { client: storage, bucket } = getStorage()
-  const newest = objects.slice(0, visibleRecordsPerUser)
+  const newest = objects.slice(0, limit)
   const items = await Promise.all(newest.map(async (object) => {
     try {
       const result = await storage.send(new GetObjectCommand({ Bucket: bucket, Key: object.Key }))

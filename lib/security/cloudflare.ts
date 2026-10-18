@@ -26,7 +26,7 @@ const challengedActions = new Set(['challenge', 'jschallenge', 'managed_challeng
 
 type FirewallGroup = {
   count: number
-  dimensions: { action: string; source: string; clientCountryName: string }
+  dimensions: { action: string; source: string; clientCountryName: string; datetimeMinute: string }
 }
 
 type RequestGroup = {
@@ -58,6 +58,7 @@ export type CloudflareSnapshot = {
   thresholdMet: boolean
   firewallActions: Array<{ action: string; source: string; count: number }>
   countries: Array<{ country: string; count: number }>
+  recentEvents: Array<{ minute: string; action: string; source: string; country: string; count: number }>
 }
 
 export async function getCloudflareSnapshot(now = new Date()): Promise<CloudflareSnapshot> {
@@ -83,7 +84,7 @@ export async function getCloudflareSnapshot(now = new Date()): Promise<Cloudflar
           sum { requests bytes cachedRequests threats }
         }
         firewallEventsAdaptiveGroups(limit: 100, filter: { datetime_geq: ${JSON.stringify(recent)} }) {
-          dimensions { action source clientCountryName }
+          dimensions { action source clientCountryName datetimeMinute }
           count
         }
       }
@@ -169,6 +170,15 @@ export async function getCloudflareSnapshot(now = new Date()): Promise<Cloudflar
       .map(([country, count]) => ({ country, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5),
+    recentEvents: [...firewallGroups]
+      .map((group) => ({
+        minute: group.dimensions.datetimeMinute,
+        action: group.dimensions.action,
+        source: group.dimensions.source || 'unknown',
+        country: group.dimensions.clientCountryName || 'Unknown',
+        count: group.count,
+      }))
+      .sort((a, b) => Date.parse(b.minute) - Date.parse(a.minute) || b.count - a.count),
   }
 }
 

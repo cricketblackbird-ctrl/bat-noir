@@ -3,7 +3,12 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { clearActivityArchive, fetchActivityArchive } from '@/lib/activity-archive-client'
-import type { ActivityArchiveRecord } from '@/lib/activity-archive-types'
+import {
+  activityArchivePageSizes,
+  defaultActivityArchivePageSize,
+  type ActivityArchivePageSize,
+  type ActivityArchiveRecord,
+} from '@/lib/activity-archive-types'
 import { formatCentralTime } from '@/lib/format-time'
 
 const topicNames: Record<string, string> = {
@@ -28,7 +33,9 @@ function contentFor(record: ActivityArchiveRecord) {
 }
 
 export function ActivityArchivePanel() {
-  const { data, error, isLoading, mutate } = useSWR('/api/activity-archive', fetchActivityArchive, {
+  const [visibleLimit, setVisibleLimit] = useState<ActivityArchivePageSize>(defaultActivityArchivePageSize)
+  const archiveUrl = `/api/activity-archive?limit=${visibleLimit}`
+  const { data, error, isLoading, isValidating, mutate } = useSWR(archiveUrl, fetchActivityArchive, {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
   })
@@ -52,12 +59,29 @@ export function ActivityArchivePanel() {
 
   return (
     <section className="panel activity-archive-panel" aria-labelledby="activity-archive-heading">
-      <div className="panel-heading">
+      <div className="panel-heading archive-heading">
         <div><p className="section-kicker">PRIVATE R2 STORAGE · ACCOUNT-SCOPED</p><h2 id="activity-archive-heading">Captured information archive</h2></div>
-        <span className="archive-total">{data ? `${data.total} / 200` : 'R2'}</span>
+        <div className="archive-header-tools">
+          <label className="archive-limit-control" htmlFor="archive-limit">
+            <span>Show entries</span>
+            <select id="archive-limit" value={visibleLimit} onChange={(event) => {
+              const nextLimit = Number(event.target.value)
+              if (activityArchivePageSizes.some((size) => size === nextLimit)) setVisibleLimit(nextLimit as ActivityArchivePageSize)
+            }} disabled={busy}>
+              <option value={30}>30</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>All 200</option>
+            </select>
+          </label>
+          <button className="text-button archive-refresh" type="button" onClick={() => void mutate()} disabled={busy || isValidating}>
+            {isValidating ? 'Refreshing…' : 'Refresh archive'}
+          </button>
+          <span className="archive-total">{data ? `${data.total} / 200 stored` : 'R2'}</span>
+        </div>
       </div>
-      <p className="archive-description">Stream filter choices and snapshots are saved when you use the tester. Browser hints are saved only when you choose Save browser snapshot. Records are private to your signed-in account; the archive keeps the latest 200 items.</p>
-      {error ? <p className="archive-state" role="status">Private R2 archive is unavailable. New captures remain in this tab only until storage is available.</p>
+      <p className="archive-description">Stream filter choices and snapshots are saved when you use the tester. Browser hints are saved only when you choose Save browser snapshot. Records are private to your signed-in account; choose All 200 to load the full archive.</p>
+      {error ? <p className="archive-state" role="status">Private R2 archive is unavailable. Verify the Cloudflare account ID and bucket access in project settings, then refresh. New captures remain in this tab only until storage is available.</p>
         : isLoading || !data ? <p className="archive-state" role="status">Loading private archive…</p>
           : data.items.length === 0 ? <p className="archive-state">No records saved yet. Use the tester capture controls or save a browser snapshot.</p>
             : <ol className="archive-list">{data.items.map((record) => <li key={record.id}>
@@ -67,7 +91,6 @@ export function ActivityArchivePanel() {
               </details>
             </li>)}</ol>}
       <div className="archive-actions">
-        <button className="text-button" type="button" onClick={() => void mutate()} disabled={busy || isLoading}>Refresh archive</button>
         <button className="text-button archive-clear" type="button" onClick={() => void onClearArchive()} disabled={busy || !data?.total}>{busy ? 'Clearing…' : 'Delete all archived records'}</button>
       </div>
       <p className="archive-notice" role="status" aria-live="polite">{notice}</p>

@@ -26,6 +26,7 @@ type HealthSnapshot = {
           thresholdMet: boolean
           firewallActions: Array<{ action: string; source: string; count: number }>
           countries: Array<{ country: string; count: number }>
+          recentEvents: Array<{ minute: string; action: string; source: string; country: string; count: number }>
         }
       }
     | { available: false; reason: string }
@@ -51,6 +52,13 @@ function formatCapturedAt(value: string) {
     : new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(date)
 }
 
+function formatEventMinute(value: string) {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? 'Time unavailable'
+    : new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(date)
+}
+
 function heartbeatLabel(fighter: FighterHeartbeat) {
   const state = fighter.listenerStatus === 'PASS'
     ? 'Heartbeat verified'
@@ -61,7 +69,7 @@ function heartbeatLabel(fighter: FighterHeartbeat) {
 }
 
 export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartbeat[] }) {
-  const { data, error, isLoading } = useSWR<HealthSnapshot>('/api/security/health', fetcher, {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<HealthSnapshot>('/api/security/health', fetcher, {
     refreshInterval: 30_000,
     revalidateOnFocus: true,
     dedupingInterval: 10_000,
@@ -81,18 +89,20 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
     <section id="cloudflare-security-view" className="panel telemetry-panel" aria-labelledby="telemetry-heading">
       <div className="panel-heading telemetry-heading">
         <div>
-          <p className="section-kicker">AGGREGATE EDGE SIGNALS · AUTHENTICATED HEARTBEATS</p>
-          <h2 id="telemetry-heading">Cloudflare security telemetry</h2>
+          <p className="section-kicker">MAGIC DRAGONS · LIVE AGGREGATE EDGE SIGNALS</p>
+          <h2 id="telemetry-heading">Magic Dragons</h2>
         </div>
         <div className="telemetry-controls">
           <span className={`telemetry-feed-state ${metrics ? 'is-connected' : data?.cloudflare.available === false ? 'is-offline' : ''}`} role="status">
             <span aria-hidden="true" />{feedStatus}
           </span>
-
+          <button className="telemetry-refresh" type="button" onClick={() => void mutate()} disabled={isValidating} aria-label="Refresh Cloudflare security feed">
+            {isValidating ? 'Refreshing…' : 'Refresh feed'}
+          </button>
         </div>
       </div>
 
-      <p className="telemetry-description">Cloudflare zone aggregates and verified operations heartbeats. This view does not collect or display visitor IP addresses or per-person histories.</p>
+      <p className="telemetry-description">Live data from the connected Cloudflare zone, alongside verified operations heartbeats. This view shows aggregate security details only—not visitor IP addresses or per-person histories.</p>
 
       {error ? (
         <p className="telemetry-message" role="alert">The protected live security snapshot could not be loaded. No sample values are shown.</p>
@@ -137,6 +147,27 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
               ) : <p>Authenticated operations heartbeat data is not available yet.</p>}
             </section>
           </div>
+
+          <section className="telemetry-stream" aria-labelledby="telemetry-stream-heading">
+            <div className="telemetry-stream-heading">
+              <div>
+                <h3 id="telemetry-stream-heading">Recent firewall activity · 60 seconds</h3>
+                <p>Cloudflare groups activity by minute, action, source, and country. Visitor IPs and request paths are not shown.</p>
+              </div>
+              <span>{metrics.recentEvents.length} groups</span>
+            </div>
+            {metrics.recentEvents.length ? (
+              <ul className="telemetry-stream-list">
+                {metrics.recentEvents.map((event, index) => (
+                  <li key={`${event.minute}-${event.action}-${event.source}-${event.country}-${index}`}>
+                    <time dateTime={event.minute}>{formatEventMinute(event.minute)}</time>
+                    <div><strong>{event.action.replace(/_/g, ' ')}</strong><span>{event.source.replace(/_/g, ' ')} · {event.country}</span></div>
+                    <b>{event.count.toLocaleString()}</b>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="telemetry-stream-empty">No firewall activity groups were returned in the last 60 seconds.</p>}
+          </section>
 
           {data?.activeIncident && <p className="telemetry-incident"><strong>Active incident:</strong> {data.activeIncident.blockedCount.toLocaleString()} blocked or challenged requests; detected {formatCapturedAt(data.activeIncident.detectedAt)}.</p>}
           <p className="telemetry-updated">Cloudflare snapshot captured {data ? formatCapturedAt(data.capturedAt) : 'time unavailable'} · refreshes automatically every 30 seconds.</p>

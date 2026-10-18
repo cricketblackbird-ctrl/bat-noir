@@ -2,13 +2,16 @@ import {
   bigint,
   boolean,
   date,
+  index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   real,
   text,
   timestamp,
   uuid,
+  varchar,
 } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
@@ -123,6 +126,25 @@ export const magicDragonInsights = pgTable('magic_dragon_insights', {
   source: text('source').notNull(),
   capturedAt: timestamp('captured_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const telemetryEvents = pgTable('telemetry_events', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow(),
+  connector: varchar('connector', { length: 255 }).notNull(),
+  eventType: varchar('event_type', { length: 100 }).notNull(),
+  requestId: varchar('request_id', { length: 100 }),
+  statusCode: integer('status_code'),
+  payload: jsonb('payload'),
+}, (table) => [index('idx_telemetry_timestamp').on(table.timestamp.desc())])
+
+export const platformMetrics = pgTable('platform_metrics', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  recordedAt: timestamp('recorded_at', { withTimezone: true }).defaultNow(),
+  requestVolume: bigint('request_volume', { mode: 'number' }).notNull(),
+  activeConnectors: integer('active_connectors').notNull(),
+  avgLatencyMs: numeric('avg_latency_ms', { precision: 6, scale: 2 }).notNull(),
+  cacheHitRate: numeric('cache_hit_rate', { precision: 5, scale: 4 }),
+}, (table) => [index('idx_metrics_recorded').on(table.recordedAt.desc())])
 
 export const securityAlertIncidents = pgTable('security_alert_incidents', {
   id: uuid('id').primaryKey().defaultRandom(),

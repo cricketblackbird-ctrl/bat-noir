@@ -2,7 +2,15 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { deleteActivityArchive, getActivityArchive, putActivityArchive } from '@/lib/activity-archive'
-import { streamTopics, type ActivityArchiveInput, type BrowserHintSnapshot, type StreamTopic } from '@/lib/activity-archive-types'
+import {
+  activityArchivePageSizes,
+  defaultActivityArchivePageSize,
+  streamTopics,
+  type ActivityArchiveInput,
+  type ActivityArchivePageSize,
+  type BrowserHintSnapshot,
+  type StreamTopic,
+} from '@/lib/activity-archive-types'
 import { readJsonBody } from '@/lib/read-json-body'
 
 export const runtime = 'nodejs'
@@ -72,12 +80,17 @@ function parseInput(value: unknown): ActivityArchiveInput | null {
   return null
 }
 
-export async function GET() {
+function getArchiveLimit(request: Request): ActivityArchivePageSize {
+  const requestedLimit = Number(new URL(request.url).searchParams.get('limit'))
+  return activityArchivePageSizes.find((size) => size === requestedLimit) ?? defaultActivityArchivePageSize
+}
+
+export async function GET(request: Request) {
   const userId = await getUserId()
   if (!userId) return json({ error: 'Unauthorized' }, 401)
 
   try {
-    return json(await getActivityArchive(userId))
+    return json(await getActivityArchive(userId, getArchiveLimit(request)))
   } catch {
     return json({ error: 'Private archive is unavailable' }, 503)
   }

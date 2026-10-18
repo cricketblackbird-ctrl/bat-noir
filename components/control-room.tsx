@@ -9,6 +9,7 @@ import { KeyChest } from '@/components/key-chest'
 import { ActivityArchivePanel } from '@/components/activity-archive'
 import { PlatformConsole } from '@/components/platform-console'
 import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
+import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
 const MMLiveIndicator = dynamic(() => import('@/components/mm-live-indicator').then((module) => module.MMLiveIndicator), { ssr: false })
@@ -46,13 +47,6 @@ type Operations = {
 
 type DashboardView = 'dashboard' | 'tester' | 'intel'
 const dashboardViews: DashboardView[] = ['dashboard', 'tester', 'intel']
-
-type MagicInsights = {
-  available: boolean
-  source: string | null
-  insights: Array<{ date: string; country: string; countryCode: string; visitors: number; capturedAt: string }>
-  privacy: string
-}
 
 const fetcher = async (url: string) => {
   const response = await fetch(url, { cache: 'no-store' })
@@ -104,7 +98,6 @@ function StatusDot({ stopped, listenerStatus, heartbeatAgeMs }: { stopped: boole
 
 export function ControlRoom({ operator }: { operator: Operations['operator'] & { id: string } }) {
   const { data, error, mutate } = useSWR<Operations>('/api/operations', fetcher, { refreshInterval: 5000, revalidateOnFocus: true })
-  const magic = useSWR<MagicInsights>('/api/magic-dragons', fetcher, { refreshInterval: 30000, revalidateOnFocus: true })
   const [strategy, setStrategy] = useState<Strategy>('inspect_verify')
   const [formation, setFormation] = useState<Formation>('all_three')
   const [feedback, setFeedback] = useState('')
@@ -252,7 +245,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
             <select id="formation" value={formation} onChange={(event) => setFormation(event.target.value as Formation)} disabled={!operator.isMm || isPending}>
               {(Object.entries(formationNames) as [Formation, string][]).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
-            <button className="button button-primary issue-button" type="submit" disabled={!operator.isMm || isPending || stoppedAll || (formation === 'all_three' && !data?.activeAttack)}>{isPending ? 'Updating…' : stoppedAll ? 'All fighters stopped' : formation === 'all_three' && !data?.activeAttack ? 'Waiting for active attack report' : 'PROTECT THIS SITE'}</button>
+            <button className={`button button-primary issue-button${formation === 'all_three' && !data?.activeAttack ? ' issue-button-waiting' : ''}`} type="submit" disabled={!operator.isMm || isPending || stoppedAll || (formation === 'all_three' && !data?.activeAttack)}>{isPending ? 'Updating…' : stoppedAll ? 'All fighters stopped' : formation === 'all_three' && !data?.activeAttack ? 'Waiting for active attack report' : 'PROTECT THIS SITE'}</button>
           </form>
           <p className="directive-note">The default assignment uses all 3 defenders. Every defensive directive requires a fresh authenticated attack report and stops are respected. Directives queue to the authenticated bot inboxes; they do not block traffic or terminate an invasion by themselves.</p>
           <div className="stop-block"><div className="stop-heading"><p className="section-kicker">MM · EMERGENCY OVERRIDE</p><span>{stoppedAll ? 'GLOBAL STOP ACTIVE' : 'Four stop controls'}</span></div><div className="stop-grid">
@@ -280,14 +273,6 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         <section id="view-panel-intel" className="view-panel intel-view" role="tabpanel" aria-labelledby="view-tab-intel" tabIndex={0} hidden={activeView !== 'intel'}>
           <div className="control-grid intel-grid">
         <ActivityArchivePanel />
-        <section className="panel magic-panel" aria-labelledby="magic-heading">
-          <div className="panel-heading"><div><p className="section-kicker">SEPARATE · AGGREGATE ONLY</p><h2 id="magic-heading">Magic Dragons</h2></div><span className="panel-sigil magic-sigil" aria-hidden="true">✧</span></div>
-          <p className="magic-description">A small, independent view of where visits come from—kept separate from fighter telemetry.</p>
-          {magic.error ? <p className="empty-insight">Aggregate insights are unavailable right now.</p> : magic.data?.available ? <ul className="insight-list">{magic.data.insights.map((insight, index) => <li key={`${insight.date}-${insight.countryCode}-${index}`}><span className="insight-country">{insight.country}</span><span>{insight.visitors.toLocaleString()} visits</span><time dateTime={insight.date}>{insight.date}</time></li>)}</ul> : <p className="empty-insight">No Cloudflare aggregate feed is connected yet. Nothing is inferred or invented.</p>}
-          <button className="privacy-toggle" type="button" aria-expanded={showPrivacy} onClick={() => setShowPrivacy((current) => !current)}>{showPrivacy ? 'Hide privacy note' : 'What this view stores'}</button>
-          {showPrivacy && <p className="privacy-note">{magic.data?.privacy ?? 'Only daily country-level aggregates are intended. No visitor IP addresses, identities, or per-person history are stored in this feed.'}</p>}
-          <div className="magic-boundary"><span aria-hidden="true">✦</span> Not used to decide who is an enemy.</div>
-        </section>
 
         <section className="panel activity-panel" aria-labelledby="activity-heading">
           <div className="panel-heading"><div><p className="section-kicker">SIGNED TELEMETRY · AUDITABLE DIRECTIVES</p><h2 id="activity-heading">Combat &amp; directive activity</h2></div><span className="panel-sigil" aria-hidden="true">⌁</span></div>
@@ -299,6 +284,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         </section>
           </div>
           <KeyChest userId={operator.id} />
+          <CloudflareTelemetryPanel fighters={guards} />
         </section>
       </div>
 

@@ -2,6 +2,10 @@ export const streamTopics = ['all', 'website', 'health', 'safety', 'security', '
 
 export type StreamTopic = (typeof streamTopics)[number]
 
+export const activityArchivePageSizes = [30, 50, 100, 200] as const
+export type ActivityArchivePageSize = (typeof activityArchivePageSizes)[number]
+export const defaultActivityArchivePageSize: ActivityArchivePageSize = 30
+
 export type BrowserHintSnapshot = {
   online: boolean
   visible: boolean
