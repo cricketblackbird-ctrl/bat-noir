@@ -95,6 +95,23 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
         </div>
       </div>
 
+      <section className="origin-isolation-card" aria-labelledby="origin-isolation-heading">
+        <div className="origin-isolation-heading">
+          <div>
+            <p className="section-kicker">ORIGIN PRIVACY · TUNNEL STATUS</p>
+            <h3 id="origin-isolation-heading">Origin isolation is not verified</h3>
+          </div>
+          <span className="origin-isolation-state"><span aria-hidden="true" />Not configured</span>
+        </div>
+        <p className="origin-isolation-description">This app runs on Vercel&apos;s serverless runtime. No persistent <code>cloudflared</code> connector or origin firewall state is available to this dashboard, so it cannot confirm that a server origin IP is hidden or unreachable.</p>
+        <div className="origin-isolation-metrics">
+          <article><span>Cloudflare Tunnel</span><strong>Not detected</strong><small>No connector health source is configured</small></article>
+          <article><span>Origin reachability</span><strong>Unverified</strong><small>No origin network policy is reported here</small></article>
+          <article><span>Dashboard data</span><strong>Aggregated</strong><small>Cloudflare feed omits raw visitor IPs</small></article>
+        </div>
+        <p className="origin-isolation-caveat">A tunnel must run on a persistent origin host; it cannot run as a long-lived process inside this Vercel deployment. To isolate a separate origin, route it through a Cloudflare Tunnel and restrict direct origin access. This dashboard status is informational—not proof that the origin is protected.</p>
+      </section>
+
       <p className="telemetry-description">Live data from the connected Cloudflare zone, alongside verified operations heartbeats. This view shows aggregate security details only—not visitor IP addresses or per-person histories.</p>
 
       {error ? (

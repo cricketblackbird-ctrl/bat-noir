@@ -195,15 +195,33 @@ function GuardianStatusWidget({ fighters, isLoading, hasError }: { fighters: Fig
       ref={widgetRef}
       className={`guardian-status-widget${isHealthy ? ' is-live' : ' is-attention'}${isFloating ? ' is-floating' : ''}`}
       style={isFloating ? { left: floatingPosition.left, top: floatingPosition.top } : undefined}
-      role="status"
-      aria-live="polite"
-      aria-label={`${heading}. ${detail}.`}
+      role="region"
+      aria-label="Guardian status panel"
     >
       <span className="guardian-status-mark" aria-hidden="true"><Shield /><span className="guardian-status-light" /></span>
-      <div className="guardian-status-copy"><strong>{heading}</strong><p>{detail}. Heartbeat monitoring continues while stopped.</p></div>
-      <div className="guardian-status-actions">
-        {isFloating && <button className="guardian-status-move" type="button" aria-label="Move guardian status panel; use arrow keys to reposition" title="Drag to move, or use arrow keys" onPointerDown={handleMoveStart} onPointerMove={handleMove} onPointerUp={handleMoveEnd} onPointerCancel={handleMoveEnd} onLostPointerCapture={handleMoveEnd} onKeyDown={handleMoveKeyDown}>Move</button>}
-        <button className="guardian-status-toggle" type="button" onClick={toggleFloating} aria-label={isFloating ? 'Place guardian status panel in the page' : 'Float guardian status panel'}>{isFloating ? 'Dock' : 'Float'}</button>
+      <div className="guardian-status-content">
+        <div className="guardian-status-heading">
+          <div className="guardian-status-copy"><strong>{heading}</strong><p>{detail}. Heartbeat monitoring continues while stopped.</p></div>
+          <div className="guardian-status-actions">
+            {isFloating && <button className="guardian-status-move" type="button" aria-label="Move guardian status panel; use arrow keys to reposition" title="Drag to move, or use arrow keys" onPointerDown={handleMoveStart} onPointerMove={handleMove} onPointerUp={handleMoveEnd} onPointerCancel={handleMoveEnd} onLostPointerCapture={handleMoveEnd} onKeyDown={handleMoveKeyDown}>Move</button>}
+            <button className="guardian-status-toggle" type="button" onClick={toggleFloating} aria-label={isFloating ? 'Place guardian status panel in the page' : 'Float guardian status panel'}>{isFloating ? 'Dock' : 'Float'}</button>
+          </div>
+        </div>
+        <p className="guardian-status-cadence">Inbox polling every {HEARTBEAT_CONFIG.pollIntervalMs / 1000}s · heartbeat freshness {HEARTBEAT_CONFIG.maxHeartbeatAgeSec}s</p>
+        <div className="guardian-status-metrics" aria-label="Live guardian heartbeats">
+          {fighters.map((fighter) => {
+            const heartbeatAge = fighter.heartbeatAgeMs === null
+              ? 'No verified heartbeat'
+              : `${Math.max(0, Math.floor(fighter.heartbeatAgeMs / 1000))}s ago`
+            return (
+              <div className="guardian-status-metric" key={fighter.id}>
+                <span className="guardian-status-metric-name">{fighter.name}</span>
+                <span className={`guardian-status-metric-state is-${fighter.listenerStatus.toLowerCase()}`}>{fighter.listenerStatus}{fighter.stopped ? ' · stopped' : ''}</span>
+                <span className="guardian-status-metric-age">Heartbeat {heartbeatAge}</span>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </aside>
   )
