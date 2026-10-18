@@ -35,12 +35,18 @@ These are Cloudflare proxy/anycast addresses, consistent with the domain being p
 
 Checks run on 2026-10-18:
 
+- Cloudflare API inspection was attempted after the operator approved restoration. The configured `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` values are placeholder-like and cannot identify/query the domain zone. No Cloudflare API changes, registrar changes, or DNS edits were made. To continue, replace both values in project Settings → Vars with a real scoped API token and the actual zone ID; do not share either value in chat.
+
 - The operator-provided DNS capture earlier in chat showed `104.21.52.12` and `172.67.180.44`; that capture's time and resolver are unknown.
 - A fresh lookup from this environment and independent Google and Cloudflare DNS-over-HTTPS resolvers returned only `162.254.39.118` for `montemader.com`. The current delegated nameservers resolved to `dns1.namecheaphosting.com` and `dns2.namecheaphosting.com`.
 - HTTPS HEAD requests returned `200` for both `https://montemader.com` and `https://mastercontrolsuite.vercel.app`. The former identified a LiteSpeed/WordPress response; the latter is a Vercel response.
 - The deployed `https://mastercontrolsuite.vercel.app/api/vercel-usage` returned `404 NOT_FOUND`. The checked-out app builds successfully, but the current production deployment does not serve this route. The local preview is gated by its sign-in screen.
 
 **Recovery caution:** do not set `104.21.52.12` and `172.67.180.44` as ordinary A records at Namecheap. Those are Cloudflare proxy IPs, not the site origin, and the current delegation is not to Cloudflare. To restore Cloudflare proxying, first confirm the correct Cloudflare zone, assigned Cloudflare nameservers, and the actual origin record; then update registrar delegation and proxy settings through the authoritative account. No DNS or registrar changes were made during these checks.
+
+## Existing data persistence and new intake
+
+The live Neon schema already contains `dragon_telemetry_records`, `telemetry_events`, `platform_metrics`, `magic_dragon_insights`, `security_alert_incidents`, and `dragon_rule_revisions`. The current Cloudflare panel fetches aggregate zone analytics on demand; it does not currently archive each response as history. Avoid duplicating tables until each incoming stream and its required retention, granularity, and source are specified. No new data tables or migrations have been applied for DNS or Cloudflare intake yet.
 
 ## Firewall IP Access Rules
 
