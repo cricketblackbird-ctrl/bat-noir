@@ -50,7 +50,7 @@ export function AccessGate() {
 
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button-primary auth-submit" type="submit" disabled={busy}>
-              {busy ? 'Please wait…' : 'Sign in'}
+              {busy ? 'Please wait…' : 'ENTER'}
             </button>
           </form>
         </section>
