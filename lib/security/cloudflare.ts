@@ -72,9 +72,8 @@ export async function getCloudflareSnapshot(now = new Date()): Promise<Cloudflar
       scopes: ['Zone.Analytics:Read'],
     })
   } catch {
-    token = process.env.CLOUDFLARE_API_TOKEN
+    throw new CloudflareAnalyticsError('credential_unavailable')
   }
-  token ||= process.env.CLOUDFLARE_API_TOKEN
   if (!token) throw new CloudflareAnalyticsError('credential_unavailable')
 
   const recent = new Date(now.getTime() - 60_000).toISOString()
