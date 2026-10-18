@@ -35,16 +35,13 @@ export function AccessGate() {
       <div className="auth-card" aria-labelledby="auth-title">
         <header className="auth-brand">
           <div className="auth-brand-mark" aria-hidden="true">M</div>
-          <p className="auth-brand-name">MONTEMADER</p>
-          <p className="auth-brand-caption">DEFENSE COMMAND GRID</p>
         </header>
 
         <div className="auth-divider" aria-hidden="true"><span /></div>
 
         <section className="auth-content">
-          <p className="auth-kicker">PROTECTED ACCESS</p>
           <h1 id="auth-title">Sign in</h1>
-          <p className="auth-description">Enter your account credentials to continue.</p>
+          <p className="auth-description">Good to have you back.</p>
 
           <form className="auth-form" onSubmit={submit}>
             <label htmlFor="username">Sign in</label>
@@ -60,12 +57,7 @@ export function AccessGate() {
           </form>
         </section>
 
-        <footer className="auth-footer">
-          <span className="auth-footer-dot" aria-hidden="true" />
-          <span>SECURE ACCOUNT ACCESS</span>
-        </footer>
       </div>
-      <p className="auth-background-label" aria-hidden="true">MONTEMADER.COM <span>·</span> AUTHORIZED USERS ONLY</p>
     </main>
   )
 }
