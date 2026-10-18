@@ -10,7 +10,6 @@ import { ActivityArchivePanel } from '@/components/activity-archive'
 import { PlatformConsole } from '@/components/platform-console'
 import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
-import { GuardianLinks } from '@/components/guardian-links'
 import { HeartbeatReadinessPanel } from '@/components/heartbeat-readiness-panel'
 import { HEARTBEAT_CONFIG } from '@/lib/heartbeat-config'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
@@ -373,7 +372,6 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
             onRefresh={async () => { await mutate() }}
           />
           <CloudflareTelemetryPanel fighters={guards} />
-          <GuardianLinks />
         </section>
       </div>
 

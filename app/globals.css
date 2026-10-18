@@ -1112,28 +1112,6 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
   .heartbeat-readiness-heading .telemetry-refresh { width: 100%; }
 }
 
-.guardian-links-panel { gap: 10px; }
-.guardian-links-intro { margin: 0; color: #c3b3cb; font-size: calc((13px) + 1pt); line-height: 1.5; }
-.guardian-links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); justify-items: center; gap: 16px 10px; margin: 4px 0; padding: 0; list-style: none; }
-.guardian-links-grid li { min-width: 0; }
-.guardian-link { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 7px; color: #f4e8f2; text-align: center; text-decoration: none; }
-.guardian-link-mark { position: relative; display: grid; width: 116px; max-width: 100%; aspect-ratio: 1; place-items: center; transition: transform .18s ease, filter .18s ease; }
-.guardian-link:hover .guardian-link-mark, .guardian-link:focus-visible .guardian-link-mark { transform: translateY(-2px); filter: drop-shadow(0 0 11px rgb(230 165 211 / 34%)); }
-.guardian-link:focus-visible { outline: 2px solid #fff4fc; outline-offset: 4px; border-radius: 8px; }
-.guardian-link-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.guardian-link-orbit-text { fill: #100912; font-family: Arial, Helvetica, sans-serif; font-size: 8px; font-weight: 800; letter-spacing: .6px; }
-.guardian-link-orbit-text textPath { animation: guardian-link-orbit 32s linear infinite; transform-box: view-box; transform-origin: 60px 60px; }
-.guardian-link-symbol { position: relative; z-index: 1; display: grid; width: 60px; height: 60px; place-items: center; border: 1px solid rgb(255 244 252 / 22%); border-radius: 50%; background: rgb(13 7 18 / 50%); color: #fff8fe; box-shadow: inset 0 0 18px rgb(255 244 252 / 5%); }
-.guardian-link-symbol svg, .guardian-link-symbol img { width: 29px; height: 29px; }
-.guardian-link-symbol img { filter: brightness(0) invert(1); object-fit: contain; }
-.guardian-link-name { max-width: 13ch; font-size: calc((12px) + 1pt); line-height: 1.3; overflow-wrap: anywhere; }
-.guardian-links-notice { margin: 0; border-left: 2px solid #e8ce91; padding: 8px 10px; background: rgb(232 206 145 / 5%); color: #d8c8d6; font-size: calc((12px) + 1pt); line-height: 1.55; }
-.guardian-links-notice strong { color: #fff4fc; }
-@keyframes guardian-link-orbit { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) {
-  .guardian-link-mark, .guardian-link-orbit-text textPath { animation: none; transition: none; }
-}
-
 .command-page { height: auto; min-height: 100dvh; overflow: visible; }
 .panel { overflow: visible; }
 .dashboard-nav { flex-wrap: wrap; overflow: visible; }
