@@ -1,10 +1,9 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Defense Command Grid',
-  description: 'Authenticated security operations dashboard with live site health, verified agent reports, defensive controls, and auditable activity.',
+  description: 'Authenticated security operations dashboard with Cloudflare aggregate analytics, verified guardian reports, defensive controls, and auditable activity.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -40,7 +39,6 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )

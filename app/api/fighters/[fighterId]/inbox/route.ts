@@ -5,6 +5,7 @@ import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonEmergencyStop } from '@/lib/db/schema'
 import { readJsonBody } from '@/lib/read-json-body'
+import { HEARTBEAT_CONFIG } from '@/lib/heartbeat-config'
 import { SITE_SCOPE } from '@/lib/site-scope'
 
 export const runtime = 'nodejs'
@@ -16,7 +17,7 @@ const inboxHeaders = { 'Cache-Control': 'private, no-store' }
 const listeningContract = {
   listeningRequired: true,
   nextPollRequired: true,
-  nextPollAfterMs: 5000,
+  nextPollAfterMs: HEARTBEAT_CONFIG.pollIntervalMs,
   stopBlocksExecutionOnly: true,
   contract: 'PASS only when this authenticated bot continues polling the MM inbox, including while stopped. Stop blocks execution only.',
 }
@@ -26,9 +27,9 @@ const telemetryContract = {
   scopeValidation: 'Exact scope required; out-of-scope telemetry is rejected.',
   dataSource: 'Authenticated fighter reports only; not direct website request capture.',
   heartbeatEventType: 'listener_heartbeat',
-  heartbeatRequiredEveryMs: 5000,
+  heartbeatRequiredEveryMs: HEARTBEAT_CONFIG.pollIntervalMs,
   minimumDispatchIntervalMs: 1000,
-  passThresholdMs: 32000,
+  passThresholdMs: HEARTBEAT_CONFIG.maxHeartbeatAgeSec * 1000,
   allowedEventTypes: ['health_report', 'hit', 'recall', 'reappear', 'listener_heartbeat'],
   reportOnlyObservedFacts: true,
   neverSendSecretsOrVisitorPersonalData: true,

@@ -10,6 +10,9 @@ import { ActivityArchivePanel } from '@/components/activity-archive'
 import { PlatformConsole } from '@/components/platform-console'
 import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
+import { GuardianLinks } from '@/components/guardian-links'
+import { HeartbeatReadinessPanel } from '@/components/heartbeat-readiness-panel'
+import { HEARTBEAT_CONFIG } from '@/lib/heartbeat-config'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
 const MMLiveIndicator = dynamic(() => import('@/components/mm-live-indicator').then((module) => module.MMLiveIndicator), { ssr: false })
@@ -43,6 +46,7 @@ type Fighter = {
 
 type Operations = {
   operator: { isMm: boolean }
+  domain: string
   activeAttack: { expiresAt: string; reportCount: number; sources: Array<{ id: string; name: string }> } | null
   fighters: Fighter[]
   stops: { stopRuach?: boolean; stopXena?: boolean; stopSuperbot?: boolean; stopAll?: boolean; updatedAt?: string | null }
@@ -53,8 +57,8 @@ type Operations = {
   observedAt: string
 }
 
-type DashboardView = 'dashboard' | 'tester' | 'intel'
-const dashboardViews: DashboardView[] = ['dashboard', 'tester', 'intel']
+type DashboardView = 'dashboard' | 'tester' | 'intel' | 'cloudflare'
+const dashboardViews: DashboardView[] = ['dashboard', 'tester', 'intel', 'cloudflare']
 
 const fetcher = async (url: string) => {
   const response = await fetch(url, { cache: 'no-store' })
@@ -140,7 +144,7 @@ function GuardianStatusWidget({ fighters, isLoading, hasError }: { fighters: Fig
 }
 
 export function ControlRoom({ operator }: { operator: Operations['operator'] & { id: string } }) {
-  const { data, error, mutate } = useSWR<Operations>('/api/operations', fetcher, { refreshInterval: 5000, revalidateOnFocus: true })
+  const { data, error, mutate } = useSWR<Operations>('/api/operations', fetcher, { refreshInterval: HEARTBEAT_CONFIG.pollIntervalMs, revalidateOnFocus: true })
   const [strategy, setStrategy] = useState<Strategy>('inspect_verify')
   const [formation, setFormation] = useState<Formation>('all_three')
   const [feedback, setFeedback] = useState('')
@@ -258,6 +262,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         <button id="view-tab-dashboard" className={`view-tab${activeView === 'dashboard' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'dashboard'} aria-controls="view-panel-dashboard" tabIndex={activeView === 'dashboard' ? 0 : -1} onClick={() => selectDashboardView('dashboard')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'dashboard')}>Dashboard</button>
         <button id="view-tab-tester" className={`view-tab${activeView === 'tester' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'tester'} aria-controls="view-panel-tester" tabIndex={activeView === 'tester' ? 0 : -1} onClick={() => selectDashboardView('tester')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'tester')}>Tester &amp; capabilities</button>
         <button id="view-tab-intel" className={`view-tab${activeView === 'intel' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'intel'} aria-controls="view-panel-intel" tabIndex={activeView === 'intel' ? 0 : -1} onClick={() => selectDashboardView('intel')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'intel')}>Intel &amp; activity</button>
+        <button id="view-tab-cloudflare" className={`view-tab${activeView === 'cloudflare' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'cloudflare'} aria-controls="view-panel-cloudflare" tabIndex={activeView === 'cloudflare' ? 0 : -1} onClick={() => selectDashboardView('cloudflare')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'cloudflare')}>Cloudflare</button>
       </nav>
 
       <div className="dashboard-views">
@@ -330,7 +335,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
 
         <section id="view-panel-tester" className="view-panel tester-view" role="tabpanel" aria-labelledby="view-tab-tester" tabIndex={0} hidden={activeView !== 'tester'}>
           <PlatformConsole onOpenSecurityView={() => {
-            selectDashboardView('intel')
+            selectDashboardView('cloudflare')
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 const securityView = document.getElementById('cloudflare-security-view')
@@ -355,7 +360,20 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         </section>
           </div>
           <KeyChest userId={operator.id} />
+        </section>
+
+        <section id="view-panel-cloudflare" className="view-panel cloudflare-view" role="tabpanel" aria-labelledby="view-tab-cloudflare" tabIndex={0} hidden={activeView !== 'cloudflare'}>
+          <HeartbeatReadinessPanel
+            domain={data?.domain ?? null}
+            fighters={guards}
+            commands={data?.commands ?? []}
+            telemetryCount24h={data?.telemetryCount24h ?? null}
+            isLoading={!data && !error}
+            hasError={Boolean(error)}
+            onRefresh={async () => { await mutate() }}
+          />
           <CloudflareTelemetryPanel fighters={guards} />
+          <GuardianLinks />
         </section>
       </div>
 

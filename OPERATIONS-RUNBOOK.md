@@ -1,24 +1,13 @@
 # Master Control Suite recovery notes
 
-This runbook records how the usage panel is connected, where its credentials are configured, and the firewall IP rules supplied for the Vercel project. It deliberately contains no credential values.
+This runbook records the dashboard’s analytics source, Cloudflare/DNS observations, and the firewall IP rules supplied for the Vercel project. It deliberately contains no credential values.
 
-## Usage panel: how it is wired
+## Analytics source
 
-- The deployed page is `https://mastercontrolsuite.vercel.app`.
-- The authenticated usage panel is rendered by `components/vercel-usage-panel.tsx` and calls `GET /api/vercel-usage`.
-- The route in `app/api/vercel-usage/route.ts` reads Vercel data server-side. It requests project Web Analytics grouped by path and team billing charges for the current UTC month to date.
-- The route requires an authenticated session and the authorized operator. Responses are private and not cached. The Vercel token is never sent to the browser.
-- The panel includes links to Vercel Usage and project Analytics, along with its own source/range disclosure.
-
-## Credential recovery
-
-1. In Vercel, open the `master_control_suite` project and select **Settings → Environment Variables** (or **Vars** in the v0 project settings).
-2. Set `VERCEL_API_TOKEN` for each environment where this panel should run. Do not put the token in source code, this document, browser code, or a chat message.
-3. Use a valid Vercel token whose owner has access to team `cricketblackbird-4588`, the project’s Web Analytics, and team billing charges. A variable being present does not prove the token is valid or sufficiently authorized.
-4. Redeploy after changing the variable, then sign in as the authorized operator and reload the page.
-5. If the panel still reports HTTP 401/403, create or select a valid token with the required team access, update the Vercel variable, and redeploy. Do not work around the operator check or expose the token to the client.
-
-**Last observed status:** the variable was present in the project runtime, but calls to both Vercel endpoints returned HTTP 403 (`invalidToken`). No live analytics or billing values were confirmed at that time. Recheck after replacing the token; do not treat an unavailable value as zero.
+- The authenticated dashboard reads Cloudflare zone aggregates through `GET /api/security/health`.
+- Cloudflare requests are made server-side; responses are private and not cached. The dashboard does not archive these analytics results.
+- Vercel Web Analytics, Vercel billing/usage API calls, and the Vercel Analytics browser tracker are not used by the app.
+- Cloudflare data is fetched on demand for the signed-in dashboard; the app writes no copy to Vercel Analytics or its history database. Because the app is hosted on Vercel, its server runtime still handles each response in transit.
 
 ## Domain DNS and Cloudflare edge
 
@@ -40,7 +29,7 @@ Checks run on 2026-10-18:
 - The operator-provided DNS capture earlier in chat showed `104.21.52.12` and `172.67.180.44`; that capture's time and resolver are unknown.
 - A fresh lookup from this environment and independent Google and Cloudflare DNS-over-HTTPS resolvers returned only `162.254.39.118` for `montemader.com`. The current delegated nameservers resolved to `dns1.namecheaphosting.com` and `dns2.namecheaphosting.com`.
 - HTTPS HEAD requests returned `200` for both `https://montemader.com` and `https://mastercontrolsuite.vercel.app`. The former identified a LiteSpeed/WordPress response; the latter is a Vercel response.
-- The deployed `https://mastercontrolsuite.vercel.app/api/vercel-usage` returned `404 NOT_FOUND`. The checked-out app builds successfully, but the current production deployment does not serve this route. The local preview is gated by its sign-in screen.
+- The former `/api/vercel-usage` endpoint has been removed. Cloudflare aggregate analytics are served through the authenticated `/api/security/health` route.
 
 **Recovery caution:** do not set `104.21.52.12` and `172.67.180.44` as ordinary A records at Namecheap. Those are Cloudflare proxy IPs, not the site origin, and the current delegation is not to Cloudflare. To restore Cloudflare proxying, first confirm the correct Cloudflare zone, assigned Cloudflare nameservers, and the actual origin record; then update registrar delegation and proxy settings through the authoritative account. No DNS or registrar changes were made during these checks.
 
@@ -63,5 +52,5 @@ These are the rule details supplied for documentation. They have **not** been ve
 
 ## Change record
 
-- The page usage panel and source notes were added in commit `c2f0001` on branch `v0/mm-live-rules-readability`.
-- The application provides a read-only view of Vercel usage data; credentials and firewall configuration remain managed in Vercel project settings.
+- The former Vercel usage panel was added in commit `c2f0001` on branch `v0/mm-live-rules-readability` and has since been removed from the app.
+- The application now reads Cloudflare aggregate analytics on demand; it does not use Vercel Web Analytics, billing, usage, or the browser analytics tracker.

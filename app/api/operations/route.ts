@@ -6,6 +6,7 @@ import { getFighterCredentialStatus, type FighterId } from '@/lib/bot-auth'
 import { getActiveAttack } from '@/lib/active-attack'
 import { db } from '@/lib/db'
 import { dragonCommandQueue, dragonControlState, dragonEmergencyStop, dragonRuleRevisions, dragonTelemetryRecords } from '@/lib/db/schema'
+import { HEARTBEAT_CONFIG } from '@/lib/heartbeat-config'
 import { SITE_SCOPE } from '@/lib/site-scope'
 
 export const runtime = 'nodejs'
@@ -18,7 +19,7 @@ const fighterRoles: Record<FighterId, string> = {
   superbot: 'Credential signal review',
 }
 const fighters: FighterId[] = ['ruach', 'xena', 'superbot']
-const listenerFreshnessMs = 32_000
+const listenerFreshnessMs = HEARTBEAT_CONFIG.maxHeartbeatAgeSec * 1000
 
 function decodeRuleText(value: unknown): string[] {
   if (Array.isArray(value) && value.every((item) => typeof item === 'string')) return value

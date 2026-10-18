@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { readBrowserHints, type BrowserHints } from '@/components/browser-environment-panel'
-import { VercelUsagePanel } from '@/components/vercel-usage-panel'
 import { fetchActivityArchive, saveActivityArchive } from '@/lib/activity-archive-client'
 import type { ActivityArchiveResponse, StreamTopic } from '@/lib/activity-archive-types'
 import { formatCentralDateTime, formatCentralTime } from '@/lib/format-time'
@@ -380,8 +379,6 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
             )}
             <p className="website-data-footnote">Site check: the server sends an HTTPS HEAD request with an 8-second timeout and no page-body download. HTTP 2xx/3xx responses are marked responding; redirects are not followed. HTTP 4xx/5xx responses are server errors; no HTTP status means the request failed or timed out. Response time measures the server-to-response-headers round trip; it does not test browser rendering, page assets, sign-in, or app features. The browser exposes rough device hints, not a full computer diagnostic. Cloudflare request totals are aggregates and do not identify individual viewers.</p>
           </section>
-
-          <VercelUsagePanel />
 
           <div className="console-controls">
             <label className="sr-only" htmlFor="stream-topic">Choose a live data stream</label>
