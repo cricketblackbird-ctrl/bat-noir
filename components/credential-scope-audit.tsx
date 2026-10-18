@@ -79,26 +79,26 @@ export function CredentialScopeAudit() {
 
       <section className="credential-scope-audit credential-scope-audit--analytics" aria-labelledby="analytics-architecture-heading">
         <header className="credential-scope-header">
-          <p className="credential-scope-kicker">Analytics &amp; Telemetry Architecture</p>
-          <h2 id="analytics-architecture-heading">Privacy-Preserving Visitor Tracking &amp; Aggregate Feeds</h2>
+          <p className="credential-scope-kicker">Credential Audit View Update</p>
+          <h2 id="analytics-architecture-heading">Analytics Architecture Card Integration (Commit 637f312)</h2>
         </header>
 
         <div className="credential-scope-notice credential-scope-notice--success" role="note">
-          <p><strong>Design Principle:</strong> Production page visits are measured site-wide via Vercel Analytics. The application does not store visitor identities, IP addresses, or per-person visit histories.</p>
+          <p><strong>Integration Status:</strong> The Analytics &amp; Telemetry Architecture card has been successfully integrated into the credential-audit view, accurately documenting anonymous traffic flows, Cloudflare aggregates, and database dependencies.</p>
         </div>
 
         <div className="credential-scope-list">
-          <h3>Data Pipeline &amp; Feed Separation</h3>
+          <h3>Build &amp; Inspection Summary</h3>
           <ul>
-            <li><strong>Sign-In Analytics:</strong><span> Guests reaching the sign-in boundary contribute to site-wide aggregate page-view counts without app-level identity or visit-history records.</span></li>
-            <li><strong>Cloudflare Edge:</strong><span> Traffic totals operate as an independent aggregate feed, separate from application storage.</span></li>
-            <li><strong>Database Views:</strong><span> The “Magic Dragons” view reads aggregate data. This codebase has no active writer for that table, so it remains empty until an external ingestion process populates it.</span></li>
+            <li><strong>Code Quality:</strong><span> TypeScript compilation and diff checks pass cleanly.</span></li>
+            <li><strong>Preview Verification:</strong><span> The preview loads successfully at the sign-in boundary; authenticated card inspection remains pending session state.</span></li>
+            <li><strong>Version Control:</strong><span> Changes successfully packaged and pushed under commit <code>637f312</code>.</span></li>
           </ul>
         </div>
 
         <footer className="credential-scope-footer">
-          <span>Analytics: Vercel &amp; Cloudflare Feeds</span>
-          <span className="credential-scope-status">Privacy-First</span>
+          <span>Commit: 637f312</span>
+          <span className="credential-scope-status">Committed &amp; Synced</span>
         </footer>
       </section>
     </>
