@@ -7,20 +7,22 @@ export function CredentialScopeAudit() {
       </header>
 
       <div className="credential-scope-notice" role="note">
-        <strong>Reported scopes.</strong> The app cannot inspect provider-side credential grants; this panel reflects the scope details provided for the default object storage credential.
+        <p><strong>Reported scope profile:</strong> The object storage credential is described as granting read, write, and deletion privileges for stored assets, telemetry artifacts, and static backups. These permissions are user-provided and have not been independently verified by the app.</p>
       </div>
 
       <div className="credential-scope-list">
-        <h3>Scopes granted</h3>
-        <p className="credential-scope-intro">Scopes granted to the Default object storage credential.</p>
+        <h3>Authorized scope list</h3>
+        <p className="credential-scope-intro">Scopes reported for the Default object storage credential.</p>
         <ul>
-          <li><code>storage:read</code><span>List &amp; download objects</span></li>
-          <li><code>storage:write</code><span>Upload &amp; delete objects</span></li>
+          <li><code>storage:read</code><span>Permits reading and querying storage objects.</span></li>
+          <li><strong>List &amp; download objects:</strong><span>Authorizes traversing bucket directories and retrieving file payloads.</span></li>
+          <li><code>storage:write</code><span>Permits creating and updating files in the bucket.</span></li>
+          <li><strong>Upload &amp; delete objects:</strong><span>Authorizes ingesting new assets and purging obsolete data.</span></li>
         </ul>
       </div>
 
       <footer className="credential-scope-footer">
-        <span>Object storage: Default credential</span>
+        <span>Storage: Default object credential</span>
         <span className="credential-scope-status">Reported · not live-verified</span>
       </footer>
     </section>
