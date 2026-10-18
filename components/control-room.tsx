@@ -1,11 +1,12 @@
 'use client'
 
 import { Shield } from 'lucide-react'
-import { FormEvent, KeyboardEvent, useMemo, useState, useTransition } from 'react'
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
 import { PlatformConsole } from '@/components/platform-console'
+import { BrowserEnvironmentPanel } from '@/components/browser-environment-panel'
 import { SiteHealthPanel } from '@/components/site-health-panel'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
@@ -112,6 +113,26 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
   const guards = data?.fighters ?? []
   const recentSignals = useMemo(() => guards.filter((fighter) => fighter.signal).length, [guards])
 
+  useEffect(() => {
+    const syncViewFromLocation = () => {
+      const matchingView = dashboardViews.find((view) => window.location.hash === `#view-panel-${view}`)
+      if (matchingView) setActiveView(matchingView)
+    }
+
+    syncViewFromLocation()
+    window.addEventListener('hashchange', syncViewFromLocation)
+    window.addEventListener('popstate', syncViewFromLocation)
+    return () => {
+      window.removeEventListener('hashchange', syncViewFromLocation)
+      window.removeEventListener('popstate', syncViewFromLocation)
+    }
+  }, [])
+
+  function selectDashboardView(view: DashboardView) {
+    setActiveView(view)
+    window.history.pushState(null, '', `#view-panel-${view}`)
+  }
+
   function handleDashboardTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, current: DashboardView) {
     const index = dashboardViews.indexOf(current)
     let nextIndex: number
@@ -123,7 +144,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
 
     event.preventDefault()
     const nextView = dashboardViews[nextIndex]
-    setActiveView(nextView)
+    selectDashboardView(nextView)
     requestAnimationFrame(() => document.getElementById(`view-tab-${nextView}`)?.focus())
   }
 
@@ -184,14 +205,14 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
       </header>
 
       <nav className="dashboard-nav" role="tablist" aria-label="Defense dashboard views">
-        <button id="view-tab-dashboard" className={`view-tab${activeView === 'dashboard' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'dashboard'} aria-controls="view-panel-dashboard" tabIndex={activeView === 'dashboard' ? 0 : -1} onClick={() => setActiveView('dashboard')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'dashboard')}>Dashboard</button>
-        <button id="view-tab-tester" className={`view-tab${activeView === 'tester' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'tester'} aria-controls="view-panel-tester" tabIndex={activeView === 'tester' ? 0 : -1} onClick={() => setActiveView('tester')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'tester')}>Tester &amp; capabilities</button>
-        <button id="view-tab-intel" className={`view-tab${activeView === 'intel' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'intel'} aria-controls="view-panel-intel" tabIndex={activeView === 'intel' ? 0 : -1} onClick={() => setActiveView('intel')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'intel')}>Intel &amp; activity</button>
+        <button id="view-tab-dashboard" className={`view-tab${activeView === 'dashboard' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'dashboard'} aria-controls="view-panel-dashboard" tabIndex={activeView === 'dashboard' ? 0 : -1} onClick={() => selectDashboardView('dashboard')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'dashboard')}>Dashboard</button>
+        <button id="view-tab-tester" className={`view-tab${activeView === 'tester' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'tester'} aria-controls="view-panel-tester" tabIndex={activeView === 'tester' ? 0 : -1} onClick={() => selectDashboardView('tester')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'tester')}>Tester &amp; capabilities</button>
+        <button id="view-tab-intel" className={`view-tab${activeView === 'intel' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'intel'} aria-controls="view-panel-intel" tabIndex={activeView === 'intel' ? 0 : -1} onClick={() => selectDashboardView('intel')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'intel')}>Intel &amp; activity</button>
       </nav>
 
       <div className="dashboard-views">
         <section id="view-panel-dashboard" className="view-panel dashboard-view" role="tabpanel" aria-labelledby="view-tab-dashboard" tabIndex={0} hidden={activeView !== 'dashboard'}>
-          <SiteHealthPanel canTestSms={operator.isMm} />
+          <SiteHealthPanel />
           {!operator.isMm && <div className="readonly-notice" role="status">This account can read live reports. MM alone can issue or stop directives.</div>}
           <div className="control-grid dashboard-grid">
         <section className="panel fighter-panel" aria-labelledby="fighters-heading">
@@ -251,6 +272,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         <section id="view-panel-intel" className="view-panel intel-view" role="tabpanel" aria-labelledby="view-tab-intel" tabIndex={0} hidden={activeView !== 'intel'}>
           <KeyChest userId={operator.id} />
           <div className="control-grid intel-grid">
+        <BrowserEnvironmentPanel />
         <section className="panel magic-panel" aria-labelledby="magic-heading">
           <div className="panel-heading"><div><p className="section-kicker">SEPARATE · AGGREGATE ONLY</p><h2 id="magic-heading">Magic Dragons</h2></div><span className="panel-sigil magic-sigil" aria-hidden="true">✧</span></div>
           <p className="magic-description">A small, independent view of where visits come from—kept separate from fighter telemetry.</p>
@@ -273,11 +295,11 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
       </div>
 
       <footer className="heart-footer">
-        <span className="footer-star footer-star-left" aria-hidden="true">✧</span>
+        <span className="footer-star footer-star-left" aria-hidden="true">★</span>
         <span className="footer-thread footer-thread-left" aria-hidden="true" />
-        <span className="heart-phrase freedom-word">freedom<span className="sword-slash" aria-hidden="true"><svg viewBox="0 0 100 20" focusable="false"><path d="M4 15 88 4m-9-1 10 1-4 8M12 12l-7 4 6 2" /></svg></span></span>
+        <span className="heart-phrase freedom-word">freedom<span className="freedom-underline" aria-hidden="true"><svg viewBox="0 0 100 8" focusable="false"><path d="M2 3.5 Q50 7.5 98 3.5" /></svg></span></span>
         <span className="footer-thread footer-thread-right" aria-hidden="true" />
-        <span className="footer-star footer-star-right" aria-hidden="true">✦</span>
+        <span className="footer-star footer-star-right" aria-hidden="true">★</span>
       </footer>
     </main>
   )

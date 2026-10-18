@@ -132,10 +132,6 @@ export const securityAlertIncidents = pgTable('security_alert_incidents', {
   lastTriggeredAt: timestamp('last_triggered_at', { withTimezone: true }).notNull().defaultNow(),
   resolvedAt: timestamp('resolved_at', { withTimezone: true }),
   blockedCount: integer('blocked_count').notNull().default(0),
-  smsStatus: text('sms_status').notNull().default('pending'),
-  smsSentAt: timestamp('sms_sent_at', { withTimezone: true }),
-  smsProviderId: text('sms_provider_id'),
-  smsError: text('sms_error'),
 })
 
 export const userSecretVaults = pgTable('user_secret_vaults', {

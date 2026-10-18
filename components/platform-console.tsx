@@ -9,13 +9,26 @@ type ActiveAttack = {
   state: 'active'
   evidence: string
   confidence: string
+  siteScope: string
+  windowMs: number
   detectedAt: string
   expiresAt: string
   correlated: boolean
   reportCount: number
   sourceCount: number
   sources: Array<{ id: string; name: string }>
-  reports: Array<{ fighterId: string; fighterName: string; receivedAt: string; category: string | null; vector: string | null; signature: string | null }>
+  reports: Array<{
+    fighterId: string
+    fighterName: string
+    nodeId: string
+    receivedAt: string
+    healthPercent: number
+    hitsTaken: number
+    hitCapacity: number
+    category: string | null
+    vector: string | null
+    signature: string | null
+  }>
 }
 
 type ConsoleSnapshot = {
@@ -82,6 +95,17 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
     'Only authenticated bot hit reports activate this 60-second window. This app inbox is not a network tunnel, does not proxy website traffic, and does not hide the hosting origin.',
   ]
 
+  if (snapshot.activeAttack) {
+    lines.push(
+      `Attack assessment: ${snapshot.activeAttack.confidence}; correlated=${snapshot.activeAttack.correlated}; window=${snapshot.activeAttack.windowMs / 1000}s; evidence=${snapshot.activeAttack.evidence}.`,
+      `Attack report sources: ${snapshot.activeAttack.sources.map((source) => source.name).join(', ')}.`,
+    )
+    for (const report of snapshot.activeAttack.reports) {
+      const classification = [report.category, report.vector, report.signature].filter(Boolean).join(' · ') || 'no classification metadata supplied'
+      lines.push(`${report.fighterName} reported ${classification} at ${new Date(report.receivedAt).toISOString()} · health ${report.healthPercent}% · hits ${report.hitsTaken}/${report.hitCapacity}.`)
+    }
+  }
+
   if (topic === 'all' || topic === 'health') {
     lines.push('', '[HEALTH & MM LISTENER]')
     for (const fighter of snapshot.fighters) {
@@ -136,6 +160,7 @@ export function PlatformConsole() {
     revalidateOnFocus: true,
     dedupingInterval: 1000,
   })
+  const snapshotIsFresh = data ? Date.now() - new Date(data.observedAt).getTime() <= 15_000 : false
 
   useEffect(() => {
     if (!isRecording || !data || lastRecordedAt.current === data.observedAt) return
@@ -175,11 +200,41 @@ export function PlatformConsole() {
             </button>
           </div>
           <p className="console-description">{topicDescriptions[topic]} Text records stay in this page session only; they are not saved to a database or browser storage.</p>
-          <p className={`attack-route-status${data?.activeAttack ? ' is-active' : ''}`} role="status" aria-live="polite">
-            {data?.activeAttack
-              ? `Attack report active · inbox packet expires ${new Date(data.activeAttack.expiresAt).toLocaleTimeString()}`
-              : 'No active attack report · no packet routed'}
-          </p>
+          <section className={`attack-report${data?.activeAttack ? ' is-active' : ''}`} aria-labelledby="attack-report-heading" aria-live="polite">
+            <div className="attack-report-heading">
+              <h3 id="attack-report-heading">Real-time attack report</h3>
+              <span>{data ? `Server update ${new Date(data.observedAt).toLocaleTimeString()}` : 'Waiting for server'}</span>
+            </div>
+            {error && (!data || !snapshotIsFresh) ? (
+              <p className="attack-report-state is-unavailable" role="alert">Live report feed unavailable{data ? ` · last server observation ${new Date(data.observedAt).toLocaleTimeString()}` : ''}. No sample or simulated attack is displayed.</p>
+            ) : isLoading && !data ? (
+              <p className="attack-report-state" role="status">Connecting to authenticated telemetry…</p>
+            ) : !data || !snapshotIsFresh ? (
+              <p className="attack-report-state" role="status">Waiting for a fresh server observation. Stale reports are not presented as active.</p>
+            ) : data.activeAttack ? (
+              <>
+                <p className="attack-report-state is-active" role="status">Authenticated hit report active · {data.activeAttack.reportCount} correlated report{data.activeAttack.reportCount === 1 ? '' : 's'} from {data.activeAttack.sourceCount} source{data.activeAttack.sourceCount === 1 ? '' : 's'} · expires {new Date(data.activeAttack.expiresAt).toLocaleTimeString()}</p>
+                <dl className="attack-report-facts">
+                  <div><dt>Assessment</dt><dd>{data.activeAttack.confidence.replace(/_/g, ' ')}</dd></div>
+                  <div><dt>Evidence</dt><dd>{data.activeAttack.evidence.replace(/_/g, ' ')}</dd></div>
+                  <div><dt>Correlation</dt><dd>{data.activeAttack.correlated ? 'Matched across reporters' : 'Single reporter'}</dd></div>
+                  <div><dt>Scope / window</dt><dd>{data.activeAttack.siteScope} · {data.activeAttack.windowMs / 1000}s</dd></div>
+                </dl>
+                <ul className="attack-report-list" aria-label="Authenticated attack telemetry reports">
+                  {data.activeAttack.reports.map((report) => (
+                    <li key={`${report.fighterId}-${report.receivedAt}`}>
+                      <strong>{report.fighterName}</strong>
+                      <span>{[report.category, report.vector, report.signature].filter(Boolean).join(' · ') || 'No classification metadata supplied'}</span>
+                      <time dateTime={report.receivedAt}>{new Date(report.receivedAt).toLocaleTimeString()}</time>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="attack-report-state" role="status">No authenticated bot hit report in the active 60-second window. This is not a claim that the site has no attacks; Cloudflare traffic totals are shown in the live security view.</p>
+            )}
+            <p className="attack-report-caveat">Refreshes every 5 seconds from accepted, bearer-authenticated reports. Reported evidence is not independently confirmed, and this console does not inspect or proxy visitor traffic.</p>
+          </section>
           <div className="console-record-actions">
             <span className="console-stream-state" role="status">{error ? 'Live reports unavailable' : isRecording ? 'Live recording active' : isLoading ? 'Connecting to live reports…' : 'Live reports connected'}</span>
             <button className="text-button console-clear" type="button" onClick={clearRecords} disabled={records.length === 0}>Clear text</button>

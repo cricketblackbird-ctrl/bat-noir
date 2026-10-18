@@ -1,24 +1,24 @@
 .key-chest-panel { width: 100%; min-height: 330px; margin-bottom: 9px; }
-.key-chest-mark { color: #f5f7ff; font-size: 18px; text-shadow: 0 0 10px rgb(205 203 255 / 80%); }
-.key-chest-intro { flex: 0 0 auto; margin: 0 0 9px; color: #b8a9c0; font-size: 10px; line-height: 1.45; }
+.key-chest-mark { color: #f5f7ff; font-size: 20px; text-shadow: 0 0 10px rgb(205 203 255 / 80%); }
+.key-chest-intro { flex: 0 0 auto; margin: 0 0 9px; color: #b8a9c0; font-size: 12px; line-height: 1.45; }
 .key-chest-open { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; gap: 9px; }
 .key-chest-toolbar, .key-chest-entry-heading, .key-chest-entry-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.key-chest-toolbar p { margin: 0; color: #a99bad; font-size: 9px; }
+.key-chest-toolbar p { margin: 0; color: #a99bad; font-size: 11px; }
 .chest-entry-form, .chest-unlock-form { display: flex; flex: 0 0 auto; flex-direction: column; gap: 6px; }
-.chest-entry-form input, .chest-entry-form select, .chest-entry-form textarea, .chest-unlock-form input { width: 100%; min-width: 0; border: 1px solid #553967; border-radius: 6px; padding: 8px 10px; background: #100a16; color: #f1e6f6; font-size: 12px; }
+.chest-entry-form input, .chest-entry-form select, .chest-entry-form textarea, .chest-unlock-form input { width: 100%; min-width: 0; border: 1px solid #553967; border-radius: 6px; padding: 8px 10px; background: #100a16; color: #f1e6f6; font-size: 14px; }
 .chest-entry-form textarea { min-height: 76px; resize: vertical; white-space: pre-wrap; }
 .chest-entry-form input:focus-visible, .chest-entry-form select:focus-visible, .chest-entry-form textarea:focus-visible, .chest-unlock-form input:focus-visible { border-color: #e5bd68; outline: 2px solid rgb(209 140 195 / 24%); outline-offset: 1px; }
 .chest-entry-form .button, .chest-unlock-form .button { align-self: flex-start; min-width: 150px; }
-.key-chest-warning, .key-chest-state, .key-chest-empty, .key-chest-message { margin: 2px 0 0; color: #a99bad; font-size: 9px; line-height: 1.45; }
+.key-chest-warning, .key-chest-state, .key-chest-empty, .key-chest-message { margin: 2px 0 0; color: #a99bad; font-size: 11px; line-height: 1.45; }
 .key-chest-warning { color: #e0c99b; }
 .key-chest-message { color: #f0cbe3; }
 .key-chest-state { display: flex; align-items: center; gap: 9px; }
 .key-chest-list { display: grid; flex: 1 1 auto; gap: 7px; min-height: 0; max-height: 230px; overflow: auto; margin: 0; padding: 0 3px 0 0; list-style: none; }
 .key-chest-entry { min-width: 0; border: 1px solid rgb(123 63 158 / 35%); border-radius: 7px; padding: 9px; background: rgb(8 5 12 / 48%); }
-.key-chest-entry h3 { margin: 3px 0 0; color: #f0e4f1; font-family: Georgia, serif; font-size: 12px; font-weight: 400; overflow-wrap: anywhere; }
-.key-chest-category { color: #bc8bbd; font-size: 7px; letter-spacing: .12em; }
-.chest-text-button { border: 0; padding: 4px; background: transparent; color: #e1c4e8; cursor: pointer; font-size: 9px; text-decoration: underline; text-underline-offset: 2px; }
+.key-chest-entry h3 { margin: 3px 0 0; color: #f0e4f1; font-family: Georgia, serif; font-size: 14px; font-weight: 400; overflow-wrap: anywhere; }
+.key-chest-category { color: #bc8bbd; font-size: 9px; letter-spacing: .12em; }
+.chest-text-button { border: 0; padding: 4px; background: transparent; color: #e1c4e8; cursor: pointer; font-size: 11px; text-decoration: underline; text-underline-offset: 2px; }
 .chest-remove-button { color: #f0a8c7; }
-.key-chest-value { max-height: 140px; overflow: auto; margin: 8px 0 0; border-radius: 5px; padding: 8px; background: #08060b; color: #f5f3ff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.key-chest-value { max-height: 140px; overflow: auto; margin: 8px 0 0; border-radius: 5px; padding: 8px; background: #08060b; color: #f5f3ff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .chest-secondary-button { border-color: #70527d; background: #1b1221; color: #e4d2ed; }
 @media (max-width: 560px) { .key-chest-panel { min-height: 360px; } .key-chest-entry-heading { align-items: flex-start; } .key-chest-entry-actions { flex-wrap: wrap; justify-content: flex-end; } }

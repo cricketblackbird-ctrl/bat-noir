@@ -3,7 +3,6 @@ import { db } from '@/lib/db'
 import { securityAlertIncidents } from '@/lib/db/schema'
 import { SITE_SCOPE } from '@/lib/site-scope'
 import { CloudflareAnalyticsError, getCloudflareSnapshot, getMonitoredSiteUrl } from '@/lib/security/cloudflare'
-import { sendEmergencySms } from '@/lib/security/sms'
 
 export async function getSiteHealthSnapshot() {
   const cloudflareStatus = getCloudflareSnapshot()
@@ -43,8 +42,6 @@ export async function getSiteHealthSnapshot() {
       detectedAt: activeIncident.detectedAt.toISOString(),
       lastTriggeredAt: activeIncident.lastTriggeredAt.toISOString(),
       blockedCount: activeIncident.blockedCount,
-      smsStatus: activeIncident.smsStatus,
-      smsSentAt: activeIncident.smsSentAt?.toISOString() ?? null,
     } : null,
   }
 }
@@ -63,14 +60,14 @@ export async function processSecurityWindow() {
           .set({ status: 'resolved', resolvedAt: new Date(), lastTriggeredAt: new Date(), blockedCount: snapshot.blockedOrChallenged60s })
           .where(eq(securityAlertIncidents.id, active.id))
       }
-      return { state: 'clear' as const, count: snapshot.blockedOrChallenged60s, incidentId: active?.id ?? null, smsStatus: null }
+      return { state: 'clear' as const, count: snapshot.blockedOrChallenged60s, incidentId: active?.id ?? null }
     }
 
     if (active) {
       await tx.update(securityAlertIncidents)
         .set({ lastTriggeredAt: new Date(), blockedCount: snapshot.blockedOrChallenged60s })
         .where(eq(securityAlertIncidents.id, active.id))
-      return { state: 'active' as const, count: snapshot.blockedOrChallenged60s, incidentId: active.id, smsStatus: active.smsStatus }
+      return { state: 'active' as const, count: snapshot.blockedOrChallenged60s, incidentId: active.id }
     }
 
     const now = new Date()
@@ -80,22 +77,8 @@ export async function processSecurityWindow() {
       detectedAt: now,
       lastTriggeredAt: now,
       blockedCount: snapshot.blockedOrChallenged60s,
-      smsStatus: 'pending',
     }).returning({ id: securityAlertIncidents.id })
 
-    const message = `MONTEMADER ALERT: Cloudflare detected a likely attack on ${SITE_SCOPE} at ${now.toISOString()}. Recent activity: ${snapshot.blockedOrChallenged60s} blocked or challenged requests in the last 60 seconds. Defensive status: Cloudflare reported traffic was blocked or challenged.`
-    try {
-      const sent = await sendEmergencySms(message)
-      await tx.update(securityAlertIncidents).set({
-        smsStatus: 'sent',
-        smsSentAt: new Date(),
-        smsProviderId: sent.sid,
-      }).where(eq(securityAlertIncidents.id, incident.id))
-      return { state: 'new_incident' as const, count: snapshot.blockedOrChallenged60s, incidentId: incident.id, smsStatus: 'sent' as const }
-    } catch {
-      await tx.update(securityAlertIncidents).set({ smsStatus: 'failed' })
-        .where(eq(securityAlertIncidents.id, incident.id))
-      return { state: 'new_incident' as const, count: snapshot.blockedOrChallenged60s, incidentId: incident.id, smsStatus: 'failed' as const }
-    }
+    return { state: 'new_incident' as const, count: snapshot.blockedOrChallenged60s, incidentId: incident.id }
   })
 }
