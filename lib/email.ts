@@ -15,7 +15,7 @@ export function getTransactionalEmailRouting() {
 
   return {
     environment: production ? 'production' as const : 'non-production' as const,
-    recipient: production ? MAIL_RECIPIENT : 'delivered@resend.dev',
+    recipient: MAIL_RECIPIENT,
     senders: production && validEmailDomain
       ? [`security@${emailDomain}`, `alerts@${emailDomain}`]
       : ['onboarding@resend.dev'],
