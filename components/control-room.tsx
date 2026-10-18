@@ -5,6 +5,7 @@ import { FormEvent, KeyboardEvent, useEffect, useMemo, useState, useTransition }
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
+import { ActivityArchivePanel } from '@/components/activity-archive'
 import { PlatformConsole } from '@/components/platform-console'
 import { BrowserEnvironmentPanel } from '@/components/browser-environment-panel'
 import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
@@ -278,6 +279,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <div className="control-grid intel-grid">
         <CloudflareTelemetryPanel fighters={data?.fighters ?? []} />
         <BrowserEnvironmentPanel />
+        <ActivityArchivePanel />
         <section className="panel magic-panel" aria-labelledby="magic-heading">
           <div className="panel-heading"><div><p className="section-kicker">SEPARATE · AGGREGATE ONLY</p><h2 id="magic-heading">Magic Dragons</h2></div><span className="panel-sigil magic-sigil" aria-hidden="true">✧</span></div>
           <p className="magic-description">A small, independent view of where visits come from—kept separate from fighter telemetry.</p>

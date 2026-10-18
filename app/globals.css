@@ -635,6 +635,21 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .browser-signal > span { color: #aa9cb2; font-size: 12px; }
 .browser-signal > strong { overflow-wrap: anywhere; color: #eaddeb; font-size: 13px; font-weight: 500; line-height: 1.4; }
 .browser-data-note { margin: 0; color: #a99bad; font-size: 12px; line-height: 1.45; }
+.browser-archive-action { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.browser-archive-notice { color: #d9bddc; font-size: 12px; }
+.archive-inline-note { margin: 0; color: #b8a6c0; font-size: 12px; line-height: 1.45; }
+.activity-archive-panel { gap: 10px; min-width: 0; }
+.archive-total { flex: 0 0 auto; border: 1px solid rgb(214 166 210 / 44%); border-radius: 999px; padding: 4px 9px; color: #efcbe8; font-size: 12px; }
+.archive-description, .archive-state { margin: 0; color: #b9a9bf; font-size: 13px; line-height: 1.5; }
+.archive-list { display: flex; max-height: 360px; flex-direction: column; gap: 6px; overflow-y: auto; margin: 0; padding: 0 4px 0 0; list-style: none; }
+.archive-list li { min-width: 0; border: 1px solid rgb(123 63 158 / 30%); border-radius: 7px; background: rgb(16 8 23 / 75%); }
+.archive-list details { padding: 9px 10px; }
+.archive-list summary { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; color: #eaddeb; cursor: pointer; font-size: 13px; line-height: 1.4; }
+.archive-list summary time { flex: 0 0 auto; color: #a99bad; font-size: 11px; }
+.archive-list pre { max-height: 220px; overflow: auto; margin: 10px 0 0; border-top: 1px solid rgb(123 63 158 / 24%); padding-top: 9px; color: #cbbbd2; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.archive-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.archive-clear { color: #e5a9d4; }
+.archive-notice { min-height: 16px; margin: 0; color: #d9bddc; font-size: 12px; }
 .cloudflare-emergency { border-top: 1px solid rgb(199 75 158 / 22%); padding-top: 8px; }
 .cloudflare-live-message { display: flex; align-items: flex-start; gap: 8px; margin: 0; border: 1px solid rgb(123 63 158 / 34%); border-radius: 7px; padding: 10px; color: #d9cadd; font-size: 13px; line-height: 1.5; }
 .cloudflare-explainer { margin: -2px 0 0; color: #c3b3cb; font-size: 14px; line-height: 1.45; }

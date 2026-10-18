@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { readBrowserHints, type BrowserHints } from '@/components/browser-environment-panel'
+import { fetchActivityArchive, saveActivityArchive } from '@/lib/activity-archive-client'
+import type { ActivityArchiveResponse, StreamTopic } from '@/lib/activity-archive-types'
 import { formatCentralDateTime, formatCentralTime } from '@/lib/format-time'
-
-type StreamTopic = 'all' | 'website' | 'health' | 'safety' | 'security' | 'clarity'
 
 type ActiveAttack = {
   state: 'active'
@@ -113,7 +113,7 @@ function formatWebsiteSnapshot(health: WebsiteHealthSnapshot, browser: BrowserHi
   lines.push(
     `Computer connection: ${browser ? browser.online ? 'browser reports online' : 'browser reports offline' : 'not available'}`,
     `Connection hint: ${browser?.connectionType ?? 'not provided'}${browser?.estimatedRttMs === null || !browser ? '' : ` · estimated ${browser.estimatedRttMs} ms RTT`}`,
-    'Audience privacy: aggregate requests only; this app does not record individual viewers, identities, or page actions.',
+    'Audience privacy: only aggregate requests are shown; no visitor identities or browsing histories are included in this operator snapshot.',
   )
   return lines.join('\n')
 }
@@ -193,6 +193,10 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
   const [secondsTransition, setSecondsTransition] = useState<{ current: string; previous: string | null }>({ current: '', previous: null })
   const [browserHints, setBrowserHints] = useState<BrowserHints | null>(null)
   const lastRecordedAt = useRef<string | null>(null)
+  const { data: archiveData, error: archiveError, mutate: mutateArchive } = useSWR<ActivityArchiveResponse>('/api/activity-archive', fetchActivityArchive, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  })
   const { data, error, isLoading, mutate } = useSWR<ConsoleSnapshot>('/api/operations', fetcher, {
     refreshInterval: 5000,
     revalidateOnFocus: true,
@@ -215,6 +219,24 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
   const cloudflareMetrics = website?.cloudflare.available ? website.cloudflare.metrics : null
   const clockText = clockNow ? militaryClockFormat.format(clockNow) : '--:--:--'
   const isClockReady = clockNow !== null
+
+  async function saveSnapshot(topicToSave: StreamTopic, text: string) {
+    try {
+      await saveActivityArchive({ kind: 'snapshot', topic: topicToSave, text: text.slice(0, 20_000) })
+      void mutateArchive()
+      setNotice(`Captured ${topicLabels[topicToSave]} and saved it to your private archive.`)
+    } catch {
+      setNotice('Snapshot captured in this tab, but the private archive could not be reached.')
+    }
+  }
+
+  function changeTopic(nextTopic: StreamTopic) {
+    setTopic(nextTopic)
+    setNotice('')
+    void saveActivityArchive({ kind: 'topic_selected', topic: nextTopic })
+      .then(() => { void mutateArchive() })
+      .catch(() => setNotice('Filter changed for this session, but the private archive could not be reached.'))
+  }
 
   useEffect(() => {
     const tick = () => setClockNow(new Date())
@@ -263,7 +285,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
       ? formatWebsiteSnapshot(website!, browserHints)
       : formatSnapshot(data ?? null, topic, website, browserHints)
     setRecords((current) => [text, ...current].slice(0, 30))
-    setNotice(`Captured ${topicLabels[topic]} · ${formatCentralTime(new Date())}.`)
+    void saveSnapshot(topic, text)
   }, [browserHints, data, isRecording, liveKey, recordReady, snapshotIsFresh, topic, website, websiteIsFresh])
 
   function toggleRecording() {
@@ -280,7 +302,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
   function clearRecords() {
     setRecords([])
     lastRecordedAt.current = liveKey || null
-    setNotice('Captured records cleared.')
+    setNotice('Current-tab records cleared. Saved R2 records remain until deleted from Intel & activity.')
   }
 
   function captureCurrentSnapshot() {
@@ -290,7 +312,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
       : formatSnapshot(data ?? null, topic, website, browserHints)
     setRecords((current) => [text, ...current].slice(0, 30))
     lastRecordedAt.current = liveKey
-    setNotice(`${topicLabels[topic]} captured · ${formatCentralTime(new Date())}.`)
+    void saveSnapshot(topic, text)
   }
 
   async function copyCurrentData() {
@@ -359,13 +381,14 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
 
           <div className="console-controls">
             <label className="sr-only" htmlFor="stream-topic">Choose a live data stream</label>
-            <select id="stream-topic" value={topic} onChange={(event) => setTopic(event.target.value as StreamTopic)}>
+            <select id="stream-topic" value={topic} onChange={(event) => changeTopic(event.target.value as StreamTopic)}>
               {(Object.entries(topicLabels) as [StreamTopic, string][]).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
             <button className="button button-primary live-capture-button" type="button" onClick={toggleRecording} disabled={topic === 'website' ? websiteLoading && !website : isLoading && !data}>
               {isRecording ? 'Pause live stream' : 'Record live stream'}
             </button>
           </div>
+          <p className="archive-inline-note" role="status">{archiveError ? 'Private archive unavailable · captures stay in this tab.' : `Private R2 archive · ${archiveData?.total ?? '…'} of 200 records. Filter choices and captured snapshots are saved to your account; snapshots include coarse connection hints, not visitor identities or browsing history.`}</p>
 
           <section className={`attack-report${data?.activeAttack ? ' is-active' : ''}`} aria-labelledby="attack-report-heading" aria-live="polite">
             <div className="attack-report-heading">

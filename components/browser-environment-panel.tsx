@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import useSWR from 'swr'
+import { fetchActivityArchive, saveActivityArchive } from '@/lib/activity-archive-client'
+import type { ActivityArchiveResponse } from '@/lib/activity-archive-types'
 import { formatCentralTime } from '@/lib/format-time'
 
 type CloudflareSnapshot = {
@@ -80,6 +82,9 @@ function hintValue(value: string | number | boolean | null, suffix = '') {
 
 export function BrowserEnvironmentPanel() {
   const [browserHints, setBrowserHints] = useState<BrowserHints | null>(null)
+  const [savingHints, setSavingHints] = useState(false)
+  const [archiveNotice, setArchiveNotice] = useState('')
+  const { mutate: mutateArchive } = useSWR<ActivityArchiveResponse>('/api/activity-archive', fetchActivityArchive)
   const { data, error, isLoading, mutate } = useSWR<CloudflareSnapshot>('/api/security/health', fetcher, {
     refreshInterval: 30_000,
     revalidateOnFocus: true,
@@ -102,6 +107,21 @@ export function BrowserEnvironmentPanel() {
     }
   }, [])
 
+  async function saveBrowserSnapshot() {
+    if (!browserHints || savingHints) return
+    setSavingHints(true)
+    setArchiveNotice('')
+    try {
+      await saveActivityArchive({ kind: 'browser_hints', hints: browserHints })
+      void mutateArchive()
+      setArchiveNotice('Browser hints saved to your private R2 archive.')
+    } catch {
+      setArchiveNotice('Browser hints were not saved. The archive may be unavailable.')
+    } finally {
+      setSavingHints(false)
+    }
+  }
+
   const alertLabel = !data || !data.cloudflare.available
     ? 'Waiting for live Cloudflare status'
     : data.cloudflare.metrics.thresholdMet
@@ -118,7 +138,7 @@ export function BrowserEnvironmentPanel() {
       </div>
 
       <section className="browser-data-section" aria-labelledby="browser-hints-heading">
-        <div className="browser-data-subheading"><h3 id="browser-hints-heading">This browser</h3><span>Local · not uploaded{browserHints ? ` · checked ${formatCentralTime(browserHints.checkedAt)}` : ''}</span></div>
+        <div className="browser-data-subheading"><h3 id="browser-hints-heading">This browser</h3><span>Local · optional private upload{browserHints ? ` · checked ${formatCentralTime(browserHints.checkedAt)}` : ''}</span></div>
         <div className="browser-signal-grid">
           <article className="browser-signal"><span>Connection</span><strong>{browserHints ? browserHints.online ? 'Browser reports online' : 'Browser reports offline' : 'Checking browser'}</strong></article>
           <article className="browser-signal"><span>Page visibility</span><strong>{browserHints ? browserHints.visible ? 'Visible' : 'Backgrounded' : 'Checking browser'}</strong></article>
@@ -128,7 +148,8 @@ export function BrowserEnvironmentPanel() {
           <article className="browser-signal"><span>Estimated downlink / RTT</span><strong>{browserHints?.estimatedDownlinkMbps === null || !browserHints ? 'Not provided by this browser' : `${browserHints.estimatedDownlinkMbps} Mbps · ${browserHints.estimatedRttMs === null ? 'RTT unavailable' : `${browserHints.estimatedRttMs} ms RTT`}`}</strong></article>
           <article className="browser-signal"><span>Data saver preference</span><strong>{hintValue(browserHints?.dataSaver ?? null)}</strong></article>
         </div>
-        <p className="browser-data-note">Coarse hints reported by your browser only. No browsing history, IP address, process list, or device identifier is read, stored, or sent. Browser online status does not prove site reachability.</p>
+        <p className="browser-data-note">Coarse browser hints only; no browsing history, IP address, process list, or device identifier is read. This panel sends nothing until you save; tester captures separately include the connection and RTT hints. Browser online status does not prove site reachability.</p>
+        <div className="browser-archive-action"><button className="button chest-secondary-button" type="button" onClick={() => void saveBrowserSnapshot()} disabled={!browserHints || savingHints}>{savingHints ? 'Saving…' : 'Save browser snapshot'}</button><span className="browser-archive-notice" role="status" aria-live="polite">{archiveNotice}</span></div>
       </section>
 
       <section className="browser-data-section cloudflare-emergency" aria-labelledby="cloudflare-live-heading" aria-live="polite">
