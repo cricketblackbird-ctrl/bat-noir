@@ -1,0 +1,40 @@
+<div style="background: #140c1b; color: #f7f0f9; padding: 3rem; border-radius: 1.25rem; font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 2.5rem auto; border: 1px solid #412850; box-shadow: 0 16px 40px rgba(0,0,0,0.6);">
+  
+  <div style="border-bottom: 1px solid #412850; padding-bottom: 1.5rem; margin-bottom: 2rem;">
+    <p style="margin: 0 0 6px; color: #34d399; font-size: 12px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;">Credential Recovery Guide</p>
+    <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #f7f0f9;">Locating &amp; Restoring Cloudflare Connector Tokens</h2>
+  </div>
+
+  <div style="background: #09050d; padding: 1.5rem; border-radius: 0.85rem; margin-bottom: 2rem; border-left: 4px solid #34d399;">
+    <p style="margin: 0; font-size: 1rem; line-height: 1.6; color: #f7f0f9;">
+      <strong>Recovery Reference:</strong> When a pipeline loses track of its active Cloudflare connector or API token, use the dashboard paths below to verify, regenerate, and update your environment variables.
+    </p>
+  </div>
+
+  <div style="margin-bottom: 2rem;">
+    <h3 style="color: #c084fc; font-size: 1.1rem; margin-bottom: 0.75rem;">1. Cloudflare API Tokens</h3>
+    <p style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #b8a3c5; line-height: 1.6;">
+      Navigate to <strong>My Profile &gt; API Tokens</strong> in the Cloudflare dashboard to review active keys or generate a new token with least-privilege permissions.
+    </p>
+  </div>
+
+  <div style="margin-bottom: 2rem;">
+    <h3 style="color: #c084fc; font-size: 1.1rem; margin-bottom: 0.75rem;">2. Cloudflare Tunnel / Connector Tokens</h3>
+    <p style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #b8a3c5; line-height: 1.6;">
+      Go to <strong>Zero Trust &gt; Networks &gt; Tunnels</strong>, select your active tunnel, and retrieve the connector string from the installation parameters.
+    </p>
+  </div>
+
+  <div style="background: #050208; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #412850; margin-bottom: 2rem;">
+    <p style="margin: 0 0 0.5rem 0; font-weight: 600; color: #f7f0f9; font-size: 0.95rem;">Next Steps:</p>
+    <p style="margin: 0; font-size: 0.9rem; color: #b8a3c5; line-height: 1.6;">
+      Once regenerated, update your local <code>.env</code> file and deployment secrets (e.g., Vercel environment variables) to restore pipeline connectivity.
+    </p>
+  </div>
+
+  <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #412850; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #b8a3c5;">
+    <span>Cloudflare Connector</span>
+    <span style="color: #34d399; font-weight: 600;">Ready for Recovery</span>
+  </div>
+
+</div>

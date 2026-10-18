@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { FormEvent, useState } from 'react'
 import useSWR from 'swr'
 import {
@@ -180,14 +181,18 @@ export function KeyChest({ userId }: { userId: string }) {
 
   return (
     <section className="panel key-chest-panel" aria-labelledby="key-chest-heading">
-      <div className="panel-heading">
-        <div>
-          <p className="section-kicker">PAGE 03 · PRIVATE SITE CHEST</p>
-          <h2 id="key-chest-heading">Site information &amp; keys</h2>
-        </div>
-        <span className="key-chest-mark" aria-hidden="true">✦</span>
-      </div>
-      <p className="key-chest-intro">Save useful site notes, credentials, and recovery details for later. Everything is encrypted in this browser and stays hidden until you choose Recall; your passphrase never leaves this device.</p>
+      <details className="key-chest-details">
+        <summary className="key-chest-summary">
+          <Image src="/images/ancient-fantasy-chest.png" alt="An ancient dark-purple chest with silver fittings and a glowing pink lock" width={88} height={88} className="key-chest-art" />
+          <span className="key-chest-summary-copy">
+            <span className="section-kicker">PRIVATE SITE VAULT · ENCRYPTED</span>
+            <h2 id="key-chest-heading">Site information &amp; keys</h2>
+            <span className="key-chest-summary-note">{isUnlocked ? `${entries.length} encrypted entries · chest unlocked` : savedVault ? 'Encrypted entries · locked' : 'Create a private place for site notes and keys'}</span>
+          </span>
+          <span className="key-chest-open-label">{isUnlocked ? 'Close vault' : 'Open chest'}<span aria-hidden="true">⌄</span></span>
+        </summary>
+        <div className="key-chest-content">
+          <p className="key-chest-intro">Save useful site notes, credentials, and recovery details. Entries are encrypted in this browser and stay hidden until you recall them; your passphrase never leaves this device.</p>
 
       {loadError ? (
         <div className="key-chest-state" role="status">
@@ -259,6 +264,8 @@ export function KeyChest({ userId }: { userId: string }) {
       )}
 
       {message && <p className="key-chest-message" role="status">{message}</p>}
+        </div>
+      </details>
     </section>
   )
 }

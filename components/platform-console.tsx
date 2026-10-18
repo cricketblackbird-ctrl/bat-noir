@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
+import { readBrowserHints, type BrowserHints } from '@/components/browser-environment-panel'
 import { formatCentralDateTime, formatCentralTime } from '@/lib/format-time'
 
-type StreamTopic = 'all' | 'health' | 'safety' | 'security' | 'clarity'
+type StreamTopic = 'all' | 'website' | 'health' | 'safety' | 'security' | 'clarity'
 
 type ActiveAttack = {
   state: 'active'
@@ -59,206 +60,357 @@ type ConsoleSnapshot = {
   commands: Array<{ fighterName: string; strategy: string; threatType: string; status: string; createdAt: string }>
 }
 
-const fetcher = async (url: string): Promise<ConsoleSnapshot> => {
+type WebsiteHealthSnapshot = {
+  domain: string
+  capturedAt: string
+  cloudflare:
+    | { available: true; metrics: { requests24h: number; bytes24h: number; threatRequests24h: number; blockedOrChallenged60s: number; blocked60s: number; challenged60s: number; threshold: number; thresholdMet: boolean } }
+    | { available: false; reason: string }
+  site: { ok: boolean; statusCode: number | null; latencyMs: number | null }
+  activeIncident: { detectedAt: string; blockedCount: number } | null
+}
+
+const fetcher = async <T,>(url: string): Promise<T> => {
   const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin' })
   if (!response.ok) throw new Error('Live reports are unavailable or this session has expired.')
-  return response.json() as Promise<ConsoleSnapshot>
+  return response.json() as Promise<T>
 }
 
 const topicLabels: Record<StreamTopic, string> = {
-  all: 'All live reports',
+  all: 'All live data',
+  website: 'Website & audience',
   health: 'Health & listening',
   safety: 'Safety & listening',
   security: 'Security signals',
   clarity: 'Clarity & freshness',
 }
 
-const topicDescriptions: Record<StreamTopic, string> = {
-  all: 'Capture current authenticated status, listener heartbeats, signal interpretations, and the directive queue.',
-  health: 'Capture reported health, hit counts, and the fresh, waiting, or stale MM heartbeat for each fighter.',
-  safety: 'Capture emergency stop states and the mandatory MM-listening heartbeat rule. Stops never authorize a bot to stop listening.',
-  security: 'Capture authenticated signal interpretations, active-attack correlation, and credential boundaries. Aggregate Cloudflare traffic and firewall counts are shown in the live site-health panel; no per-visitor IP history is stored.',
-  clarity: 'Capture observation time, report count, freshness, and whether a signal is reported or heuristic.',
+const militaryClockFormat = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'America/Chicago',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+})
+
+function formatWebsiteSnapshot(health: WebsiteHealthSnapshot, browser: BrowserHints | null) {
+  const lines = [
+    `WEBSITE & AUDIENCE · ${health.domain}`,
+    `Checked: ${formatCentralDateTime(health.capturedAt)}`,
+    `Website: ${health.site.ok ? 'reachable' : 'unavailable'} · HTTP ${health.site.statusCode ?? 'no response'} · ${health.site.latencyMs === null ? 'latency unavailable' : `${health.site.latencyMs} ms`}`,
+  ]
+  if (health.cloudflare.available) {
+    const metrics = health.cloudflare.metrics
+    lines.push(
+      `Cloudflare requests · 24h: ${metrics.requests24h.toLocaleString()}`,
+      `Threat requests · 24h: ${metrics.threatRequests24h.toLocaleString()}`,
+      `Blocked / challenged · 60s: ${metrics.blocked60s.toLocaleString()} / ${metrics.challenged60s.toLocaleString()} (alert threshold ${metrics.threshold})`,
+      `Data transfer · 24h: ${formatBytes(metrics.bytes24h)}`,
+    )
+  } else {
+    lines.push(`Cloudflare totals unavailable: ${health.cloudflare.reason}.`)
+  }
+  lines.push(
+    `Computer connection: ${browser ? browser.online ? 'browser reports online' : 'browser reports offline' : 'not available'}`,
+    `Connection hint: ${browser?.connectionType ?? 'not provided'}${browser?.estimatedRttMs === null || !browser ? '' : ` · estimated ${browser.estimatedRttMs} ms RTT`}`,
+    'Audience privacy: aggregate requests only; this app does not record individual viewers, identities, or page actions.',
+  )
+  return lines.join('\n')
 }
 
-function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
+function formatBytes(bytes: number) {
+  if (bytes < 1_000_000) return `${(bytes / 1_000).toFixed(1)} KB`
+  if (bytes < 1_000_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`
+  return `${(bytes / 1_000_000_000).toFixed(2)} GB`
+}
+
+function formatSnapshot(snapshot: ConsoleSnapshot | null, topic: StreamTopic, website?: WebsiteHealthSnapshot, browser: BrowserHints | null = null) {
+  const observedAt = snapshot?.observedAt ?? website?.capturedAt ?? new Date().toISOString()
   const lines = [
-    `BOT🍓CONTROL · ${topicLabels[topic].toUpperCase()}`,
-    `Domain: ${snapshot.domain}`,
-    `Observed: ${formatCentralDateTime(snapshot.observedAt)}`,
-    `Listener contract status: ${snapshot.systemHealth}`,
-    `Authenticated telemetry reports in the last 24 hours: ${snapshot.telemetryCount24h}`,
-    '',
-    '[ATTACK-GATED INBOX ROUTING]',
-    snapshot.activeAttack
-      ? `Active attack report until ${formatCentralDateTime(snapshot.activeAttack.expiresAt)}; ${snapshot.activeAttack.reportCount} correlated report(s) from ${snapshot.activeAttack.sources.map((source) => source.name).join(', ')}.`
-      : 'No fresh authenticated hit report; no attack packet is available in fighter inboxes.',
-    'Only authenticated bot hit reports activate this 60-second window. This app inbox is not a network tunnel, does not proxy website traffic, and does not hide the hosting origin.',
+    `LIVE DATA · ${topicLabels[topic].toUpperCase()}`,
+    `Domain: ${snapshot?.domain ?? website?.domain ?? 'Configured website'}`,
+    `Observed: ${formatCentralDateTime(observedAt)}`,
   ]
 
-  if (snapshot.activeAttack) {
-    lines.push(
-      `Attack assessment: ${snapshot.activeAttack.confidence}; correlated=${snapshot.activeAttack.correlated}; window=${snapshot.activeAttack.windowMs / 1000}s; evidence=${snapshot.activeAttack.evidence}.`,
-      `Attack report sources: ${snapshot.activeAttack.sources.map((source) => source.name).join(', ')}.`,
-    )
-    for (const report of snapshot.activeAttack.reports) {
-      const classification = [report.category, report.vector, report.signature].filter(Boolean).join(' · ') || 'no classification metadata supplied'
-      lines.push(`${report.fighterName} reported ${classification} at ${formatCentralDateTime(report.receivedAt)} · health ${report.healthPercent}% · hits ${report.hitsTaken}/${report.hitCapacity}.`)
-    }
+  if (topic === 'all' || topic === 'website') {
+    lines.push('', website ? formatWebsiteSnapshot(website, browser) : 'Website and Cloudflare data are not available yet.')
   }
 
-  if (topic === 'all' || topic === 'health') {
-    lines.push('', '[HEALTH & MM LISTENER]')
-    for (const fighter of snapshot.fighters) {
-      const health = fighter.health === null ? 'NO VERIFIED HEALTH REPORT' : `${fighter.health}% reported`
-      const hits = fighter.hitsTaken === null || fighter.hitCapacity === null
-        ? 'hit count unavailable'
-        : `${fighter.hitsTaken}/${fighter.hitCapacity} hits`
-      const inboxPoll = fighter.lastInboxPoll ? formatCentralDateTime(fighter.lastInboxPoll) : 'never verified'
-      lines.push(`${fighter.name} · ${fighter.role}: ${health}; ${hits}; inbox polling ${fighter.listenerStatus}; last poll ${inboxPoll}`)
-    }
-  }
-
-  if (topic === 'all' || topic === 'safety') {
+  if (snapshot && topic !== 'website') {
     lines.push(
       '',
-      '[SAFETY & MM LISTENING]',
-      `Emergency stops: all=${Boolean(snapshot.stops.stopAll)}, Ruach=${Boolean(snapshot.stops.stopRuach)}, Xena=${Boolean(snapshot.stops.stopXena)}, SuperBot=${Boolean(snapshot.stops.stopSuperbot)}`,
+      `Authenticated reports · 24h: ${snapshot.telemetryCount24h}`,
+      `MM listener health: ${snapshot.systemHealth}`,
+      snapshot.activeAttack
+        ? `Attack report: ${snapshot.activeAttack.reportCount} reports from ${snapshot.activeAttack.sourceCount} sources · expires ${formatCentralDateTime(snapshot.activeAttack.expiresAt)}`
+        : 'Attack report: none active in the last 60 seconds.',
     )
-    for (const fighter of snapshot.fighters) lines.push(`${fighter.name}: MM inbox listening ${fighter.listenerStatus}; execution ${fighter.stopped ? 'stopped' : 'not stopped'}`)
-    lines.push('PASS means an authenticated listener_heartbeat arrived within 32 seconds. WAITING means none was observed in the last 24 hours; STALE means the last heartbeat is older than 32 seconds.')
-  }
 
-  if (topic === 'all' || topic === 'security') {
-    lines.push('', '[SECURITY SIGNALS]')
-    for (const fighter of snapshot.fighters) {
-      lines.push(`${fighter.name}: ${fighter.signal ? `${fighter.signal.label} (${fighter.signal.confidence})` : 'no recent signal'} · ${fighter.credentialBoundary}`)
+    if (snapshot.activeAttack) {
+      for (const report of snapshot.activeAttack.reports) {
+        const classification = [report.category, report.vector, report.signature].filter(Boolean).join(' · ') || 'unclassified'
+        lines.push(`${report.fighterName} · ${classification} · ${formatCentralDateTime(report.receivedAt)} · ${report.healthPercent}% · ${report.hitsTaken}/${report.hitCapacity} hits`)
+      }
     }
-    lines.push(`Network firewall/WAF status: ${snapshot.wafStatus}`)
-  }
 
-  if (topic === 'all' || topic === 'clarity') {
-    lines.push('', '[CLARITY & DIRECTIVES]')
-    lines.push(`Source: authenticated agent reports and the command queue; observed ${formatCentralDateTime(snapshot.observedAt)}.`)
-    lines.push(`Recent directives returned: ${snapshot.commands.length}`)
-    for (const command of snapshot.commands) {
-      lines.push(`${command.fighterName}: ${command.threatType.replace(/_/g, ' ')} · ${command.strategy.replace(/_/g, ' ')} · ${command.status} · ${formatCentralDateTime(command.createdAt)}`)
+    if (topic === 'all' || topic === 'health') {
+      lines.push('', '[HEALTH & LISTENING]')
+      for (const fighter of snapshot.fighters) {
+        const health = fighter.health === null ? 'no verified health' : `${fighter.health}% health`
+        const hits = fighter.hitsTaken === null || fighter.hitCapacity === null ? 'hits unavailable' : `${fighter.hitsTaken}/${fighter.hitCapacity} hits`
+        lines.push(`${fighter.name} · ${health} · ${hits} · inbox ${fighter.listenerStatus}`)
+      }
     }
-    lines.push('Interpretations marked heuristic are pattern hints, not confirmed incidents. No simulated events are added.')
+
+    if (topic === 'all' || topic === 'safety') {
+      lines.push('', '[SAFETY]')
+      lines.push(`Stops · all ${Boolean(snapshot.stops.stopAll)} · Ruach ${Boolean(snapshot.stops.stopRuach)} · Xena ${Boolean(snapshot.stops.stopXena)} · SuperBot ${Boolean(snapshot.stops.stopSuperbot)}`)
+      for (const fighter of snapshot.fighters) lines.push(`${fighter.name} · inbox ${fighter.listenerStatus} · execution ${fighter.stopped ? 'stopped' : 'running'}`)
+    }
+
+    if (topic === 'all' || topic === 'security') {
+      lines.push('', '[SECURITY SIGNALS]')
+      for (const fighter of snapshot.fighters) lines.push(`${fighter.name} · ${fighter.signal ? `${fighter.signal.label} (${fighter.signal.confidence})` : 'no recent signal'}`)
+      lines.push(`Firewall / WAF · ${snapshot.wafStatus}`)
+    }
+
+    if (topic === 'all' || topic === 'clarity') {
+      lines.push('', '[DIRECTIVES]')
+      for (const command of snapshot.commands) lines.push(`${command.fighterName} · ${command.threatType.replace(/_/g, ' ')} · ${command.strategy.replace(/_/g, ' ')} · ${command.status} · ${formatCentralDateTime(command.createdAt)}`)
+      lines.push(`Heuristic signals are pattern hints, not confirmed incidents. Directives returned: ${snapshot.commands.length}.`)
+    }
   }
 
   return lines.join('\n')
 }
 
-export function PlatformConsole() {
+export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: () => void }) {
   const [topic, setTopic] = useState<StreamTopic>('all')
   const [records, setRecords] = useState<string[]>([])
   const [isRecording, setIsRecording] = useState(false)
   const [notice, setNotice] = useState('')
+  const [clockNow, setClockNow] = useState<Date | null>(null)
+  const [secondsTransition, setSecondsTransition] = useState<{ current: string; previous: string | null }>({ current: '', previous: null })
+  const [browserHints, setBrowserHints] = useState<BrowserHints | null>(null)
   const lastRecordedAt = useRef<string | null>(null)
   const { data, error, isLoading, mutate } = useSWR<ConsoleSnapshot>('/api/operations', fetcher, {
     refreshInterval: 5000,
     revalidateOnFocus: true,
     dedupingInterval: 1000,
   })
+  const { data: website, error: websiteError, isLoading: websiteLoading, mutate: refreshWebsite } = useSWR<WebsiteHealthSnapshot>('/api/security/health', fetcher, {
+    refreshInterval: 30_000,
+    revalidateOnFocus: true,
+    dedupingInterval: 10_000,
+  })
   const snapshotIsFresh = data ? Date.now() - new Date(data.observedAt).getTime() <= 32_000 : false
+  const websiteIsFresh = website ? Date.now() - new Date(website.capturedAt).getTime() <= 90_000 : false
+  const liveKey = topic === 'website'
+    ? website?.capturedAt ?? ''
+    : topic === 'all'
+      ? `${data?.observedAt ?? ''}:${website?.capturedAt ?? ''}`
+      : data?.observedAt ?? ''
+  const recordReady = topic === 'website' ? Boolean(website) : Boolean(data)
+  const canCapture = topic === 'website' ? websiteIsFresh : snapshotIsFresh
+  const cloudflareMetrics = website?.cloudflare.available ? website.cloudflare.metrics : null
+  const clockText = clockNow ? militaryClockFormat.format(clockNow) : '--:--:--'
 
   useEffect(() => {
-    if (!isRecording || !data || lastRecordedAt.current === data.observedAt) return
-    lastRecordedAt.current = data.observedAt
-    setRecords((current) => [formatSnapshot(data, topic), ...current].slice(0, 20))
-    setNotice(`Live text record captured at ${formatCentralTime(data.observedAt)}.`)
-  }, [data, isRecording, topic])
+    const tick = () => setClockNow(new Date())
+    tick()
+    const timer = window.setInterval(tick, 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const nextSecond = clockText.slice(-2)
+    if (!/^\\d{2}$/.test(nextSecond)) return
+
+    setSecondsTransition((current) => current.current === nextSecond
+      ? current
+      : { current: nextSecond, previous: current.current || null })
+    const timeout = window.setTimeout(() => {
+      setSecondsTransition((current) => current.current === nextSecond ? { ...current, previous: null } : current)
+    }, 920)
+    return () => window.clearTimeout(timeout)
+  }, [clockText])
+
+  useEffect(() => {
+    const updateBrowser = () => setBrowserHints(readBrowserHints())
+    const connection = (navigator as Navigator & { connection?: EventTarget }).connection
+    updateBrowser()
+    const timer = window.setInterval(updateBrowser, 5000)
+    window.addEventListener('online', updateBrowser)
+    window.addEventListener('offline', updateBrowser)
+    document.addEventListener('visibilitychange', updateBrowser)
+    connection?.addEventListener('change', updateBrowser)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('online', updateBrowser)
+      window.removeEventListener('offline', updateBrowser)
+      document.removeEventListener('visibilitychange', updateBrowser)
+      connection?.removeEventListener('change', updateBrowser)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isRecording || !recordReady || !liveKey || lastRecordedAt.current === liveKey) return
+    if (topic === 'website' && !websiteIsFresh) return
+    if (topic !== 'website' && !snapshotIsFresh) return
+    lastRecordedAt.current = liveKey
+    const text = topic === 'website'
+      ? formatWebsiteSnapshot(website!, browserHints)
+      : formatSnapshot(data ?? null, topic, website, browserHints)
+    setRecords((current) => [text, ...current].slice(0, 30))
+    setNotice(`Captured ${topicLabels[topic]} · ${formatCentralTime(new Date())}.`)
+  }, [browserHints, data, isRecording, liveKey, recordReady, snapshotIsFresh, topic, website, websiteIsFresh])
 
   function toggleRecording() {
     setNotice('')
     setIsRecording((current) => !current)
-    if (!isRecording) void mutate()
-    else setNotice('Live text stream paused.')
+    if (!isRecording) {
+      void mutate()
+      void refreshWebsite()
+    } else {
+      setNotice('Live stream paused.')
+    }
   }
 
   function clearRecords() {
     setRecords([])
-    lastRecordedAt.current = data?.observedAt ?? null
-    setNotice('Session text records cleared.')
+    lastRecordedAt.current = liveKey || null
+    setNotice('Captured records cleared.')
+  }
+
+  function captureCurrentSnapshot() {
+    if (!canCapture) return
+    const text = topic === 'website'
+      ? formatWebsiteSnapshot(website!, browserHints)
+      : formatSnapshot(data ?? null, topic, website, browserHints)
+    setRecords((current) => [text, ...current].slice(0, 30))
+    lastRecordedAt.current = liveKey
+    setNotice(`${topicLabels[topic]} captured · ${formatCentralTime(new Date())}.`)
+  }
+
+  async function copyCurrentData() {
+    if (!canCapture) return
+    const text = topic === 'website'
+      ? formatWebsiteSnapshot(website!, browserHints)
+      : formatSnapshot(data ?? null, topic, website, browserHints)
+    try {
+      await navigator.clipboard.writeText(text)
+      setNotice(`${topicLabels[topic]} copied for sharing.`)
+    } catch {
+      setNotice('Clipboard unavailable. Capture the snapshot to the viewer to copy it there.')
+    }
   }
 
   return (
     <section className="panel platform-console" aria-labelledby="console-heading">
-      <div className="panel-heading">
-        <div><p className="section-kicker">TEXT ONLY · AUTHENTICATED REPORTS</p><h2 id="console-heading">Live data console</h2></div>
-        <span className="console-refresh">{isRecording ? 'Recording · refreshes every 5 seconds' : 'Updates every 5 seconds'}</span>
+      <div className="panel-heading console-main-heading">
+        <div><p className="section-kicker">LIVE WEBSITE · CLOUDflare · DEVICE</p><h2 id="console-heading">Website &amp; computer health</h2></div>
+        <div className="console-topbar-tools">
+          <div className="live-clock-block">
+            <span className="live-clock-label">CENTRAL · 24H</span>
+            <time className="live-clock" role="timer" aria-label={`Central time, 24-hour clock: ${clockText}`} dateTime={clockNow?.toISOString()}>
+              <span>{clockText.slice(0, 6)}</span><span className="live-clock-seconds-stack" aria-hidden="true">
+                {secondsTransition.previous && <span key={`previous-${secondsTransition.current}`} className="live-clock-second is-fading-out">{secondsTransition.previous}</span>}
+                <span key={`current-${secondsTransition.current || clockText.slice(-2)}`} className="live-clock-second is-fading-in">{secondsTransition.current || clockText.slice(-2)}</span>
+              </span>
+            </time>
+          </div>
+          <span className="console-refresh">Page 5s · Cloudflare 30s</span>
+        </div>
       </div>
       <div className="console-columns">
         <div className="console-recorder">
-          <label className="control-label" htmlFor="stream-topic">Choose a report stream</label>
+          <div className="console-status-row">
+            <span className={`console-live-status${error || (data && !snapshotIsFresh) ? ' is-unavailable' : !data ? ' is-waiting' : ''}`} role="status">
+              <span className="console-live-indicator" aria-hidden="true" />
+              {error ? 'Page reports unavailable' : !snapshotIsFresh ? 'Connecting to page reports' : 'Page reports live'}
+            </span>
+            <span className={`console-live-status${websiteError || (website && !websiteIsFresh) || (website && !website.cloudflare.available) ? ' is-unavailable' : !website ? ' is-waiting' : ''}`} role="status">
+              <span className="console-live-indicator" aria-hidden="true" />
+              {websiteError ? 'Cloudflare unavailable' : !website ? 'Connecting to Cloudflare' : website.cloudflare.available ? 'Cloudflare live' : `Cloudflare · ${website.cloudflare.reason.replace(/_/g, ' ')}`}
+            </span>
+            <button className="text-button security-view-link" type="button" onClick={onOpenSecurityView}>Full security view</button>
+          </div>
+
+          <section className="website-data-panel" aria-labelledby="website-data-heading" aria-live="polite">
+            <div className="website-data-heading">
+              <div><h3 id="website-data-heading">Live site &amp; audience data</h3><span>{website ? `Updated ${formatCentralTime(website.capturedAt)}` : 'Waiting for live data'}</span></div>
+            </div>
+            {websiteError ? <p className="website-data-message is-unavailable" role="alert">Could not reach the live security feed. No sample data is shown.</p> : !website ? <p className="website-data-message" role="status">Connecting to the site and Cloudflare over HTTPS…</p> : (
+              <div className="website-metrics-grid">
+                <article className={`website-metric${website.site.ok ? ' is-good' : ' is-bad'}`}><span>Website HTTP check</span><strong>{website.site.statusCode === null ? 'No response' : website.site.ok ? 'Responding' : 'HTTP error'}</strong><small>{website.site.statusCode === null ? 'No HTTP status received' : `HTTP ${website.site.statusCode} · HTTPS HEAD`}</small></article>
+                <article className={`website-metric${website.site.ok ? ' is-good' : ' is-bad'}`}><span>Response time</span><strong>{website.site.latencyMs === null ? '—' : `${website.site.latencyMs} ms`}</strong><small>{website.site.latencyMs === null ? 'No response to time' : 'Server to response headers'}</small></article>
+                <article className="website-metric"><span>Cloudflare requests · 24h</span><strong>{cloudflareMetrics ? cloudflareMetrics.requests24h.toLocaleString() : '—'}</strong><small>Requests, not unique viewers</small></article>
+                <article className="website-metric"><span>Threat requests · 24h</span><strong>{cloudflareMetrics ? cloudflareMetrics.threatRequests24h.toLocaleString() : '—'}</strong><small>Cloudflare aggregate</small></article>
+                <article className="website-metric"><span>Blocked / challenged · 60s</span><strong>{cloudflareMetrics ? `${cloudflareMetrics.blocked60s.toLocaleString()} / ${cloudflareMetrics.challenged60s.toLocaleString()}` : '—'}</strong><small>{cloudflareMetrics ? `Alert threshold ${cloudflareMetrics.threshold}` : website.cloudflare.available ? 'No data' : `Unavailable · ${website.cloudflare.reason.replace(/_/g, ' ')}`}</small></article>
+                <article className="website-metric"><span>Data transfer · 24h</span><strong>{cloudflareMetrics ? formatBytes(cloudflareMetrics.bytes24h) : '—'}</strong><small>Aggregate response bytes</small></article>
+                <article className={`website-metric${browserHints?.online === false ? ' is-bad' : ' is-good'}`}><span>This computer</span><strong>{browserHints ? browserHints.online ? 'Browser online' : 'Browser offline' : 'Checking'}</strong><small>{browserHints?.connectionType ?? 'Connection hint unavailable'}{browserHints?.estimatedRttMs === null || !browserHints ? '' : ` · ~${browserHints.estimatedRttMs} ms RTT`}</small></article>
+                <article className="website-metric"><span>Device estimate</span><strong>{browserHints?.processorCount ? `${browserHints.processorCount} cores` : 'Unavailable'}</strong><small>{browserHints?.approximateMemoryGb ? `~${browserHints.approximateMemoryGb} GB memory` : 'Memory hint unavailable'}</small></article>
+                <article className="website-metric website-privacy-metric"><span>Viewer privacy</span><strong>No individual viewer recording</strong><small>Aggregate requests only; no identities, page actions, or browsing history.</small></article>
+              </div>
+            )}
+            <p className="website-data-footnote">{website ? <>Site check: our server sends an HTTPS HEAD request to <strong>{website.domain}</strong>, with an 8-second timeout and no page body download. HTTP 2xx and 3xx responses are marked responding; redirects are not followed. HTTP 4xx/5xx responses show as an HTTP error, while no HTTP status means the request failed or timed out. Response time measures the server-to-response-headers round trip; it does not test browser rendering, page assets, sign-in, or app features.</> : 'The site check is a server-side HTTPS HEAD probe. It checks for an HTTP response, not whether a visitor’s browser can render every page.'} The browser exposes only rough device hints, not a full computer diagnostic. Cloudflare request totals are aggregates and do not identify individual viewers.</p>
+          </section>
+
           <div className="console-controls">
+            <label className="sr-only" htmlFor="stream-topic">Choose a live data stream</label>
             <select id="stream-topic" value={topic} onChange={(event) => setTopic(event.target.value as StreamTopic)}>
               {(Object.entries(topicLabels) as [StreamTopic, string][]).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
-            <button className="button button-primary capture-button" type="button" onClick={toggleRecording} disabled={isLoading && !data}>
-              {isRecording ? 'Pause live text stream' : 'Record live text stream'}
+            <button className="button button-primary live-capture-button" type="button" onClick={toggleRecording} disabled={topic === 'website' ? websiteLoading && !website : isLoading && !data}>
+              {isRecording ? 'Pause live stream' : 'Record live stream'}
             </button>
           </div>
-          <p className="console-description">{topicDescriptions[topic]} Text records stay in this page session only; they are not saved to a database or browser storage.</p>
+
           <section className={`attack-report${data?.activeAttack ? ' is-active' : ''}`} aria-labelledby="attack-report-heading" aria-live="polite">
             <div className="attack-report-heading">
-              <h3 id="attack-report-heading">Real-time attack report</h3>
-              <span>{data ? `Server update ${formatCentralTime(data.observedAt)}` : 'Waiting for server'}</span>
+              <h3 id="attack-report-heading">Live attack reports</h3>
+              <span>{data ? `Updated ${formatCentralTime(data.observedAt)}` : 'Waiting'}</span>
             </div>
             {error && (!data || !snapshotIsFresh) ? (
-              <p className="attack-report-state is-unavailable" role="alert">Live report feed unavailable{data ? ` · last server observation ${formatCentralTime(data.observedAt)}` : ''}. No sample or simulated attack is displayed.</p>
-            ) : isLoading && !data ? (
-              <p className="attack-report-state" role="status">Connecting to authenticated telemetry…</p>
+              <p className="attack-report-state is-unavailable" role="alert">Page reports unavailable{data ? ` · last update ${formatCentralTime(data.observedAt)}` : ''}.</p>
             ) : !data || !snapshotIsFresh ? (
-              <p className="attack-report-state" role="status">Waiting for a fresh server observation. Stale reports are not presented as active.</p>
+              <p className="attack-report-state" role="status">Waiting for fresh page reports.</p>
             ) : data.activeAttack ? (
               <>
-                <p className="attack-report-state is-active" role="status">Authenticated hit report active · {data.activeAttack.reportCount} correlated report{data.activeAttack.reportCount === 1 ? '' : 's'} from {data.activeAttack.sourceCount} source{data.activeAttack.sourceCount === 1 ? '' : 's'} · expires {formatCentralTime(data.activeAttack.expiresAt)}</p>
+                <p className="attack-report-state is-active" role="status">{data.activeAttack.reportCount} authenticated report{data.activeAttack.reportCount === 1 ? '' : 's'} · {data.activeAttack.sourceCount} sources · expires {formatCentralTime(data.activeAttack.expiresAt)}</p>
                 <dl className="attack-report-facts">
                   <div><dt>Assessment</dt><dd>{data.activeAttack.confidence.replace(/_/g, ' ')}</dd></div>
                   <div><dt>Evidence</dt><dd>{data.activeAttack.evidence.replace(/_/g, ' ')}</dd></div>
-                  <div><dt>Correlation</dt><dd>{data.activeAttack.correlated ? 'Matched across reporters' : 'Single reporter'}</dd></div>
+                  <div><dt>Correlation</dt><dd>{data.activeAttack.correlated ? 'Matched' : 'Single source'}</dd></div>
                   <div><dt>Scope / window</dt><dd>{data.activeAttack.siteScope} · {data.activeAttack.windowMs / 1000}s</dd></div>
                 </dl>
                 <ul className="attack-report-list" aria-label="Authenticated attack telemetry reports">
                   {data.activeAttack.reports.map((report) => (
                     <li key={`${report.fighterId}-${report.receivedAt}`}>
                       <strong>{report.fighterName}</strong>
-                      <span>{[report.category, report.vector, report.signature].filter(Boolean).join(' · ') || 'No classification metadata supplied'}</span>
+                      <span>{[report.category, report.vector, report.signature].filter(Boolean).join(' · ') || 'Unclassified'}</span>
                       <time dateTime={report.receivedAt}>{formatCentralTime(report.receivedAt)}</time>
                     </li>
                   ))}
                 </ul>
               </>
             ) : (
-              <p className="attack-report-state" role="status">No authenticated bot hit report in the active 60-second window. This is not a claim that the site has no attacks; Cloudflare traffic totals are shown in the live security view.</p>
+              <p className="attack-report-state" role="status">No authenticated hit reports in the last 60 seconds. Website traffic totals above come from Cloudflare.</p>
             )}
-            <p className="attack-report-caveat">Refreshes every 5 seconds from accepted, bearer-authenticated reports. Reported evidence is not independently confirmed, and this console does not inspect or proxy visitor traffic.</p>
+            <div className="attack-report-actions" aria-label="Capture or share current data">
+              <button className="button button-primary live-capture-button" type="button" onClick={captureCurrentSnapshot} disabled={!canCapture}>Capture snapshot</button>
+              <button className="button button-primary live-capture-button" type="button" onClick={copyCurrentData} disabled={!canCapture}>Copy data to share</button>
+            </div>
           </section>
+
           <div className="console-record-actions">
-            <span className="console-stream-state" role="status">{error ? 'Live reports unavailable' : isRecording ? 'Live recording active' : isLoading ? 'Connecting to live reports…' : 'Live reports connected'}</span>
-            <button className="text-button console-clear" type="button" onClick={clearRecords} disabled={records.length === 0}>Clear text</button>
+            <span className="console-stream-state" role="status">{isRecording ? `Streaming · ${topicLabels[topic]}` : 'Viewer · ready'}</span>
+            <button className="text-button console-clear" type="button" onClick={clearRecords} disabled={records.length === 0}>Clear</button>
           </div>
-          <label className="sr-only" htmlFor="text-records">Captured live text records</label>
-          <textarea id="text-records" className="text-records" readOnly value={records.join('\n\n────────────────────────\n\n')} placeholder="Choose a stream and start recording. Only authenticated reports are shown; no events are simulated." />
+          <label className="sr-only" htmlFor="text-records">Captured live data records</label>
+          <textarea id="text-records" className="text-records" readOnly value={records.join('\n\n────────────────────────\n\n')} placeholder="Captured live data appears here." />
           <p className="action-feedback" role="status" aria-live="polite">{notice}</p>
         </div>
-        <aside className="platform-map" aria-labelledby="platform-map-heading">
-            <div className="map-heading"><span className="section-kicker">HOW TO USE THIS PLATFORM</span><span className="pass-fail">LIVE STATUS · REQUIRED</span></div>
-
-          <h3 id="platform-map-heading">Platform map</h3>
-          <p className="map-intro">Each dropdown selection controls the text captured in column one. Missing or expired heartbeats stay visible as waiting or stale; they are never shown as live.</p>
-          <div className="guide-block">
-            <h4>Queue a defensive combo</h4>
-            <p>Choose one fighter to queue its assigned response for the configured site. A queued combo is not proof that traffic was blocked; verify a completion report and edge controls separately.</p>
-          </div>
-          <div className="guide-block">
-            <h4>Protect the site</h4>
-            <p>Live aggregate request and firewall counts come from Cloudflare. Attack reports still enter fighter inboxes separately; this app does not proxy traffic, hide the origin, or change edge firewall rules.</p>
-          </div>
-          <p className="listener-contract"><strong>Heartbeat rule:</strong> PASS requires a fresh authenticated heartbeat. Missing or older-than-32-second heartbeats show as waiting or stale—even during an execution stop. Each agent sends <code>POST /api/telemetry</code> with <code>eventType: &quot;listener_heartbeat&quot;</code>, its <code>siteScope</code>, health, and hit counts. Use that fighter&apos;s existing bearer credential server-side; this console never displays tokens.</p>
-        </aside>
       </div>
     </section>
   )

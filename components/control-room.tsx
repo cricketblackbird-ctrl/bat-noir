@@ -7,7 +7,6 @@ import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
 import { PlatformConsole } from '@/components/platform-console'
 import { BrowserEnvironmentPanel } from '@/components/browser-environment-panel'
-import { CredentialScopeAudit } from '@/components/credential-scope-audit'
 import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
 import { SiteHealthPanel } from '@/components/site-health-panel'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
@@ -267,12 +266,15 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         </section>
 
         <section id="view-panel-tester" className="view-panel tester-view" role="tabpanel" aria-labelledby="view-tab-tester" tabIndex={0} hidden={activeView !== 'tester'}>
-          <PlatformConsole />
-          <CredentialScopeAudit />
+          <PlatformConsole onOpenSecurityView={() => {
+            selectDashboardView('intel')
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => document.getElementById('cloudflare-security-view')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+            })
+          }} />
         </section>
 
         <section id="view-panel-intel" className="view-panel intel-view" role="tabpanel" aria-labelledby="view-tab-intel" tabIndex={0} hidden={activeView !== 'intel'}>
-          <KeyChest userId={operator.id} />
           <div className="control-grid intel-grid">
         <CloudflareTelemetryPanel fighters={data?.fighters ?? []} />
         <BrowserEnvironmentPanel />
@@ -294,6 +296,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <p className="activity-footnote">Only authenticated reports and queued directives appear here. A queued directive is not evidence of a completed strike.</p>
         </section>
           </div>
+          <KeyChest userId={operator.id} />
         </section>
       </div>
 

@@ -28,7 +28,7 @@ type CloudflareSnapshot = {
   activeIncident: { detectedAt: string; blockedCount: number } | null
 }
 
-type BrowserHints = {
+export type BrowserHints = {
   online: boolean
   visible: boolean
   processorCount: number | null
@@ -50,7 +50,7 @@ type NavigatorWithHints = Navigator & {
   }
 }
 
-function readBrowserHints(): BrowserHints {
+export function readBrowserHints(): BrowserHints {
   const browser = navigator as NavigatorWithHints
   const connection = browser.connection
   return {

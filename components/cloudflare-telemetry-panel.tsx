@@ -78,7 +78,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
           : 'LIVE · ACTIVE DATA RECON'
 
   return (
-    <section className="panel telemetry-panel" aria-labelledby="telemetry-heading">
+    <section id="cloudflare-security-view" className="panel telemetry-panel" aria-labelledby="telemetry-heading">
       <div className="panel-heading telemetry-heading">
         <div>
           <p className="section-kicker">AGGREGATE EDGE SIGNALS · AUTHENTICATED HEARTBEATS</p>
