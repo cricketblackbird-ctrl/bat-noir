@@ -94,14 +94,22 @@ function formatAge(date: string | null) {
 }
 
 function StatusDot({ stopped, listenerStatus, heartbeatAgeMs }: { stopped: boolean; listenerStatus: 'PASS' | 'WAITING' | 'STALE'; heartbeatAgeMs: number | null }) {
-  const labels = {
-    PASS: 'MM heartbeat · live',
-    WAITING: 'Waiting for heartbeat',
-    STALE: 'Heartbeat stale',
-  }
-  const age = heartbeatAgeMs === null ? 'No authenticated heartbeat in the last 24 hours' : `Last authenticated heartbeat ${Math.max(0, Math.floor(heartbeatAgeMs / 1000))} seconds ago`
-  const label = `${labels[listenerStatus]}${stopped ? ' · execution stopped' : ''}`
-  return <span className={`status-dot is-${listenerStatus.toLowerCase()}`} title={age}><span aria-hidden="true" />{label}</span>
+  const isPass = listenerStatus === 'PASS'
+  const age = heartbeatAgeMs === null
+    ? 'No authenticated heartbeat in the last 24 hours'
+    : `Last authenticated heartbeat ${Math.max(0, Math.floor(heartbeatAgeMs / 1000))} seconds ago`
+  const executionState = stopped ? 'Execution is stopped; heartbeat monitoring continues.' : ''
+  const detail = [age, executionState].filter(Boolean).join('. ')
+
+  return (
+    <span
+      className={`status-dot ${isPass ? 'is-pass' : 'is-fail'}`}
+      title={detail}
+      aria-label={`${isPass ? 'PASS' : 'FAIL'}: ${detail}`}
+    >
+      <span aria-hidden="true" />{isPass ? 'PASS' : 'FAIL'}
+    </span>
+  )
 }
 
 function GuardianStatusWidget({ fighters, isLoading, hasError }: { fighters: Fighter[]; isLoading: boolean; hasError: boolean }) {

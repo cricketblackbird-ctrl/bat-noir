@@ -137,11 +137,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .xena-shield-icon { display: block; width: 16px; height: 16px; align-self: center; justify-self: center; flex: 0 0 auto; transform: none; stroke-width: 1.6; }
 .fighter-heading { flex: 1; min-width: 0; flex-wrap: wrap; justify-content: space-between; gap: 3px; }
 .fighter-heading h3 { margin: 0; color: #f0dff0; font-family: Georgia, serif; font-size: calc((15px) + 1pt); font-weight: 400; }
-.status-dot { display: inline-flex; align-items: center; gap: 4px; color: #cbb7ce; font-size: calc((12px) + 1pt); white-space: nowrap; }
-.status-dot > span { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #9a829e; }
-.status-dot.is-pass > span { background: #e6a5d3; box-shadow: 0 0 7px rgb(214 166 210 / 55%); animation: heartbeat-breathe 1.6s ease-in-out infinite; }
-.status-dot.is-waiting > span { background: #d6a6d2; }
-.status-dot.is-stale > span { background: #a894ac; }
+.status-dot { display: inline-flex; align-items: center; gap: 4px; color: #8e8994; font-size: calc((12px) + 1pt); font-weight: 700; white-space: nowrap; }
+.status-dot > span { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
+.status-dot.is-pass { color: #e6a5d3; }
+.status-dot.is-pass > span { box-shadow: 0 0 7px rgb(214 166 210 / 55%); animation: heartbeat-breathe 1.6s ease-in-out infinite; }
+.status-dot.is-fail > span { animation: none; }
 .guardian-status-widget { position: fixed; z-index: 50; bottom: 16px; left: 16px; display: flex; align-items: center; gap: 11px; max-width: min(380px, calc(100vw - 32px)); border: 1px solid rgb(214 166 210 / 45%); border-radius: 12px; padding: 10px 13px; background: rgb(20 12 27 / 94%); box-shadow: 0 12px 34px rgb(0 0 0 / 42%), 0 0 20px rgb(214 166 210 / 10%); backdrop-filter: blur(12px); }
 .guardian-status-mark { position: relative; display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid rgb(230 165 211 / 48%); border-radius: 9px; background: rgb(199 75 158 / 12%); color: #fff4fc; }
 .guardian-status-mark svg { width: 19px; height: 19px; }
