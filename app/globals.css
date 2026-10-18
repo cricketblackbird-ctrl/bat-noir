@@ -68,7 +68,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   inherits: false;
   initial-value: 0;
 }
-.brand-name { --stripe-gap-opacity: 0; margin: 0; color: #e79bcd; font-size: 14px; letter-spacing: .19em; transform-origin: center; -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgb(0 0 0 / calc(1 - var(--stripe-gap-opacity))) 2px 4px); mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgb(0 0 0 / calc(1 - var(--stripe-gap-opacity))) 2px 4px); animation: master-control-swirl 15s linear 2 both; }
+.brand-name { --stripe-gap-opacity: 0; margin: 0; color: #e79bcd; font-size: 14px; letter-spacing: .19em; transform-origin: center; -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgb(0 0 0 / calc(1 - var(--stripe-gap-opacity))) 2px 4px); mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgb(0 0 0 / calc(1 - var(--stripe-gap-opacity))) 2px 4px); animation: master-control-swirl 32s linear 2 both; }
 @keyframes master-control-swirl {
   0% { --stripe-gap-opacity: 0; transform: translateX(0) scaleX(1); filter: blur(0); opacity: 1; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
   1.5% { --stripe-gap-opacity: 1; transform: translateX(0) scaleX(1); filter: blur(0); opacity: 1; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
@@ -567,4 +567,69 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
   .dashboard-grid, .intel-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
   .dashboard-grid .fighter-panel { min-height: 390px; }
   .dashboard-grid .directives-panel, .intel-grid .magic-panel, .intel-grid .activity-panel { min-height: 230px; }
+}
+
+.diagnostics-page { position: fixed; inset: 0; overflow-y: auto; padding: clamp(18px, 4vw, 42px) clamp(16px, 5vw, 58px); background: radial-gradient(circle at 50% 0%, #1e102a 0%, #09050d 70%); color: #f7f0f9; }
+.diagnostics-shell { width: min(1080px, 100%); margin: 0 auto; }
+.diagnostics-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #412850; padding-bottom: 18px; }
+.diagnostics-back { display: inline-flex; min-height: 38px; align-items: center; gap: 8px; color: #d9c5e4; font-size: 13px; text-decoration: none; }
+.diagnostics-back:hover { color: #fff; }
+.diagnostics-back svg, .diagnostics-kicker svg, .diagnostics-refresh svg, .diagnostics-overview-icon svg, .diagnostics-state svg, .diagnostics-privacy svg { width: 17px; height: 17px; flex: 0 0 auto; }
+.diagnostics-brand { display: inline-flex; align-items: center; gap: 9px; color: #c084fc; font-size: 11px; font-weight: 700; letter-spacing: .18em; }
+.diagnostics-brand > span { display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid #8c4caa; border-radius: 50%; color: #f472b6; font-family: Georgia, serif; font-size: 12px; letter-spacing: 0; }
+.diagnostics-hero { padding: clamp(26px, 5vw, 52px) 0 20px; }
+.diagnostics-kicker { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; color: #c084fc; font-size: 10px; font-weight: 700; letter-spacing: .16em; }
+.diagnostics-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.diagnostics-title-row h1 { margin: 0; color: #f7f0f9; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(30px, 5vw, 48px); font-weight: 400; letter-spacing: -.025em; }
+.diagnostics-title-row p { max-width: 660px; margin: 10px 0 0; color: #b8a3c5; font-size: 14px; line-height: 1.6; }
+.diagnostics-refresh { display: inline-flex; min-height: 40px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; border: 1px solid #694079; border-radius: 8px; padding: 9px 13px; background: #1f1328; color: #f7f0f9; cursor: pointer; font-size: 12px; font-weight: 600; }
+.diagnostics-refresh:hover:not(:disabled) { border-color: #c084fc; background: #2b1936; }
+.diagnostics-refresh:disabled { cursor: progress; opacity: .65; }
+.diagnostics-refresh svg { width: 15px; height: 15px; }
+.diagnostics-overview { display: flex; align-items: center; gap: 14px; border: 1px solid #694079; border-radius: 12px; padding: 16px 18px; background: linear-gradient(115deg, rgb(31 19 40 / 98%), rgb(20 12 27 / 94%)); box-shadow: 0 12px 36px rgb(0 0 0 / 20%); }
+.diagnostics-overview-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border: 1px solid rgb(192 132 252 / 42%); border-radius: 11px; background: rgb(192 132 252 / 10%); color: #c084fc; }
+.diagnostics-overview-copy { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.diagnostics-overview-copy > span, .diagnostics-count small { color: #b8a3c5; font-size: 11px; }
+.diagnostics-overview-copy strong { color: #f7f0f9; font-size: 15px; font-weight: 600; }
+.diagnostics-overview-copy small { color: #9d89aa; font-size: 11px; line-height: 1.45; }
+.diagnostics-count { display: flex; flex: 0 0 auto; flex-direction: column; align-items: flex-end; gap: 2px; margin-left: auto; }
+.diagnostics-count strong { color: #f472b6; font-family: Georgia, serif; font-size: 27px; font-weight: 400; }
+.diagnostics-count strong span { color: #9d89aa; font-size: 17px; }
+.diagnostics-count.is-good strong { color: #34d399; }
+.diagnostics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.diagnostics-card { display: flex; min-width: 0; min-height: 244px; flex-direction: column; border: 1px solid #412850; border-radius: 11px; padding: 16px; background: linear-gradient(150deg, #140c1b, #100916); }
+.diagnostics-card.state-online { border-color: rgb(52 211 153 / 42%); }
+.diagnostics-card.state-attention { border-color: rgb(251 191 36 / 43%); }
+.diagnostics-card.state-unauthorized, .diagnostics-card.state-unreachable { border-color: rgb(248 113 113 / 45%); }
+.diagnostics-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.diagnostics-step { color: #8e729c; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+.diagnostics-state { display: inline-flex; align-items: center; gap: 6px; color: #b8a3c5; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.diagnostics-state svg { width: 14px; height: 14px; }
+.state-online .diagnostics-state { color: #34d399; }
+.state-attention .diagnostics-state { color: #fbbf24; }
+.state-unauthorized .diagnostics-state, .state-unreachable .diagnostics-state { color: #f87171; }
+.diagnostics-card h2 { margin: 19px 0 5px; color: #f7f0f9; font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 400; }
+.diagnostics-card code { overflow-wrap: anywhere; color: #c084fc; font-size: 11px; }
+.diagnostics-summary { margin: 15px 0 9px; color: #e6d8ed; font-size: 12px; line-height: 1.5; }
+.diagnostics-details { display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px; padding-left: 16px; color: #b8a3c5; font-size: 11px; line-height: 1.5; }
+.diagnostics-card-footer { display: flex; justify-content: space-between; gap: 10px; margin-top: auto; border-top: 1px solid rgb(65 40 80 / 70%); padding-top: 10px; color: #8e7a99; font-size: 10px; }
+.diagnostics-error { border-left: 3px solid #f87171; padding: 10px 12px; background: rgb(248 113 113 / 9%); color: #fecaca; font-size: 12px; }
+.diagnostics-privacy { display: flex; align-items: flex-start; gap: 10px; margin-top: 14px; border: 1px solid rgb(192 132 252 / 24%); border-radius: 9px; padding: 12px 14px; background: rgb(192 132 252 / 5%); color: #b8a3c5; }
+.diagnostics-privacy svg { margin-top: 2px; color: #c084fc; }
+.diagnostics-privacy p { margin: 0; font-size: 11px; line-height: 1.6; }
+.diagnostics-privacy strong { color: #e9dcf0; }
+.diagnostics-footer { display: flex; justify-content: space-between; gap: 12px; padding: 16px 1px 4px; color: #8e7a99; font-size: 10px; }
+.diagnostics-page a:focus-visible, .diagnostics-page button:focus-visible { outline: 2px solid #f472b6; outline-offset: 3px; }
+@media (max-width: 760px) {
+  .diagnostics-title-row { align-items: flex-start; flex-direction: column; }
+  .diagnostics-grid { grid-template-columns: minmax(0, 1fr); }
+  .diagnostics-card { min-height: 210px; }
+}
+@media (max-width: 420px) {
+  .diagnostics-page { padding-inline: 14px; }
+  .diagnostics-overview { align-items: flex-start; gap: 10px; padding: 12px; }
+  .diagnostics-overview-icon { width: 36px; height: 36px; }
+  .diagnostics-overview-copy strong { font-size: 13px; }
+  .diagnostics-overview-copy small { font-size: 10px; }
+  .diagnostics-footer { flex-direction: column; }
 }

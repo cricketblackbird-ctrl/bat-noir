@@ -126,7 +126,7 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
       `Emergency stops: all=${Boolean(snapshot.stops.stopAll)}, Ruach=${Boolean(snapshot.stops.stopRuach)}, Xena=${Boolean(snapshot.stops.stopXena)}, SuperBot=${Boolean(snapshot.stops.stopSuperbot)}`,
     )
     for (const fighter of snapshot.fighters) lines.push(`${fighter.name}: MM inbox listening ${fighter.listenerStatus}; execution ${fighter.stopped ? 'stopped' : 'not stopped'}`)
-    lines.push('PASS means an authenticated listener_heartbeat arrived within 15 seconds. WAITING means none was observed in the last 24 hours; STALE means the last heartbeat is older than 15 seconds.')
+    lines.push('PASS means an authenticated listener_heartbeat arrived within 32 seconds. WAITING means none was observed in the last 24 hours; STALE means the last heartbeat is older than 32 seconds.')
   }
 
   if (topic === 'all' || topic === 'security') {
@@ -161,7 +161,7 @@ export function PlatformConsole() {
     revalidateOnFocus: true,
     dedupingInterval: 1000,
   })
-  const snapshotIsFresh = data ? Date.now() - new Date(data.observedAt).getTime() <= 15_000 : false
+  const snapshotIsFresh = data ? Date.now() - new Date(data.observedAt).getTime() <= 32_000 : false
 
   useEffect(() => {
     if (!isRecording || !data || lastRecordedAt.current === data.observedAt) return
@@ -257,7 +257,7 @@ export function PlatformConsole() {
             <h4>Protect the site</h4>
             <p>Live aggregate request and firewall counts come from Cloudflare. Attack reports still enter fighter inboxes separately; this app does not proxy traffic, hide the origin, or change edge firewall rules.</p>
           </div>
-          <p className="listener-contract"><strong>Heartbeat rule:</strong> PASS requires a fresh authenticated heartbeat. Missing or older-than-15-second heartbeats show as waiting or stale—even during an execution stop. Each agent sends <code>POST /api/telemetry</code> with <code>eventType: &quot;listener_heartbeat&quot;</code>, its <code>siteScope</code>, health, and hit counts. Use that fighter&apos;s existing bearer credential server-side; this console never displays tokens.</p>
+          <p className="listener-contract"><strong>Heartbeat rule:</strong> PASS requires a fresh authenticated heartbeat. Missing or older-than-32-second heartbeats show as waiting or stale—even during an execution stop. Each agent sends <code>POST /api/telemetry</code> with <code>eventType: &quot;listener_heartbeat&quot;</code>, its <code>siteScope</code>, health, and hit counts. Use that fighter&apos;s existing bearer credential server-side; this console never displays tokens.</p>
         </aside>
       </div>
     </section>

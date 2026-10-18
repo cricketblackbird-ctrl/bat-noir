@@ -19,7 +19,7 @@ const fighterRoles: Record<FighterId, string> = {
   superbot: 'Credential signal review',
 }
 const fighters: FighterId[] = ['ruach', 'xena', 'superbot']
-const listenerFreshnessMs = 15_000
+const listenerFreshnessMs = 32_000
 
 function canonicalFighterId(value: string) {
   return value.toLowerCase() === 'zena' ? 'xena' : value.toLowerCase()
