@@ -5,6 +5,7 @@ import { useState, useTransition, type FormEvent } from 'react'
 import useSWR from 'swr'
 import { appendRule } from '@/app/actions/rules'
 import { authClient } from '@/lib/auth-client'
+import { LeafPinMark } from '@/components/leaf-pin-mark'
 
 type SupportKind = 'update' | 'repair' | 'source' | 'support'
 type RulesSnapshot = {
@@ -87,7 +88,7 @@ export function DragonRulesPage({ operator }: { operator: { isMm: boolean } }) {
   return (
     <main className="command-page rules-command-page">
       <header className="topbar">
-        <div className="brand-lockup"><span className="brand-mm-mark" aria-hidden="true">MM</span><h1 className="brand-name">MASTER CONTROL</h1></div>
+        <div className="brand-lockup"><LeafPinMark /><h1 className="brand-name">MASTER CONTROL</h1></div>
         <div className="topbar-right"><a className="website-destination-link" href="/">Dashboard</a><button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.assign('/'))}>Sign out</button></div>
       </header>
 

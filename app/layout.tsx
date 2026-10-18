@@ -38,6 +38,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
+        <svg className="svg-filter-defs" aria-hidden="true" focusable="false">
+          <filter id="leaf-pin-sharpen" x="-10%" y="-10%" width="120%" height="120%">
+            <feConvolveMatrix order="3" kernelMatrix="0 -0.35 0 -0.35 2.4 -0.35 0 -0.35 0" preserveAlpha="true" />
+          </filter>
+        </svg>
         {children}
       </body>
     </html>

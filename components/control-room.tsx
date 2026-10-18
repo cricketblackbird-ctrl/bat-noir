@@ -10,6 +10,7 @@ import { ActivityArchivePanel } from '@/components/activity-archive'
 import { PlatformConsole } from '@/components/platform-console'
 import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
+import { LeafPinMark } from '@/components/leaf-pin-mark'
 import { HeartbeatReadinessPanel } from '@/components/heartbeat-readiness-panel'
 import { LinkHealthPanel } from '@/components/link-health-panel'
 import { HEARTBEAT_CONFIG } from '@/lib/heartbeat-config'
@@ -329,7 +330,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
     <main className="command-page">
       <header className="topbar">
         <div className="brand-lockup">
-          <span className="brand-mm-mark" aria-hidden="true">MM</span>
+          <LeafPinMark />
           <h1 className="brand-name">MASTER CONTROL</h1>
         </div>
         <div className="topbar-right">
