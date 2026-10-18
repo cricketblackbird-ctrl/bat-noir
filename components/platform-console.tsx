@@ -98,18 +98,19 @@ function formatWebsiteSnapshot(health: WebsiteHealthSnapshot, browser: BrowserHi
   const lines = [
     `WEBSITE & AUDIENCE · ${health.domain}`,
     `Checked: ${formatCentralDateTime(health.capturedAt)}`,
-    `Website: ${health.site.ok ? 'reachable' : 'unavailable'} · HTTP ${health.site.statusCode ?? 'no response'} · ${health.site.latencyMs === null ? 'latency unavailable' : `${health.site.latencyMs} ms`}`,
+    `Website check: ${health.site.ok ? 'PASS' : 'FAIL'} · HTTP ${health.site.statusCode ?? 'no response'} · ${health.site.latencyMs === null ? 'latency unavailable' : `${health.site.latencyMs} ms`}`,
   ]
   if (health.cloudflare.available) {
     const metrics = health.cloudflare.metrics
     lines.push(
-      `Cloudflare requests · 24h: ${metrics.requests24h.toLocaleString()}`,
+      'Cloudflare check: PASS',
+      `Cloudflare requests · 24h: ${metrics.requests24h.toLocaleString()}`}},{,
       `Threat requests · 24h: ${metrics.threatRequests24h.toLocaleString()}`,
       `Blocked / challenged · 60s: ${metrics.blocked60s.toLocaleString()} / ${metrics.challenged60s.toLocaleString()} (alert threshold ${metrics.threshold})`,
       `Data transfer · 24h: ${formatBytes(metrics.bytes24h)}`,
     )
   } else {
-    lines.push(`Cloudflare totals unavailable: ${health.cloudflare.reason}.`)
+    lines.push('Cloudflare check: FAIL · live totals were not returned.')
   }
   lines.push(
     `Computer connection: ${browser ? browser.online ? 'browser reports online' : 'browser reports offline' : 'not available'}`,
@@ -353,9 +354,9 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
               <span className="console-live-indicator" aria-hidden="true" />
               {error ? 'Page reports unavailable' : !snapshotIsFresh ? 'Connecting to page reports' : 'Page reports live'}
             </span>
-            <span className={`console-live-status${websiteError || (website && !websiteIsFresh) || (website && !website.cloudflare.available) ? ' is-unavailable' : !website ? ' is-waiting' : ''}`} role="status">
+            <span className={`console-live-status ${website && websiteIsFresh && website.cloudflare.available && !websiteError ? 'is-pass' : 'is-fail'}`} role="status" aria-label={`Cloudflare check ${website && websiteIsFresh && website.cloudflare.available && !websiteError ? 'PASS' : 'FAIL'}`}>
               <span className="console-live-indicator" aria-hidden="true" />
-              {websiteError ? 'Cloudflare unavailable' : !website ? 'Connecting to Cloudflare' : website.cloudflare.available ? 'Cloudflare live' : `Cloudflare · ${website.cloudflare.reason.replace(/_/g, ' ')}`}
+              Cloudflare {website && websiteIsFresh && website.cloudflare.available && !websiteError ? 'PASS' : 'FAIL'}
             </span>
             <button className="text-button security-view-link" type="button" onClick={onOpenSecurityView}>Full security view</button>
           </div>
@@ -366,11 +367,11 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
             </div>
             {websiteError ? <p className="website-data-message is-unavailable" role="alert">Could not reach the live security feed. No sample data is shown.</p> : !website ? <p className="website-data-message" role="status">Connecting to the site and Cloudflare over HTTPS…</p> : (
               <div className="website-metrics-grid">
-                <article className={`website-metric${website.site.ok ? ' is-good' : ' is-bad'}`}><span>Website HTTP check</span><strong>{website.site.statusCode === null ? 'No response' : website.site.ok ? 'Responding' : 'HTTP error'}</strong><small>{website.site.statusCode === null ? 'No HTTP status received' : `HTTP ${website.site.statusCode} · HTTPS HEAD`}</small></article>
+                <article className={`website-metric${website.site.ok ? ' is-good' : ' is-bad'}`}><span>Website HTTP check</span><strong>{website.site.ok ? 'PASS' : 'FAIL'}</strong><small>{website.site.statusCode === null ? 'No HTTP status received' : `HTTP ${website.site.statusCode} · HTTPS HEAD`}</small></article>
                 <article className={`website-metric${website.site.ok ? ' is-good' : ' is-bad'}`}><span>Response time</span><strong>{website.site.latencyMs === null ? '—' : `${website.site.latencyMs} ms`}</strong><small>Fast &lt;500 ms · Typical 500–2,000 ms · Slow &gt;2,000 ms</small></article>
                 <article className="website-metric"><span>Cloudflare requests · 24h</span><strong>{cloudflareMetrics ? cloudflareMetrics.requests24h.toLocaleString() : '—'}</strong><small>Requests, not unique viewers</small></article>
                 <article className="website-metric"><span>Threat requests · 24h</span><strong>{cloudflareMetrics ? cloudflareMetrics.threatRequests24h.toLocaleString() : '—'}</strong><small>Cloudflare aggregate</small></article>
-                <article className="website-metric"><span>Blocked / challenged · 60s</span><strong>{cloudflareMetrics ? `${cloudflareMetrics.blocked60s.toLocaleString()} / ${cloudflareMetrics.challenged60s.toLocaleString()}` : '—'}</strong><small>{cloudflareMetrics ? `Alert threshold ${cloudflareMetrics.threshold}` : website.cloudflare.available ? 'No data' : `Unavailable · ${website.cloudflare.reason.replace(/_/g, ' ')}`}</small></article>
+                <article className="website-metric"><span>Blocked / challenged · 60s</span><strong>{cloudflareMetrics ? `${cloudflareMetrics.blocked60s.toLocaleString()} / ${cloudflareMetrics.challenged60s.toLocaleString()}` : '—'}</strong><small>{cloudflareMetrics ? `Alert threshold ${cloudflareMetrics.threshold}` : website.cloudflare.available ? 'No data returned' : 'Cloudflare check failed'}</small></article>
                 <article className="website-metric"><span>Data transfer · 24h</span><strong>{cloudflareMetrics ? formatBytes(cloudflareMetrics.bytes24h) : '—'}</strong><small>Aggregate response bytes</small></article>
                 <article className={`website-metric${browserHints?.online === false ? ' is-bad' : ' is-good'}`}><span>This computer</span><strong>{browserHints ? browserHints.online ? 'Browser online' : 'Browser offline' : 'Checking'}</strong><small>{browserHints?.connectionType ?? 'Connection hint unavailable'}{browserHints?.estimatedRttMs === null || !browserHints ? '' : ` · ~${browserHints.estimatedRttMs} ms RTT`}</small></article>
                 <article className="website-metric"><span>Device estimate</span><strong>{browserHints?.processorCount ? `${browserHints.processorCount} cores` : 'Unavailable'}</strong><small>{browserHints?.approximateMemoryGb ? `~${browserHints.approximateMemoryGb} GB memory` : 'Memory hint unavailable'}</small></article>

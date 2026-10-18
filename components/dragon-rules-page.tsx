@@ -16,8 +16,12 @@ type RulesSnapshot = {
     detail: string | null
     health: number | null
     reportedAt: string | null
+    listenerStatus: 'PASS' | 'STALE' | 'WAITING'
+    heartbeatAgeMs: number | null
+    lastInboxPoll: string | null
     requestType: SupportKind | null
     request: string | null
+    requestAt: string | null
   }>
 }
 
@@ -33,12 +37,37 @@ function formatTimestamp(value: string | null) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
+function formatHeartbeatAge(ageMs: number | null) {
+  if (ageMs === null) return 'No authenticated heartbeat received'
+  const seconds = Math.max(0, Math.floor(ageMs / 1000))
+  return seconds < 2 ? 'Authenticated just now' : `Authenticated ${seconds}s ago`
+}
+
+const guardianReportPlaceholders: RulesSnapshot['reports'] = ['ruach', 'xena', 'superbot'].map((id) => ({
+  id,
+  name: id === 'ruach' ? 'Ruach' : id === 'xena' ? 'Xena' : 'SuperBot',
+  status: 'awaiting',
+  detail: null,
+  health: null,
+  reportedAt: null,
+  listenerStatus: 'WAITING',
+  heartbeatAgeMs: null,
+  lastInboxPoll: null,
+  requestType: null,
+  request: null,
+  requestAt: null,
+}))
+
 export function DragonRulesPage({ operator }: { operator: { isMm: boolean } }) {
   const { data, error, mutate } = useSWR<RulesSnapshot>('/api/operations', fetcher, { refreshInterval: 5000, revalidateOnFocus: true })
   const [draft, setDraft] = useState('')
   const [feedback, setFeedback] = useState('')
   const [isPending, startTransition] = useTransition()
   const rules = data?.rules?.rules ?? []
+  const reports = data?.reports ?? guardianReportPlaceholders.map((report) => ({
+    ...report,
+    listenerStatus: error ? 'UNAVAILABLE' as const : 'WAITING' as const,
+  }))
 
   function addRule(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -68,27 +97,34 @@ export function DragonRulesPage({ operator }: { operator: { isMm: boolean } }) {
           <p className="section-kicker">MM · VERSIONED POLICY</p>
           <h2 id="rules-title">Rules &amp; reports</h2>
           <p>One durable, append-only rules history. Add a rule to create a new revision; older versions stay available in Neon.</p>
-          <div className="rules-meta"><span><ShieldCheck aria-hidden="true" /> {operator.isMm ? 'MM can add rules' : 'Read-only account'}</span><span>{data?.rules ? `Revision ${data.rules.revision}` : 'Loading saved revision…'}</span></div>
+          <div className="rules-meta"><span><ShieldCheck aria-hidden="true" /> {operator.isMm ? 'MM can add rules' : 'Read-only account'}</span><span>{data?.rules ? `Revision ${data.rules.revision}` : error ? 'Saved revision unavailable' : data ? 'No saved revision yet' : 'Loading saved revision…'}</span></div>
         </section>
 
         <section className="rules-section" aria-labelledby="report-title">
           <div className="rules-section-heading"><div><p className="section-kicker">AUTHENTICATED · REFRESHES EVERY 5 SECONDS</p><h3 id="report-title">Team status &amp; requests</h3></div><span className="rules-live-label"><span aria-hidden="true" />Live</span></div>
           <p className="rules-caveat">These are the latest signed telemetry reports—not a command to the bots. A missing or stale report is shown as unconfirmed, never guessed.</p>
-          {error ? <p className="rules-error" role="alert">Reports are temporarily unavailable. No status has been inferred.</p> : <div className="rules-report-grid">
-            {(data?.reports ?? ['ruach', 'xena', 'superbot'].map((id) => ({ id, name: id === 'ruach' ? 'Ruach' : id === 'xena' ? 'Xena' : 'SuperBot', status: 'awaiting' as const, detail: null, health: null, reportedAt: null, requestType: null, request: null }))).map((report) => (
-              <article className="rules-report-card" key={report.id}>
-                <div className="rules-report-top"><h4>{report.name}</h4><span className={`rules-report-status is-${report.status}`}><span aria-hidden="true" />{report.status === 'reporting' ? 'Reporting' : report.status === 'stale' ? 'Stale' : 'Awaiting report'}</span></div>
-                <p className="rules-report-detail">{report.detail ?? 'No authenticated status received.'}{report.health !== null ? ` · ${report.health}% health` : ''}</p>
-                <time className="rules-report-time" dateTime={report.reportedAt ?? undefined}>{formatTimestamp(report.reportedAt)}</time>
-                <div className="rules-request"><span>{report.requestType ? `Needs ${report.requestType}` : 'No request in latest report'}</span><p>{report.request ?? 'When needed, include a concise update, repair, source, or support request in authenticated telemetry.'}</p></div>
-              </article>
-            ))}
-          </div>}
+          {error && <p className="rules-error" role="alert">The authenticated feed could not refresh. Showing the last received status, or waiting for the first heartbeat.</p>}
+          <div className="rules-report-grid">
+            {reports.map((report) => {
+              const heartbeatStatus = report.listenerStatus ?? (error ? 'UNAVAILABLE' : 'WAITING')
+              const heartbeatLabel = heartbeatStatus === 'PASS' ? 'Authenticated' : heartbeatStatus === 'STALE' ? 'Stale heartbeat' : heartbeatStatus === 'UNAVAILABLE' ? 'Feed unavailable' : 'Waiting for heartbeat'
+              const statusClass = heartbeatStatus.toLowerCase()
+              return (
+                <article className="rules-report-card" key={report.id}>
+                  <div className="rules-report-top"><h4>{report.name}</h4><span className={`rules-report-status is-${statusClass}`}><span aria-hidden="true" />{heartbeatLabel}</span></div>
+                  <p className="rules-report-detail">{report.detail ?? 'No authenticated status received.'}{report.health !== null ? ` · ${report.health}% health` : ''}</p>
+                  <time className="rules-report-time" dateTime={report.reportedAt ?? undefined}>{formatTimestamp(report.reportedAt)}</time>
+                  <p className="rules-report-heartbeat">{formatHeartbeatAge(report.heartbeatAgeMs)} · refreshes every 5 seconds</p>
+                  <div className="rules-request"><span>{report.requestType ? `Needs ${report.requestType}` : 'No recent support request'}</span><p>{report.request ?? 'When needed, include a concise update, repair, source, or support request in authenticated telemetry.'}</p>{report.requestAt && <time dateTime={report.requestAt}>Requested {formatTimestamp(report.requestAt)}</time>}</div>
+                </article>
+              )
+            })}
+          </div>
         </section>
 
         <section className="rules-section" aria-labelledby="saved-rules-title">
           <div className="rules-section-heading"><div><p className="section-kicker">SAVED IN THE APP DATABASE</p><h3 id="saved-rules-title">Current rules</h3></div>{data?.rules && <span className="rules-revision">Revision {data.rules.revision}</span>}</div>
-          {error ? <p className="rules-error" role="alert">The saved rule revision could not be loaded.</p> : <ul className="saved-rules-list">{rules.map((rule, index) => <li key={`${data?.rules?.revision ?? 0}-${index}`}><p>{rule}</p></li>)}</ul>}
+          {error ? <p className="rules-error" role="alert">The saved rule revision could not be loaded.</p> : rules.length > 0 ? <ul className="saved-rules-list">{rules.map((rule, index) => <li key={`${data?.rules?.revision ?? 0}-${index}`}><p>{rule}</p></li>)}</ul> : data ? <p className="rules-empty-state">No rules have been saved in this revision yet.</p> : <p className="rules-empty-state">Loading saved rules…</p>}
           {data?.rules && <p className="rules-updated">Last saved {formatTimestamp(data.rules.createdAt)}</p>}
           {operator.isMm ? <form className="add-rule-form" onSubmit={addRule}>
             <label htmlFor="new-rule">Add a rule</label>

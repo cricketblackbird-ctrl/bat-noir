@@ -6,7 +6,7 @@ const cloudflareConnector = 'cloudflare/montemader-security-telemetry'
 
 export type CloudflareAnalyticsFailure =
   | 'zone_not_configured'
-  | 'connect_token_unavailable'
+  | 'credential_unavailable'
   | 'permission_denied'
   | 'query_rejected'
   | 'zone_not_found'
@@ -65,15 +65,17 @@ export async function getCloudflareSnapshot(now = new Date()): Promise<Cloudflar
   const zoneId = process.env.CLOUDFLARE_ZONE_ID
   if (!zoneId) throw new CloudflareAnalyticsError('zone_not_configured')
 
-  let token: string
+  let token: string | undefined
   try {
     token = await getToken(cloudflareConnector, {
       subject: { type: 'app' },
       scopes: ['Zone.Analytics:Read'],
     })
   } catch {
-    throw new CloudflareAnalyticsError('connect_token_unavailable')
+    token = process.env.CLOUDFLARE_API_TOKEN
   }
+  token ||= process.env.CLOUDFLARE_API_TOKEN
+  if (!token) throw new CloudflareAnalyticsError('credential_unavailable')
 
   const recent = new Date(now.getTime() - 60_000).toISOString()
   const day = new Date(now.getTime() - 24 * 60 * 60_000).toISOString()

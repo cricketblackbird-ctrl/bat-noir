@@ -85,7 +85,7 @@ export function BrowserEnvironmentPanel() {
   const [savingHints, setSavingHints] = useState(false)
   const [archiveNotice, setArchiveNotice] = useState('')
   const { mutate: mutateArchive } = useSWR<ActivityArchiveResponse>('/api/activity-archive', fetchActivityArchive)
-  const { data, error, isLoading, mutate } = useSWR<CloudflareSnapshot>('/api/security/health', fetcher, {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<CloudflareSnapshot>('/api/security/health', fetcher, {
     refreshInterval: 30_000,
     revalidateOnFocus: true,
     dedupingInterval: 10_000,
@@ -134,7 +134,7 @@ export function BrowserEnvironmentPanel() {
     <section className="panel browser-data-panel" aria-labelledby="browser-data-heading">
       <div className="panel-heading">
         <div><p className="section-kicker">GENERAL PURPOSE · LIVE DATA</p><h2 id="browser-data-heading">Browser &amp; Cloudflare</h2></div>
-        <button className="text-button" type="button" onClick={() => void mutate()} disabled={isLoading}>Refresh live data</button>
+        <button className="text-button" type="button" onClick={() => void mutate()} disabled={isValidating} aria-label="Check Cloudflare connection now">{isValidating ? 'Checking…' : 'Check now'}</button>
       </div>
 
       <section className="browser-data-section" aria-labelledby="browser-hints-heading">
@@ -153,13 +153,13 @@ export function BrowserEnvironmentPanel() {
       </section>
 
       <section className="browser-data-section cloudflare-emergency" aria-labelledby="cloudflare-live-heading" aria-live="polite">
-        <div className="browser-data-subheading"><h3 id="cloudflare-live-heading">Cloudflare connection</h3><div className="cloudflare-heading-actions"><span className={`cloudflare-state ${data?.cloudflare.available ? 'is-online' : 'is-offline'}`} role="status"><span aria-hidden="true" />{data?.cloudflare.available ? 'ONLINE' : error ? 'CHECK CONNECTION' : isLoading || !data ? 'CONNECTING' : 'UNAVAILABLE'}</span><a className="cloudflare-dashboard-link" href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">Open dashboard ↗</a></div></div>
+        <div className="browser-data-subheading"><h3 id="cloudflare-live-heading">Cloudflare connection</h3><div className="cloudflare-heading-actions"><span className={`cloudflare-state ${data?.cloudflare.available && !error ? 'is-pass' : 'is-fail'}`} role="status"><span aria-hidden="true" />{data?.cloudflare.available && !error ? 'PASS' : 'FAIL'}</span><a className="cloudflare-dashboard-link" href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">Open Cloudflare dashboard ↗</a></div></div>
         {error ? (
-          <p className="cloudflare-live-message is-unavailable" role="alert">{error.message} No sample values are shown.</p>
+          <p className="cloudflare-live-message is-fail" role="alert">{error.message.includes('Sign in again') ? 'Sign in again to run this Cloudflare check.' : 'Cloudflare check failed. Live security data was not returned.'} No sample values are shown.</p>
         ) : isLoading || !data ? (
-          <p className="cloudflare-live-message" role="status">Connecting to authenticated Cloudflare analytics…</p>
+          <p className="cloudflare-live-message" role="status">Checking Cloudflare connection…</p>
         ) : !data.cloudflare.available ? (
-          <p className="cloudflare-live-message is-unavailable" role="status">Cloudflare could not provide live security data ({data.cloudflare.reason}). Use the dashboard link above to review your Cloudflare account and zone access.</p>
+          <p className="cloudflare-live-message is-fail" role="status">Cloudflare check failed. Live security data was not returned. Use the dashboard link to review the connection, then select Check now.</p>
         ) : (
           <>
             <p className={`cloudflare-live-message ${data.cloudflare.metrics.thresholdMet ? 'is-alert' : 'is-clear'}`} role="status"><span className="cloudflare-status-light" aria-hidden="true" />{alertLabel}</p>
@@ -169,7 +169,7 @@ export function BrowserEnvironmentPanel() {
               <article className="browser-signal"><span>Blocked · 60s</span><strong>{data.cloudflare.metrics.blocked60s.toLocaleString()}</strong></article>
               <article className="browser-signal"><span>Challenged · 60s</span><strong>{data.cloudflare.metrics.challenged60s.toLocaleString()}</strong></article>
               <article className="browser-signal"><span>Emergency threshold</span><strong>{data.cloudflare.metrics.threshold.toLocaleString()} blocked/challenged per 60s</strong></article>
-              <article className="browser-signal"><span>Website reachability</span><strong>{data.site.ok ? 'Reachable' : 'Unavailable'}</strong></article>
+              <article className="browser-signal"><span>Website reachability</span><strong>{data.site.ok ? 'PASS' : 'FAIL'}</strong></article>
               {data.activeIncident && <article className="browser-signal"><span>Incident detected</span><strong>{formatCentralTime(data.activeIncident.detectedAt)} · {data.activeIncident.blockedCount.toLocaleString()} requests</strong></article>}
             </div>
           </>

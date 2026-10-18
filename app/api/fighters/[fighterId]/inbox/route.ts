@@ -60,14 +60,28 @@ export async function GET(request: Request, { params }: Context) {
       .where(eq(dragonEmergencyStop.singleton, true)).for('update').limit(1)
     if (!stops) return inboxJson({ error: 'Stop state unavailable' }, 503)
 
-    if (isStopped(fighterId, stops)) {
-      return inboxJson({ fighterId, siteScope: SITE_SCOPE, stopped: true, stopAll: stops.stopAll, commands: [], securityPacket: activeAttack, ...listeningContract, telemetryContract })
+    const stopped = isStopped(fighterId, stops)
+    const hitReportGate = {
+      fighterId,
+      siteScope: SITE_SCOPE,
+      status: activeAttack ? 'authenticated_hit_report_available' : 'waiting_for_authenticated_hit_report',
+      reportPresent: Boolean(activeAttack),
+      canAct: Boolean(activeAttack) && !stopped,
+      reason: !activeAttack ? 'authenticated_hit_report_required' : stopped ? 'guardian_stopped' : null,
+      reportCount: activeAttack?.reportCount ?? 0,
+      sourceCount: activeAttack?.sourceCount ?? 0,
+      expiresAt: activeAttack?.expiresAt ?? null,
+      checkedAt: new Date().toISOString(),
     }
 
-    const [command] = await tx.select().from(dragonCommandQueue)
+    if (stopped) {
+      return inboxJson({ fighterId, siteScope: SITE_SCOPE, stopped: true, stopAll: stops.stopAll, commands: [], securityPacket: activeAttack, hitReportGate, ...listeningContract, telemetryContract })
+    }
+
+    const [command] = activeAttack ? await tx.select().from(dragonCommandQueue)
       .where(and(eq(dragonCommandQueue.fighterId, storageId), eq(dragonCommandQueue.status, 'queued'), gt(dragonCommandQueue.createdAt, stops.updatedAt)))
-      .orderBy(asc(dragonCommandQueue.createdAt)).limit(1).for('update', { skipLocked: true })
-    if (!command) return inboxJson({ fighterId, siteScope: SITE_SCOPE, stopped: false, commands: [], securityPacket: activeAttack, ...listeningContract, telemetryContract })
+      .orderBy(asc(dragonCommandQueue.createdAt)).limit(1).for('update', { skipLocked: true }) : []
+    if (!command) return inboxJson({ fighterId, siteScope: SITE_SCOPE, stopped: false, commands: [], securityPacket: activeAttack, hitReportGate, ...listeningContract, telemetryContract })
 
     const [acknowledged] = await tx.update(dragonCommandQueue)
       .set({ status: 'acknowledged', consumedAt: new Date() })
@@ -89,6 +103,7 @@ export async function GET(request: Request, { params }: Context) {
       } : null,
       commands: [],
       securityPacket: activeAttack,
+      hitReportGate,
       ...listeningContract,
       telemetryContract,
     })

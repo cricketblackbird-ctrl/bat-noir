@@ -53,7 +53,7 @@ export async function GET() {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'Cache-Control': 'private, no-store' } })
 
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  const [events, heartbeats, commands, combatEvents, recentTelemetry, controls, stops, telemetryTotals, activeAttack, ruleRows] = await Promise.all([
+  const [events, heartbeats, supportRequests, commands, combatEvents, recentTelemetry, controls, stops, telemetryTotals, activeAttack, ruleRows] = await Promise.all([
     db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
       .where(and(
         gte(dragonTelemetryRecords.receivedAt, cutoff),
@@ -65,6 +65,13 @@ export async function GET() {
         gte(dragonTelemetryRecords.receivedAt, cutoff),
         eq(dragonTelemetryRecords.eventType, 'listener_heartbeat'),
         sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
+      ))
+      .orderBy(dragonTelemetryRecords.dragonId, desc(dragonTelemetryRecords.receivedAt)),
+    db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
+      .where(and(
+        gte(dragonTelemetryRecords.receivedAt, cutoff),
+        sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
+        sql`(${dragonTelemetryRecords.payload} ->> 'supportType') IN ('update', 'repair', 'source', 'support')`,
       ))
       .orderBy(dragonTelemetryRecords.dragonId, desc(dragonTelemetryRecords.receivedAt)),
     db.select({ id: dragonCommandQueue.id, fighterId: dragonCommandQueue.fighterId, strategy: dragonCommandQueue.strategy, formation: dragonCommandQueue.formation, threatType: dragonCommandQueue.threatType, status: dragonCommandQueue.status, createdAt: dragonCommandQueue.createdAt })
@@ -101,6 +108,8 @@ export async function GET() {
   for (const event of events) latestByFighter.set(canonicalFighterId(event.dragonId), event)
   const heartbeatByFighter = new Map<string, typeof heartbeats[number]>()
   for (const event of heartbeats) heartbeatByFighter.set(canonicalFighterId(event.dragonId), event)
+  const latestSupportRequestByFighter = new Map<string, typeof supportRequests[number]>()
+  for (const event of supportRequests) latestSupportRequestByFighter.set(canonicalFighterId(event.dragonId), event)
 
   const fighterRows = fighters.map((id) => {
     const event = latestByFighter.get(id)
@@ -132,6 +141,14 @@ export async function GET() {
       listenerStatus,
       lastInboxPoll: heartbeat?.receivedAt ?? null,
       heartbeatAgeMs,
+      hitReportGate: {
+        status: activeAttack ? 'PASS' : 'FAIL',
+        reportPresent: Boolean(activeAttack),
+        reportCount: activeAttack?.reportCount ?? 0,
+        sourceCount: activeAttack?.sourceCount ?? 0,
+        expiresAt: activeAttack?.expiresAt ?? null,
+        inboxPath: `/api/fighters/${id}/inbox`,
+      },
       credentialBoundary: getFighterCredentialStatus(id),
     }
   })
@@ -157,10 +174,13 @@ export async function GET() {
     } : null,
     reports: fighterRows.map((fighter) => {
       const event = latestByFighter.get(fighter.id)
-      const supportType = event?.payload.supportType
+      const requestEvent = latestSupportRequestByFighter.get(fighter.id)
+      const supportType = requestEvent?.payload.supportType
       const requestType = supportType === 'update' || supportType === 'repair' || supportType === 'source' || supportType === 'support'
         ? supportType
         : null
+      const rawRequest = requestEvent?.payload.supportRequest
+      const request = typeof rawRequest === 'string' ? rawRequest : null
       const reportAge = event ? observedAt.getTime() - event.receivedAt.getTime() : null
       return {
         id: fighter.id,
@@ -169,8 +189,12 @@ export async function GET() {
         detail: event ? event.payload.status ?? event.eventType.replace(/_/g, ' ') : null,
         health: event?.healthPercent ?? null,
         reportedAt: event?.receivedAt.toISOString() ?? null,
+        listenerStatus: fighter.listenerStatus,
+        heartbeatAgeMs: fighter.heartbeatAgeMs,
+        lastInboxPoll: fighter.lastInboxPoll?.toISOString() ?? null,
         requestType,
-        request: requestType ? event?.payload.supportRequest ?? null : null,
+        request,
+        requestAt: requestEvent?.receivedAt.toISOString() ?? null,
       }
     }),
     systemHealth,

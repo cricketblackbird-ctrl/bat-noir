@@ -65,10 +65,10 @@ async function getProbe(target: (typeof targets)[number]): Promise<Probe> {
       const cloudflareAvailable = payload.cloudflare?.available === true
       const siteReachable = payload.site?.ok === true
       const details = [
-        `Website check: ${siteReachable ? 'responding' : 'unavailable'}`,
-        cloudflareAvailable ? 'Cloudflare analytics: connected' : `Cloudflare analytics: ${String(payload.cloudflare?.reason ?? 'unavailable').replace(/_/g, ' ')}`,
+        `Website check: ${siteReachable ? 'PASS' : 'FAIL'}`,
+        `Cloudflare check: ${cloudflareAvailable ? 'PASS' : 'FAIL'}`,
       ]
-      return { ...target, state: cloudflareAvailable && siteReachable ? 'online' : 'attention', httpStatus: response.status, summary: cloudflareAvailable && siteReachable ? 'Live site and Cloudflare checks responded.' : 'The route responded; one or more upstream checks need attention.', details, checkedAt }
+      return { ...target, state: cloudflareAvailable && siteReachable ? 'online' : 'attention', httpStatus: response.status, summary: cloudflareAvailable && siteReachable ? 'PASS · live site and Cloudflare checks responded.' : 'FAIL · one or more checks did not pass.', details, checkedAt }
     }
 
     if (target.id === 'preview') {
@@ -76,16 +76,16 @@ async function getProbe(target: (typeof targets)[number]): Promise<Probe> {
       const cloudflare = payload.data?.cloudflare
       const isVerified = payload.success === true
       const details = [
-        `Protected preview response: HTTP ${payload.status ?? 'unavailable'}`,
-        `Website check: ${site?.ok ? 'responding' : 'unavailable'}`,
-        `Cloudflare analytics: ${cloudflare?.available ? 'connected' : String(cloudflare?.reason ?? 'unavailable').replace(/_/g, ' ')}`,
+        `Protected preview response: HTTP ${payload.status ?? 'no response'}`,
+        `Website check: ${site?.ok ? 'PASS' : 'FAIL'}`,
+        `Cloudflare check: ${cloudflare?.available ? 'PASS' : 'FAIL'}`,
         `Target: ${payload.target ?? 'project preview'}`,
       ]
       return {
         ...target,
         state: isVerified ? 'online' : payload.status === 401 ? 'attention' : 'unreachable',
         httpStatus: payload.status ?? response.status,
-        summary: isVerified ? 'Server-side probe passed Vercel protection and read the signed-in preview health endpoint.' : payload.error ?? 'Protected preview health check did not complete.',
+        summary: isVerified ? 'PASS · server-side probe read the signed-in preview health endpoint.' : 'FAIL · protected preview health check did not pass.',
         details,
         checkedAt,
       }
@@ -98,7 +98,7 @@ async function getProbe(target: (typeof targets)[number]): Promise<Probe> {
         `Authenticated telemetry records · 24h: ${Number(payload.telemetryCount24h ?? 0).toLocaleString()}`,
         ...fighters.map((fighter) => `${fighter.name ?? 'Listener'} heartbeat: ${fighter.listenerStatus ?? 'unknown'}`),
       ]
-      return { ...target, state: systemPass ? 'online' : 'attention', httpStatus: response.status, summary: systemPass ? 'Operations endpoint and all listener heartbeats report PASS.' : 'Operations endpoint responded; one or more listener heartbeats need attention.', details, checkedAt }
+      return { ...target, state: systemPass ? 'online' : 'attention', httpStatus: response.status, summary: systemPass ? 'PASS · endpoint and all listener heartbeats.' : 'FAIL · one or more listener heartbeats did not pass.', details, checkedAt }
     }
 
     const insightCount = Array.isArray(payload.insights) ? payload.insights.length : 0
@@ -126,10 +126,10 @@ const fetchDiagnostics = async (): Promise<DiagnosticsSnapshot> => {
 }
 
 const stateLabels: Record<ProbeState, string> = {
-  online: 'Verified',
-  attention: 'Attention',
-  unauthorized: 'Sign-in required',
-  unreachable: 'Unavailable',
+  online: 'PASS',
+  attention: 'FAIL',
+  unauthorized: 'FAIL',
+  unreachable: 'FAIL',
 }
 
 function StateIcon({ state }: { state: ProbeState }) {
@@ -145,8 +145,8 @@ export function TelemetryDiagnostics() {
     revalidateOnFocus: true,
     dedupingInterval: 10_000,
   })
-  const verifiedCount = data?.probes.filter((probe) => probe.state === 'online').length ?? 0
-  const allVerified = verifiedCount === targets.length
+  const passCount = data?.probes.filter((probe) => probe.state === 'online').length ?? 0
+  const allPass = passCount === targets.length
 
   return (
     <main className="diagnostics-page">
@@ -173,12 +173,12 @@ export function TelemetryDiagnostics() {
           <div className="diagnostics-overview-icon"><ShieldCheck aria-hidden="true" /></div>
           <div className="diagnostics-overview-copy">
             <span>Authenticated session</span>
-            <strong>{error ? 'Live checks could not complete' : isLoading && !data ? 'Running endpoint checks…' : allVerified ? 'All endpoints verified' : 'Session verified · endpoint attention'}</strong>
-            <small>Server-verified session · required by each checked endpoint</small>
+            <strong>{error ? 'FAIL · live checks did not complete' : isLoading && !data ? 'Checking…' : allPass ? 'PASS · all endpoints' : 'FAIL · one or more endpoints'}</strong>
+            <small>Each check uses the signed-in server session</small>
           </div>
-          <div className={`diagnostics-count${allVerified ? ' is-good' : ''}`}>
-            <strong>{verifiedCount}<span> / {targets.length}</span></strong>
-            <small>verified</small>
+          <div className={`diagnostics-count${allPass ? ' is-good' : ''}`}>
+            <strong>{passCount}<span> / {targets.length}</span></strong>
+            <small>PASS</small>
           </div>
         </section>
 

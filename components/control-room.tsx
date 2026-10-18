@@ -31,6 +31,14 @@ type Fighter = {
   skills: string[]
   signal: { label: string; confidence: string } | null
   stopped: boolean
+  hitReportGate: {
+    status: 'PASS' | 'FAIL'
+    reportPresent: boolean
+    reportCount: number
+    sourceCount: number
+    expiresAt: string | null
+    inboxPath: string
+  }
 }
 
 type Operations = {
@@ -264,6 +272,12 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
                 {fighter.health === null ? <p className="health-reading">Waiting for authenticated health report</p> : <p className="health-reading"><span>{fighter.health}%</span> health · {fighter.hitsTaken}/{fighter.hitCapacity} hits</p>}
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
                 <p className="signal-age">Report {formatAge(fighter.lastSeen)} · inbox poll {formatAge(fighter.lastInboxPoll)}</p>
+                <div className="fighter-hit-report">
+                  <span className={`hit-report-state ${fighter.hitReportGate.reportPresent ? 'is-pass' : 'is-fail'}`} title={fighter.hitReportGate.reportPresent ? `Authenticated hit report expires ${fighter.hitReportGate.expiresAt ?? 'soon'}` : 'No authenticated hit report in the active 60-second window'}>
+                    <span aria-hidden="true" />HIT REPORT · {fighter.hitReportGate.status}{fighter.hitReportGate.reportPresent ? ` · ${fighter.hitReportGate.reportCount} ${fighter.hitReportGate.reportCount === 1 ? 'report' : 'reports'}` : ' · NONE'}
+                  </span>
+                  <code title="This guardian’s separately authenticated inbox">GET {fighter.hitReportGate.inboxPath}</code>
+                </div>
                 <div className="fighter-strike-row">
                   {fighter.id === 'superbot' ? <span className="strike-disabled" role="note">No strike permission</span> : !data?.activeAttack ? <p className="strike-waiting" role="status">Waiting for a guardian-authenticated hit report from this site within the last 60 seconds. Heartbeats do not unlock strikes.</p> : <button className={`button strike-button strike-${fighter.id}`} type="button" onClick={() => onStrike(fighter.id as FighterId)} disabled={!operator.isMm || isPending || fighter.stopped} aria-label={`Issue ${strikeLabels[fighter.id as FighterId]} for ${fighter.name} based on the active attack report`}>
                     {isPending ? 'Queuing…' : strikeLabels[fighter.id as FighterId]}
@@ -294,7 +308,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <div className="stop-block"><div className="stop-heading"><p className="section-kicker">MM · EMERGENCY OVERRIDE</p><span>{stoppedAll ? 'GLOBAL STOP ACTIVE' : 'Four stop controls'}</span></div><div className="stop-grid">
             {stopTargets.map(({ id, label, flag }) => {
               const stopped = Boolean(data?.stops[flag])
-              return <button key={id} className={`stop-button stop-${id}${stopped ? ' stop-active' : ''}`} type="button" onClick={() => onStop(id, !stopped)} disabled={!operator.isMm || isPending} aria-pressed={stopped}>{stopped ? `Release ${id === 'all' ? 'all' : id === 'xena' ? 'Xena' : id === 'superbot' ? 'SuperBot' : 'Ruach'}` : label}</button>
+              return <button key={id} className={`stop-button stop-${id}${stopped ? ' stop-active' : ''}`} type="button" onClick={() => onStop(id, !stopped)} disabled={!operator.isMm || isPending} aria-pressed={stopped}>{stopped ? id === 'all' ? 'RELEASE STOP' : `Release ${id === 'xena' ? 'Xena' : id === 'superbot' ? 'SuperBot' : 'Ruach'}` : id === 'all' ? <>GUARDIAN<br />STOP!</> : label}</button>
             })}
           </div></div>
           <p className="stop-caveat">A stop blocks new queued actions only; it does not terminate a running process or stop an offline bot. Keep polling MM while stopped.</p>

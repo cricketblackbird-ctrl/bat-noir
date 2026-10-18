@@ -76,15 +76,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
     dedupingInterval: 10_000,
   })
   const metrics = data?.cloudflare.available ? data.cloudflare.metrics : null
-  const feedStatus = error
-    ? 'REQUEST FAILED'
-    : isLoading && !data
-      ? 'CONNECTING'
-      : !data
-        ? 'STATUS UNKNOWN'
-        : !data.cloudflare.available
-          ? `OFFLINE · ${data.cloudflare.reason.replace(/_/g, ' ')}`
-          : 'LIVE · ACTIVE DATA RECON'
+  const feedStatus = metrics ? 'PASS' : 'FAIL'
 
   return (
     <section id="cloudflare-security-view" className="panel telemetry-panel" aria-labelledby="telemetry-heading">
@@ -94,7 +86,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
           <h2 id="telemetry-heading">Magic Dragons</h2>
         </div>
         <div className="telemetry-controls">
-          <span className={`telemetry-feed-state ${metrics ? 'is-connected' : data?.cloudflare.available === false ? 'is-offline' : ''}`} role="status">
+          <span className={`telemetry-feed-state ${metrics ? 'is-connected' : 'is-offline'}`} role="status">
             <span aria-hidden="true" />{feedStatus}
           </span>
           <button className="telemetry-refresh" type="button" onClick={() => void mutate()} disabled={isValidating} aria-label="Refresh Cloudflare security feed">
@@ -110,7 +102,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
       ) : isLoading && !data ? (
         <p className="telemetry-message" role="status">Connecting to the protected Cloudflare feed…</p>
       ) : data && !data.cloudflare.available ? (
-        <p className="telemetry-message" role="status">Cloudflare feed unavailable: {data.cloudflare.reason.replace(/_/g, ' ')}. Verify the attached Cloudflare connector has Zone Analytics:Read access to the configured zone.</p>
+        <p className="telemetry-message" role="status">Cloudflare check failed. Live security data was not returned. Use Refresh feed to try again.</p>
       ) : metrics ? (
         <>
           <div className="telemetry-metrics" aria-label="Cloudflare aggregate metrics">
