@@ -188,7 +188,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @keyframes auth-light-right { 0% { opacity: 0; transform: translate3d(-480px, .5vh, 0) rotate(1deg); } 8% { opacity: .52; } 35% { opacity: .26; transform: translate3d(24vw, -.6vh, 0) rotate(-.8deg); } 55% { opacity: .46; transform: translate3d(51vw, .4vh, 0) rotate(.5deg); } 79% { opacity: .22; transform: translate3d(79vw, -.7vh, 0) rotate(-.5deg); } 92% { opacity: .4; } 100% { opacity: 0; transform: translate3d(calc(100vw + 110px), .4vh, 0) rotate(1deg); } }
 .auth-card { position: relative; z-index: 1; top: -20px; width: min(100%, 430px); overflow: hidden; border: 1px solid rgb(229 189 104 / 42%); border-radius: 18px; background: linear-gradient(155deg, rgb(27 17 37 / 98%), rgb(13 9 19 / 98%) 70%); box-shadow: 0 24px 80px rgb(0 0 0 / 46%), 0 0 50px rgb(123 63 158 / 16%), 0 0 22px rgb(229 189 104 / 6%), inset 0 1px rgb(255 255 255 / 4%); }
 .auth-card::before { position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, #754a96 0%, #a976c5 25%, #e5bd68 50%, #a976c5 75%, #754a96 100%); content: ""; }
-
 .auth-content { padding: 22px clamp(24px, 7vw, 42px) 28px; }
 .auth-card h1 { margin: 0; color: #f4e8f5; font-family: Georgia, serif; font-size: clamp(26px, 7vw, 32px); font-weight: 400; letter-spacing: .01em; text-align: center; }
 .auth-description { margin: 8px 0 24px; color: #a99bad; font-size: 14px; line-height: 1.5; text-align: center; }

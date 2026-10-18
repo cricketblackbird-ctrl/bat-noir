@@ -58,24 +58,17 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
         return
       }
 
-      const username = String(formData.get('username') ?? '').trim()
+      const key = String(formData.get('key') ?? '').trim()
       const password = String(formData.get('password') ?? '')
-      const email = String(formData.get('email') ?? '').trim()
-      if (mode === 'sign-up' && email.toLowerCase() !== 'cricketblackbird@gmail.com') {
-        setError('Use cricketblackbird@gmail.com for this account.')
-        return
-      }
       const result = mode === 'sign-up'
         ? await authClient.signUp.email({
-            name: username,
-            email,
-            username,
-            displayUsername: username,
+            name: key,
+            email: 'cricketblackbird@gmail.com',
+            username: key,
+            displayUsername: key,
             password,
           })
-        : username.includes('@')
-          ? await authClient.signIn.email({ email: username, password })
-          : await authClient.signIn.username({ username, password })
+        : await authClient.signIn.username({ username: key, password })
 
       if (result.error) throw new Error('Authentication failed')
       router.refresh()
@@ -115,7 +108,7 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
           </h1>
           <p className="auth-description">
             {isCreatingFirstAccount
-              ? 'Use cricketblackbird@gmail.com, then choose a username and password. First-account setup closes after this.'
+              ? 'The first key opens the door. Choose it carefully; this entry seals after setup.'
               : isResetRequest
                 ? 'Reset links are sent only to cricketblackbird@gmail.com, and only if an account is registered with it.'
                 : isChoosingPassword
@@ -127,13 +120,6 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
             <p className="form-error" role="alert">This reset link is missing or expired. Request a new link to continue.</p>
           ) : (
             <form className="auth-form" onSubmit={submit}>
-              {isCreatingFirstAccount && (
-                <div className="auth-field">
-                  <label htmlFor="email">Email</label>
-                  <input id="email" type="email" name="email" autoComplete="email" required maxLength={254} defaultValue="cricketblackbird@gmail.com" />
-                </div>
-              )}
-
               {isResetRequest && (
                 <div className="auth-field">
                   <label htmlFor="reset-email">Account email</label>
@@ -143,16 +129,16 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
 
               {!isResetRequest && !isChoosingPassword && (
                 <div className="auth-field">
-                  <label htmlFor="username">{isCreatingFirstAccount ? 'Username' : 'Username or email'}</label>
+                  <label htmlFor="key">Key</label>
                   <input
-                    id="username"
+                    id="key"
                     type="text"
-                    name="username"
-                    autoComplete={isCreatingFirstAccount ? 'username' : 'username'}
+                    name="key"
+                    autoComplete="username"
                     autoCapitalize="none"
                     required
                     minLength={isCreatingFirstAccount ? 3 : 1}
-                    maxLength={isCreatingFirstAccount ? 30 : 254}
+                    maxLength={30}
                     pattern={isCreatingFirstAccount ? '[A-Za-z0-9_.]+' : undefined}
                     title={isCreatingFirstAccount ? 'Use 3–30 letters, numbers, periods, or underscores.' : undefined}
                   />
