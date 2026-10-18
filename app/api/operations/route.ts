@@ -92,7 +92,11 @@ export async function GET() {
       (id === 'xena' && stopState?.stopXena) ||
       (id === 'superbot' && stopState?.stopSuperbot))
     const heartbeatAgeMs = heartbeat ? observedAt.getTime() - heartbeat.receivedAt.getTime() : null
-    const listenerPass = heartbeatAgeMs !== null && heartbeatAgeMs >= 0 && heartbeatAgeMs <= listenerFreshnessMs
+    const listenerStatus = heartbeatAgeMs === null
+      ? 'WAITING'
+      : heartbeatAgeMs >= 0 && heartbeatAgeMs <= listenerFreshnessMs
+        ? 'PASS'
+        : 'STALE'
 
     return {
       id,
@@ -106,7 +110,7 @@ export async function GET() {
       lastSeen: event?.receivedAt ?? null,
       signal: event ? interpretSignal(event) : null,
       stopped,
-      listenerStatus: listenerPass ? 'PASS' : 'FAIL',
+      listenerStatus,
       lastInboxPoll: heartbeat?.receivedAt ?? null,
       heartbeatAgeMs,
       credentialBoundary: getFighterCredentialStatus(id),
@@ -122,7 +126,7 @@ export async function GET() {
     lastInboxPoll: fighter.lastInboxPoll,
     credentialBoundary: fighter.credentialBoundary,
   }]))
-  const systemHealth = fighterRows.every((fighter) => fighter.listenerStatus === 'PASS') ? 'PASS' : 'FAIL'
+  const systemHealth = fighterRows.every((fighter) => fighter.listenerStatus === 'PASS') ? 'PASS' : 'ATTENTION'
 
   return NextResponse.json({
     operator: { name: session.user.name, email: session.user.email, isMm },

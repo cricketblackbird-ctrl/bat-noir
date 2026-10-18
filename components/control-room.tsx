@@ -1,7 +1,7 @@
 'use client'
 
 import { Shield } from 'lucide-react'
-import { FormEvent, useMemo, useState, useTransition } from 'react'
+import { FormEvent, KeyboardEvent, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
@@ -16,8 +16,9 @@ type Fighter = {
   status: string
   role: string
   health: number | null
-  listenerStatus: 'PASS' | 'FAIL'
+  listenerStatus: 'PASS' | 'WAITING' | 'STALE'
   lastInboxPoll: string | null
+  heartbeatAgeMs: number | null
   credentialBoundary: string
   hitsTaken: number | null
   hitCapacity: number | null
@@ -37,6 +38,9 @@ type Operations = {
   telemetryCount24h: number
   observedAt: string
 }
+
+type DashboardView = 'dashboard' | 'tester' | 'intel'
+const dashboardViews: DashboardView[] = ['dashboard', 'tester', 'intel']
 
 type MagicInsights = {
   available: boolean
@@ -83,9 +87,15 @@ function formatAge(date: string | null) {
   return seconds < 60 ? 'Just reported' : `${Math.floor(seconds / 60)}m ago`
 }
 
-function StatusDot({ stopped, listenerStatus }: { stopped: boolean; listenerStatus: 'PASS' | 'FAIL' }) {
-  const label = `MM poll ${listenerStatus}${stopped ? ' · execution stopped' : ''}`
-  return <span className={`status-dot${listenerStatus === 'PASS' ? ' is-live' : ' is-stopped'}`}><span aria-hidden="true" />{label}</span>
+function StatusDot({ stopped, listenerStatus, heartbeatAgeMs }: { stopped: boolean; listenerStatus: 'PASS' | 'WAITING' | 'STALE'; heartbeatAgeMs: number | null }) {
+  const labels = {
+    PASS: 'MM heartbeat · live',
+    WAITING: 'Waiting for heartbeat',
+    STALE: 'Heartbeat stale',
+  }
+  const age = heartbeatAgeMs === null ? 'No authenticated heartbeat in the last 24 hours' : `Last authenticated heartbeat ${Math.max(0, Math.floor(heartbeatAgeMs / 1000))} seconds ago`
+  const label = `${labels[listenerStatus]}${stopped ? ' · execution stopped' : ''}`
+  return <span className={`status-dot is-${listenerStatus.toLowerCase()}`} title={age}><span aria-hidden="true" />{label}</span>
 }
 
 export function ControlRoom({ operator }: { operator: Operations['operator'] & { id: string } }) {
@@ -97,10 +107,25 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
   const [isPending, startTransition] = useTransition()
   const [strikeToast, setStrikeToast] = useState<{ key: number; fighterId: string; side: 'left' | 'right' } | null>(null)
   const [showPrivacy, setShowPrivacy] = useState(false)
-  const [activeView, setActiveView] = useState<'dashboard' | 'tester' | 'intel'>('dashboard')
+  const [activeView, setActiveView] = useState<DashboardView>('dashboard')
   const stoppedAll = Boolean(data?.stops.stopAll)
   const guards = data?.fighters ?? []
   const recentSignals = useMemo(() => guards.filter((fighter) => fighter.signal).length, [guards])
+
+  function handleDashboardTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, current: DashboardView) {
+    const index = dashboardViews.indexOf(current)
+    let nextIndex: number
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % dashboardViews.length
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + dashboardViews.length) % dashboardViews.length
+    else if (event.key === 'Home') nextIndex = 0
+    else if (event.key === 'End') nextIndex = dashboardViews.length - 1
+    else return
+
+    event.preventDefault()
+    const nextView = dashboardViews[nextIndex]
+    setActiveView(nextView)
+    requestAnimationFrame(() => document.getElementById(`view-tab-${nextView}`)?.focus())
+  }
 
   function onRunbook(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -147,27 +172,25 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
     <main className="command-page">
       <header className="topbar">
         <div className="brand-lockup">
-          <img className="brand-logo" src="/icon.svg" alt="Montemader logo" />
+          <span className="brand-mm-mark" aria-hidden="true">MM</span>
           <div>
             <h1 className="brand-name">Montemader.com</h1>
             <p className="brand-subtitle">DEFENSE COMMAND GRID</p>
           </div>
         </div>
         <div className="topbar-right">
-          <span className="mm-pill">{operator.isMm ? 'MM · FULL CONTROL' : 'READ ONLY'}</span>
-          <span className="operator-initials" aria-label={`Signed in as ${operator.name}`}>{operator.isMm ? 'MM' : operator.name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>
           <button className="signout-button" type="button" onClick={() => authClient.signOut().then(() => window.location.reload())}>Sign out</button>
         </div>
       </header>
 
-      <nav className="dashboard-nav" aria-label="Defense dashboard views">
-        <button className={`view-tab${activeView === 'dashboard' ? ' is-active' : ''}`} type="button" aria-pressed={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')}>Dashboard</button>
-        <button className={`view-tab${activeView === 'tester' ? ' is-active' : ''}`} type="button" aria-pressed={activeView === 'tester'} onClick={() => setActiveView('tester')}>Tester &amp; capabilities</button>
-        <button className={`view-tab${activeView === 'intel' ? ' is-active' : ''}`} type="button" aria-pressed={activeView === 'intel'} onClick={() => setActiveView('intel')}>Intel &amp; activity</button>
+      <nav className="dashboard-nav" role="tablist" aria-label="Defense dashboard views">
+        <button id="view-tab-dashboard" className={`view-tab${activeView === 'dashboard' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'dashboard'} aria-controls="view-panel-dashboard" tabIndex={activeView === 'dashboard' ? 0 : -1} onClick={() => setActiveView('dashboard')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'dashboard')}>Dashboard</button>
+        <button id="view-tab-tester" className={`view-tab${activeView === 'tester' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'tester'} aria-controls="view-panel-tester" tabIndex={activeView === 'tester' ? 0 : -1} onClick={() => setActiveView('tester')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'tester')}>Tester &amp; capabilities</button>
+        <button id="view-tab-intel" className={`view-tab${activeView === 'intel' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'intel'} aria-controls="view-panel-intel" tabIndex={activeView === 'intel' ? 0 : -1} onClick={() => setActiveView('intel')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'intel')}>Intel &amp; activity</button>
       </nav>
 
       <div className="dashboard-views">
-        <section className="view-panel dashboard-view" aria-label="Dashboard" hidden={activeView !== 'dashboard'}>
+        <section id="view-panel-dashboard" className="view-panel dashboard-view" role="tabpanel" aria-labelledby="view-tab-dashboard" tabIndex={0} hidden={activeView !== 'dashboard'}>
           <SiteHealthPanel canTestSms={operator.isMm} />
           {!operator.isMm && <div className="readonly-notice" role="status">This account can read live reports. MM alone can issue or stop directives.</div>}
           <div className="control-grid dashboard-grid">
@@ -176,7 +199,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <div className="fighter-list">
             {guards.map((fighter) => (
               <article className={`fighter-card fighter-${fighter.id}`} key={fighter.id}>
-                <div className="fighter-topline"><div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? <Shield className="xena-shield-icon" aria-hidden="true" /> : 'S'}</div><div className="fighter-heading"><h3>{fighter.name}</h3><StatusDot stopped={fighter.stopped} listenerStatus={fighter.listenerStatus} /></div></div>
+                <div className="fighter-topline"><div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? <Shield className="xena-shield-icon" aria-hidden="true" /> : 'S'}</div><div className="fighter-heading"><h3>{fighter.name}</h3><StatusDot stopped={fighter.stopped} listenerStatus={fighter.listenerStatus} heartbeatAgeMs={fighter.heartbeatAgeMs} /></div></div>
                 <p className="fighter-role">{fighter.role}</p>
                 {fighter.health === null ? <p className="health-reading">Awaiting a signed report</p> : <p className="health-reading"><span>{fighter.health}%</span> health · {fighter.hitsTaken}/{fighter.hitCapacity} hits</p>}
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
@@ -221,11 +244,11 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           </div>
         </section>
 
-        <section className="view-panel tester-view" aria-label="Tester and capabilities" hidden={activeView !== 'tester'}>
+        <section id="view-panel-tester" className="view-panel tester-view" role="tabpanel" aria-labelledby="view-tab-tester" tabIndex={0} hidden={activeView !== 'tester'}>
           <PlatformConsole />
         </section>
 
-        <section className="view-panel intel-view" aria-label="Intel and activity" hidden={activeView !== 'intel'}>
+        <section id="view-panel-intel" className="view-panel intel-view" role="tabpanel" aria-labelledby="view-tab-intel" tabIndex={0} hidden={activeView !== 'intel'}>
           <KeyChest userId={operator.id} />
           <div className="control-grid intel-grid">
         <section className="panel magic-panel" aria-labelledby="magic-heading">

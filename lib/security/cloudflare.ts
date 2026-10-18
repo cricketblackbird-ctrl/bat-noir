@@ -1,7 +1,26 @@
+import 'server-only'
 import { getToken } from '@vercel/connect'
 import { SITE_SCOPE } from '@/lib/site-scope'
 
 const cloudflareConnector = 'cloudflare/montemader-security-telemetry'
+
+export type CloudflareAnalyticsFailure =
+  | 'zone_not_configured'
+  | 'connect_token_unavailable'
+  | 'permission_denied'
+  | 'query_rejected'
+  | 'zone_not_found'
+  | 'rate_limited'
+  | 'request_timeout'
+  | 'upstream_unavailable'
+  | 'unknown_error'
+
+export class CloudflareAnalyticsError extends Error {
+  constructor(readonly reason: CloudflareAnalyticsFailure) {
+    super(reason)
+    this.name = 'CloudflareAnalyticsError'
+  }
+}
 const blockedActions = new Set(['block'])
 const challengedActions = new Set(['challenge', 'jschallenge', 'managed_challenge'])
 
@@ -43,11 +62,16 @@ export type CloudflareSnapshot = {
 
 export async function getCloudflareSnapshot(now = new Date()): Promise<CloudflareSnapshot> {
   const zoneId = process.env.CLOUDFLARE_ZONE_ID
-  if (!zoneId) throw new Error('Cloudflare zone is not configured.')
+  if (!zoneId) throw new CloudflareAnalyticsError('zone_not_configured')
 
-  const token = await getToken(cloudflareConnector, {
-    subject: { type: 'app' },
-  })
+  let token: string
+  try {
+    token = await getToken(cloudflareConnector, {
+      subject: { type: 'app' },
+    })
+  } catch {
+    throw new CloudflareAnalyticsError('connect_token_unavailable')
+  }
 
   const recent = new Date(now.getTime() - 60_000).toISOString()
   const day = new Date(now.getTime() - 24 * 60 * 60_000).toISOString()
@@ -65,22 +89,43 @@ export async function getCloudflareSnapshot(now = new Date()): Promise<Cloudflar
     }
   }`
 
-  const response = await fetch('https://api.cloudflare.com/client/v4/graphql', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ query }),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(12_000),
-  })
-  if (!response.ok) throw new Error(`Cloudflare analytics returned HTTP ${response.status}.`)
+  let response: Response
+  try {
+    response = await fetch('https://api.cloudflare.com/client/v4/graphql', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(12_000),
+    })
+  } catch (error) {
+    throw new CloudflareAnalyticsError(error instanceof Error && error.name === 'TimeoutError'
+      ? 'request_timeout'
+      : 'upstream_unavailable')
+  }
 
-  const result = await response.json() as CloudflareGraphqlResponse
-  if (result.errors?.length) throw new Error('Cloudflare analytics rejected the security query.')
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) throw new CloudflareAnalyticsError('permission_denied')
+    if (response.status === 429) throw new CloudflareAnalyticsError('rate_limited')
+    throw new CloudflareAnalyticsError('upstream_unavailable')
+  }
+
+  let result: CloudflareGraphqlResponse
+  try {
+    result = await response.json() as CloudflareGraphqlResponse
+  } catch {
+    throw new CloudflareAnalyticsError('query_rejected')
+  }
+  if (result.errors?.length) {
+    const errorText = result.errors.map((error) => error.message ?? '').join(' ').toLowerCase()
+    const permissionError = /access denied|permission|not authorized|unauthori[sz]ed|forbidden|scope/.test(errorText)
+    throw new CloudflareAnalyticsError(permissionError ? 'permission_denied' : 'query_rejected')
+  }
   const zone = result.data?.viewer?.zones?.[0]
-  if (!zone) throw new Error('Cloudflare returned no analytics for the configured zone.')
+  if (!zone) throw new CloudflareAnalyticsError('zone_not_found')
 
   const requestGroups = zone.httpRequests1hGroups ?? []
   const firewallGroups = zone.firewallEventsAdaptiveGroups ?? []

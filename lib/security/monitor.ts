@@ -2,12 +2,18 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { securityAlertIncidents } from '@/lib/db/schema'
 import { SITE_SCOPE } from '@/lib/site-scope'
-import { getCloudflareSnapshot, getMonitoredSiteUrl } from '@/lib/security/cloudflare'
+import { CloudflareAnalyticsError, getCloudflareSnapshot, getMonitoredSiteUrl } from '@/lib/security/cloudflare'
 import { sendEmergencySms } from '@/lib/security/sms'
 
 export async function getSiteHealthSnapshot() {
+  const cloudflareStatus = getCloudflareSnapshot()
+    .then((metrics) => ({ available: true as const, metrics }))
+    .catch((error: unknown) => ({
+      available: false as const,
+      reason: error instanceof CloudflareAnalyticsError ? error.reason : 'unknown_error' as const,
+    }))
   const [cloudflare, activeIncident] = await Promise.all([
-    getCloudflareSnapshot(),
+    cloudflareStatus,
     db.select().from(securityAlertIncidents)
       .where(and(eq(securityAlertIncidents.siteScope, SITE_SCOPE), eq(securityAlertIncidents.status, 'active')))
       .orderBy(desc(securityAlertIncidents.detectedAt)).limit(1)
@@ -30,7 +36,7 @@ export async function getSiteHealthSnapshot() {
 
   return {
     domain: SITE_SCOPE,
-    capturedAt: cloudflare.capturedAt,
+    capturedAt: cloudflare.available ? cloudflare.metrics.capturedAt : new Date().toISOString(),
     cloudflare,
     site,
     activeIncident: activeIncident ? {

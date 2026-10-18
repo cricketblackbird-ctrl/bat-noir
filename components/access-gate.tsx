@@ -84,8 +84,18 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
   const isCreatingFirstAccount = allowInitialSignup && mode === 'sign-up'
   const isResetRequest = mode === 'forgot-password'
   const isChoosingPassword = mode === 'reset-password'
-  const isSignIn = mode === 'sign-in'
   const hasResetToken = Boolean(resetToken)
+  const authTabs: { id: AccessMode; label: string }[] = [
+    { id: 'sign-in', label: 'Sign in' },
+    ...(allowInitialSignup ? [{ id: 'sign-up' as const, label: 'Create key' }] : []),
+    { id: 'forgot-password', label: 'Reset password' },
+  ]
+
+  function selectMode(nextMode: AccessMode) {
+    setError('')
+    setNotice('')
+    setMode(nextMode)
+  }
 
   return (
     <main className="auth-screen">
@@ -116,10 +126,55 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
                   : 'Good to have you back.'}
           </p>
 
+          {!isChoosingPassword && (
+            <div className="auth-tabs" role="tablist" aria-label="Account access">
+              {authTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  id={`auth-tab-${tab.id}`}
+                  className="auth-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === tab.id}
+                  aria-controls="auth-tab-panel"
+                  tabIndex={mode === tab.id ? 0 : -1}
+                  onClick={() => selectMode(tab.id)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+                    event.preventDefault()
+                    const tabs = Array.from(
+                      event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [],
+                    )
+                    const currentIndex = tabs.indexOf(event.currentTarget)
+                    const offset = event.key === 'ArrowRight' ? 1 : -1
+                    const nextTab = tabs[(currentIndex + offset + tabs.length) % tabs.length]
+                    nextTab?.focus()
+                    nextTab?.click()
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {isResetRequest && (
+            <p className="auth-recovery-help">
+              A reset link is available after your first key is created. If you have not set it up yet, choose Create key above.
+            </p>
+          )}
+
           {isChoosingPassword && !hasResetToken ? (
             <p className="form-error" role="alert">This reset link is missing or expired. Request a new link to continue.</p>
           ) : (
-            <form className="auth-form" onSubmit={submit}>
+            <form
+              className="auth-form"
+              onSubmit={submit}
+              role={isChoosingPassword ? undefined : 'tabpanel'}
+              id={isChoosingPassword ? undefined : 'auth-tab-panel'}
+              aria-labelledby={isChoosingPassword ? undefined : `auth-tab-${mode}`}
+              tabIndex={isChoosingPassword ? undefined : 0}
+            >
               {isResetRequest && (
                 <div className="auth-field">
                   <label htmlFor="reset-email">Account email</label>
@@ -193,27 +248,9 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
             </form>
           )}
 
-          {isSignIn && (
-            <button className="text-button auth-secondary" type="button" onClick={() => { setError(''); setNotice(''); setMode('forgot-password') }}>
-              Forgot password?
-            </button>
-          )}
-          {(isResetRequest || isChoosingPassword) && (
-            <button className="text-button auth-secondary" type="button" onClick={() => { setError(''); setNotice(''); setMode('sign-in') }}>
+          {isChoosingPassword && (
+            <button className="text-button auth-secondary" type="button" onClick={() => selectMode('sign-in')}>
               Back to sign in
-            </button>
-          )}
-          {allowInitialSignup && !isResetRequest && !isChoosingPassword && (
-            <button
-              className="text-button auth-secondary"
-              type="button"
-              onClick={() => {
-                setError('')
-                setNotice('')
-                setMode(mode === 'sign-up' ? 'sign-in' : 'sign-up')
-              }}
-            >
-              {isCreatingFirstAccount ? 'Back to sign in' : 'Set up the first account'}
             </button>
           )}
         </section>

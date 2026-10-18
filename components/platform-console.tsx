@@ -34,8 +34,9 @@ type ConsoleSnapshot = {
     hitsTaken: number | null
     hitCapacity: number | null
     lastSeen: string | null
-    listenerStatus: 'PASS' | 'FAIL'
+    listenerStatus: 'PASS' | 'WAITING' | 'STALE'
     lastInboxPoll: string | null
+    heartbeatAgeMs: number | null
     credentialBoundary: string
     signal: { label: string; confidence: string } | null
     stopped: boolean
@@ -60,8 +61,8 @@ const topicLabels: Record<StreamTopic, string> = {
 
 const topicDescriptions: Record<StreamTopic, string> = {
   all: 'Capture current authenticated status, listener heartbeats, signal interpretations, and the directive queue.',
-  health: 'Capture reported health, hit counts, and MM inbox-listener PASS/FAIL for each fighter.',
-  safety: 'Capture emergency stop states and the mandatory MM-listening PASS/FAIL rule. Stops never authorize a bot to stop listening.',
+  health: 'Capture reported health, hit counts, and the fresh, waiting, or stale MM heartbeat for each fighter.',
+  safety: 'Capture emergency stop states and the mandatory MM-listening heartbeat rule. Stops never authorize a bot to stop listening.',
   security: 'Capture authenticated signal interpretations, active-attack correlation, and credential boundaries. Aggregate Cloudflare traffic and firewall counts are shown in the live site-health panel; no per-visitor IP history is stored.',
   clarity: 'Capture observation time, report count, freshness, and whether a signal is reported or heuristic.',
 }
@@ -71,7 +72,7 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
     `BOT🍓CONTROL · ${topicLabels[topic].toUpperCase()}`,
     `Domain: ${snapshot.domain}`,
     `Observed: ${new Date(snapshot.observedAt).toISOString()}`,
-    `System health (listener contract): ${snapshot.systemHealth}`,
+    `Listener contract status: ${snapshot.systemHealth}`,
     `Authenticated telemetry reports in the last 24 hours: ${snapshot.telemetryCount24h}`,
     '',
     '[ATTACK-GATED INBOX ROUTING]',
@@ -100,7 +101,7 @@ function formatSnapshot(snapshot: ConsoleSnapshot, topic: StreamTopic) {
       `Emergency stops: all=${Boolean(snapshot.stops.stopAll)}, Ruach=${Boolean(snapshot.stops.stopRuach)}, Xena=${Boolean(snapshot.stops.stopXena)}, SuperBot=${Boolean(snapshot.stops.stopSuperbot)}`,
     )
     for (const fighter of snapshot.fighters) lines.push(`${fighter.name}: MM inbox listening ${fighter.listenerStatus}; execution ${fighter.stopped ? 'stopped' : 'not stopped'}`)
-    lines.push('PASS requires a fresh authenticated listener_heartbeat (15 seconds or newer). FAIL means the heartbeat is missing, expired, or invalid.')
+    lines.push('PASS means a signed listener_heartbeat arrived within 15 seconds. WAITING means none was observed in the last 24 hours; STALE means the last heartbeat is older than 15 seconds.')
   }
 
   if (topic === 'all' || topic === 'security') {
@@ -188,9 +189,10 @@ export function PlatformConsole() {
           <p className="action-feedback" role="status" aria-live="polite">{notice}</p>
         </div>
         <aside className="platform-map" aria-labelledby="platform-map-heading">
-          <div className="map-heading"><span className="section-kicker">HOW TO USE THIS PLATFORM</span><span className="pass-fail">PASS / FAIL · REQUIRED</span></div>
+            <div className="map-heading"><span className="section-kicker">HOW TO USE THIS PLATFORM</span><span className="pass-fail">LIVE STATUS · REQUIRED</span></div>
+
           <h3 id="platform-map-heading">Platform map</h3>
-          <p className="map-intro">Each dropdown selection controls the text captured in column one. Missing or expired data is a fail—not a pass.</p>
+          <p className="map-intro">Each dropdown selection controls the text captured in column one. Missing or expired heartbeats stay visible as waiting or stale; they are never shown as live.</p>
           <div className="guide-block">
             <h4>Queue a defensive combo</h4>
             <p>Choose one fighter to queue its assigned response for montemader.com. A queued combo is not proof that traffic was blocked; verify a completion report and edge controls separately.</p>
@@ -199,7 +201,7 @@ export function PlatformConsole() {
             <h4>Protect the site</h4>
             <p>Live aggregate request and firewall counts come from Cloudflare. Attack reports still enter fighter inboxes separately; this app does not proxy traffic, hide the origin, or change edge firewall rules.</p>
           </div>
-          <p className="listener-contract"><strong>Listener rule:</strong> PASS requires a fresh authenticated heartbeat. FAIL if it is missing or older than 15 seconds—even during an execution stop. This status is agent-reported, not proof of future polling.</p>
+          <p className="listener-contract"><strong>Heartbeat rule:</strong> PASS requires a fresh authenticated heartbeat. Missing or older-than-15-second heartbeats show as waiting or stale—even during an execution stop. Each agent sends <code>POST /api/telemetry</code> with <code>eventType: &quot;listener_heartbeat&quot;</code>, its <code>siteScope</code>, health, and hit counts. Use that fighter&apos;s existing bearer credential server-side; this console never displays tokens.</p>
         </aside>
       </div>
     </section>
