@@ -44,7 +44,7 @@ export async function GET() {
 
   const isMm = await claimOrReadMmAuthority(session.user.id)
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  const [events, heartbeats, commands, combatEvents, controls, stops, telemetryTotals, activeAttack] = await Promise.all([
+  const [events, heartbeats, commands, combatEvents, recentTelemetry, controls, stops, telemetryTotals, activeAttack] = await Promise.all([
     db.selectDistinctOn([dragonTelemetryRecords.dragonId]).from(dragonTelemetryRecords)
       .where(and(
         gte(dragonTelemetryRecords.receivedAt, cutoff),
@@ -66,6 +66,11 @@ export async function GET() {
         inArray(dragonTelemetryRecords.eventType, ['combat_strike', 'strike_completed', 'strike_failed']),
         sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
       )).orderBy(desc(dragonTelemetryRecords.receivedAt)).limit(10),
+    db.select({ id: dragonTelemetryRecords.id, dragonId: dragonTelemetryRecords.dragonId, eventType: dragonTelemetryRecords.eventType, healthPercent: dragonTelemetryRecords.healthPercent, hitsTaken: dragonTelemetryRecords.hitsTaken, hitCapacity: dragonTelemetryRecords.hitCapacity, payload: dragonTelemetryRecords.payload, receivedAt: dragonTelemetryRecords.receivedAt })
+      .from(dragonTelemetryRecords).where(and(
+        gte(dragonTelemetryRecords.receivedAt, cutoff),
+        sql`(${dragonTelemetryRecords.payload} ->> 'siteScope') = ${SITE_SCOPE}`,
+      )).orderBy(desc(dragonTelemetryRecords.receivedAt)).limit(8),
     db.select().from(dragonControlState),
     db.select().from(dragonEmergencyStop).where(eq(dragonEmergencyStop.singleton, true)).limit(1),
     db.select({ total: count() }).from(dragonTelemetryRecords)
@@ -152,6 +157,21 @@ export async function GET() {
       hitCapacity: event.hitCapacity,
       receivedAt: event.receivedAt.toISOString(),
     })),
+    recentTelemetry: recentTelemetry.map((event) => {
+      const fighterId = canonicalFighterId(event.dragonId)
+      return {
+        id: String(event.id),
+        fighterId,
+        fighterName: fighterNames[fighterId] ?? event.dragonId,
+        eventType: event.eventType,
+        actionType: event.payload.actionType ?? null,
+        status: event.payload.status ?? null,
+        healthPercent: event.healthPercent,
+        hitsTaken: event.hitsTaken,
+        hitCapacity: event.hitCapacity,
+        receivedAt: event.receivedAt.toISOString(),
+      }
+    }),
     telemetryCount24h: telemetryTotals[0]?.total ?? 0,
     observedAt: observedAt.toISOString(),
   }, { headers: { 'Cache-Control': 'private, no-store' } })

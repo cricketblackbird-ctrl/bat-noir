@@ -10,6 +10,7 @@ import { PlatformConsole } from '@/components/platform-console'
 import { BrowserEnvironmentPanel } from '@/components/browser-environment-panel'
 import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
 import { SiteHealthPanel } from '@/components/site-health-panel'
+import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
 type Fighter = {
@@ -38,6 +39,7 @@ type Operations = {
   stops: { stopRuach?: boolean; stopXena?: boolean; stopSuperbot?: boolean; stopAll?: boolean; updatedAt?: string | null }
   commands: Array<{ id: string; fighterId: string; fighterName: string; strategy: string; formation: string; threatType: string; status: string; createdAt: string }>
   combatEvents: Array<{ id: string; fighterId: string; fighterName: string; eventType: string; actionType: string | null; status: string | null; threatSignature: string | null; healthPercent: number; hitsTaken: number; hitCapacity: number; receivedAt: string }>
+  recentTelemetry: Array<{ id: string; fighterId: string; fighterName: string; eventType: string; actionType: string | null; status: string | null; healthPercent: number; hitsTaken: number; hitCapacity: number; receivedAt: string }>
   telemetryCount24h: number
   observedAt: string
 }
@@ -214,6 +216,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         <section id="view-panel-dashboard" className="view-panel dashboard-view" role="tabpanel" aria-labelledby="view-tab-dashboard" tabIndex={0} hidden={activeView !== 'dashboard'}>
           <SiteHealthPanel />
           {!operator.isMm && <div className="readonly-notice" role="status">This account can read live reports. MM alone can issue or stop directives.</div>}
+          <TelemetryPipelineCard snapshot={data} isLoading={!data && !error} hasError={Boolean(error)} />
           <div className="control-grid dashboard-grid">
         <section className="panel fighter-panel" aria-labelledby="fighters-heading">
           <div className="panel-heading"><div><p className="section-kicker">THREE GUARDIANS · SEPARATE STRENGTHS</p><h2 id="fighters-heading">Fighter status</h2></div><span className="report-count">{recentSignals} with recent signals</span></div>
