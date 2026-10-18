@@ -173,3 +173,19 @@ export const dragonRuleRevisions = pgTable('dragon_rule_revisions', {
   createdBy: text('created_by').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const dnsHistory = pgTable('dns_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  hostname: text('hostname').notNull(),
+  observedAt: timestamp('observed_at', { withTimezone: true }).notNull().defaultNow(),
+  source: text('source').notNull().default('dns-resolver'),
+  status: text('status').notNull(),
+  answers: jsonb('answers').$type<Array<{ type: string; value: string; ttl?: number }>>().notNull().default([]),
+  error: text('error'),
+}, (table) => [index('idx_dns_history_hostname_observed_at').on(table.hostname, table.observedAt.desc())])
+
+export const dnsMonitorSettings = pgTable('dns_monitor_settings', {
+  hostname: text('hostname').primaryKey(),
+  enabled: boolean('enabled').notNull().default(false),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})

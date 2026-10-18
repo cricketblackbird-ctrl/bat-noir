@@ -46,7 +46,9 @@ Checks run on 2026-10-18:
 
 ## Existing data persistence and new intake
 
-The live Neon schema already contains `dragon_telemetry_records`, `telemetry_events`, `platform_metrics`, `magic_dragon_insights`, `security_alert_incidents`, and `dragon_rule_revisions`. The current Cloudflare panel fetches aggregate zone analytics on demand; it does not currently archive each response as history. Avoid duplicating tables until each incoming stream and its required retention, granularity, and source are specified. No new data tables or migrations have been applied for DNS or Cloudflare intake yet.
+The live Neon schema contains `dragon_telemetry_records`, `telemetry_events`, `platform_metrics`, `magic_dragon_insights`, `security_alert_incidents`, `dragon_rule_revisions`, `dns_history`, and `dns_monitor_settings`. The Cloudflare panel continues to fetch aggregate zone analytics on demand; those results are not archived as history.
+
+The protected DNS history panel checks `montemader.com` A records and nameservers with the server resolver about once a minute while the signed-in operator has the panel open and capture is enabled. It stores no visitor IPs or WAF events, never changes DNS or firewall settings, and retains at most 500 timestamped checks per hostname. The toggle persists in `dns_monitor_settings`; DNS answers and resolver status are in `dns_history`. New checks are rate-limited to one per minute per hostname.
 
 ## Firewall IP Access Rules
 

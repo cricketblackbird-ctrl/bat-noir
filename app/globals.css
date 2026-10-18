@@ -241,6 +241,41 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .telemetry-heartbeat.is-waiting, .telemetry-heartbeat.is-stale { color: #aa97b1; }
 .telemetry-incident { margin: 8px 0 0; border: 1px solid rgb(199 75 158 / 43%); border-radius: 6px; padding: 7px 9px; color: #eac9e2; font-size: 9px; }
 .telemetry-updated, .telemetry-caveat { margin: 7px 0 0; color: #8d7c97; font-size: 8px; line-height: 1.4; }
+.dns-history-card { display: flex; min-width: 0; flex-direction: column; gap: 8px; margin-top: 10px; border: 1px solid rgb(123 63 158 / 28%); border-radius: 8px; padding: 10px; background: rgb(12 8 17 / 55%); }
+.dns-history-header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; }
+.dns-history-header h3 { margin: 3px 0 0; color: #ead6e9; font-size: 12px; font-weight: 600; }
+.dns-history-header .section-kicker { margin: 0; color: #b99bc5; font-size: 8px; letter-spacing: .1em; }
+.dns-history-toggle { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 7px; border: 1px solid rgb(184 145 196 / 42%); border-radius: 999px; padding: 5px 10px; background: rgb(32 21 39 / 80%); color: #ead6e9; cursor: pointer; font-size: 10px; }
+.dns-history-toggle:disabled { cursor: wait; opacity: .65; }
+.dns-history-toggle > span { width: 9px; height: 9px; border-radius: 50%; background: #8b7b91; }
+.dns-history-toggle[aria-checked="true"] > span { background: #72d8ac; box-shadow: 0 0 0 3px rgb(114 216 172 / 14%); }
+.dns-history-toggle:focus-visible, .dns-history-details summary:focus-visible { outline: 2px solid #d6a9f2; outline-offset: 3px; }
+.dns-history-explanation, .dns-history-state { margin: 0; color: #a493ad; font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.dns-history-status { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; color: #b9a9c1; font-size: 9px; }
+.dns-history-status > span:last-child { margin-left: auto; font-variant-numeric: tabular-nums; }
+.dns-history-dot { width: 7px; height: 7px; border-radius: 50%; background: #8b7b91; }
+.dns-history-dot.is-on { background: #72d8ac; }
+.dns-history-list { display: flex; max-height: 220px; min-height: 54px; flex-direction: column; gap: 0; overflow-y: auto; overflow-x: hidden; overflow-anchor: none; scrollbar-gutter: stable; margin: 0; padding: 0 4px 0 0; list-style: none; }
+.dns-history-list li { display: grid; min-width: 0; grid-template-columns: 122px 44px minmax(0, 1fr); align-items: start; gap: 8px; border-bottom: 1px solid rgb(123 63 158 / 15%); padding: 7px 2px; }
+.dns-history-list time { color: #9e8daa; font-size: 9px; font-variant-numeric: tabular-nums; }
+.dns-history-result { color: #c8b4d1; font-size: 8px; text-transform: uppercase; }
+.dns-history-result.is-ok { color: #72d8ac; }
+.dns-history-result.is-partial { color: #f2cd82; }
+.dns-history-result.is-error { color: #f08c96; }
+.dns-history-answers { display: flex; min-width: 0; flex-direction: column; gap: 3px; color: #c9b6cf; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; overflow-wrap: anywhere; word-break: break-word; }
+.dns-history-answers b { color: #dfc3ea; font-weight: 600; }
+.dns-history-empty { display: block !important; color: #8d7b97; font-size: 9px; line-height: 1.5; }
+.dns-history-details { color: #a493ad; font-size: 9px; line-height: 1.5; }
+.dns-history-details summary { width: fit-content; color: #d9bfdd; cursor: pointer; font-weight: 600; }
+.dns-history-details p { margin: 6px 0 0; max-width: 76ch; overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .dns-history-header { align-items: flex-start; }
+  .dns-history-header h3 { overflow-wrap: anywhere; }
+  .dns-history-list li { grid-template-columns: minmax(0, 1fr) auto; }
+  .dns-history-list time { grid-column: 1; }
+  .dns-history-result { grid-column: 2; grid-row: 1; }
+  .dns-history-answers { grid-column: 1 / -1; }
+}
 .heart-footer { position: relative; display: flex; flex: 0 0 34px; align-items: center; justify-content: center; gap: 7px; border-top: 1px solid rgb(123 63 158 / 20%); overflow: hidden; }
 .heart-phrase { position: relative; z-index: 1; max-width: min(78vw, 720px); padding: 4px 3px; color: #d6c0d9; font-family: 'Palatino Linotype', 'Book Antiqua', Georgia, serif; font-size: clamp(11px, calc(1vw + 2px), 14px); font-style: italic; font-weight: 400; letter-spacing: .025em; line-height: 1.25; text-align: center; text-shadow: 0 0 12px rgb(172 104 170 / 28%); }
 .freedom-word { position: relative; display: inline-block; color: #efc8e8; font-family: 'Palatino Linotype', 'Book Antiqua', Georgia, serif; font-size: 16px; font-style: italic; letter-spacing: .12em; }

@@ -1,6 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
+import { DnsHistoryPanel } from '@/components/dns-history-panel'
 
 type FighterHeartbeat = {
   id: string
@@ -175,6 +176,7 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
       ) : null}
 
       <p className="telemetry-caveat">These are Cloudflare-reported aggregates, not proof of attacker identity. Firewall groups are limited to the results returned by the current Cloudflare query; this is not a raw event log. Defensive actions remain within Cloudflare&apos;s existing edge controls.</p>
+      <DnsHistoryPanel />
     </section>
   )
 }
