@@ -214,6 +214,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
   const canCapture = topic === 'website' ? websiteIsFresh : snapshotIsFresh
   const cloudflareMetrics = website?.cloudflare.available ? website.cloudflare.metrics : null
   const clockText = clockNow ? militaryClockFormat.format(clockNow) : '--:--:--'
+  const isClockReady = clockNow !== null
 
   useEffect(() => {
     const tick = () => setClockNow(new Date())
@@ -312,7 +313,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
         <div className="console-topbar-tools">
           <div className="live-clock-block">
             <span className="live-clock-label">CENTRAL · 24H</span>
-            <time className="live-clock" role="timer" aria-label={`Central time, 24-hour clock: ${clockText}`} dateTime={clockNow?.toISOString()}>
+            <time className="live-clock" role="timer" aria-label={isClockReady ? `Central time, 24-hour clock: ${clockText}` : 'Central time, 24-hour clock loading'} dateTime={clockNow?.toISOString()}>
               <span>{clockText.slice(0, 6)}</span><span className="live-clock-seconds-stack" aria-hidden="true">
                 {secondsTransition.previous && <span key={`previous-${secondsTransition.current}`} className="live-clock-second is-fading-out">{secondsTransition.previous}</span>}
                 <span key={`current-${secondsTransition.current || clockText.slice(-2)}`} className="live-clock-second is-fading-in">{secondsTransition.current || clockText.slice(-2)}</span>
@@ -353,7 +354,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
                 <article className="website-metric website-privacy-metric"><span>Viewer privacy</span><strong>No individual viewer recording</strong><small>Aggregate requests only; no identities, page actions, or browsing history.</small></article>
               </div>
             )}
-            <p className="website-data-footnote">{website ? <>Site check: our server sends an HTTPS HEAD request to <strong>{website.domain}</strong>, with an 8-second timeout and no page body download. HTTP 2xx and 3xx responses are marked responding; redirects are not followed. HTTP 4xx/5xx responses show as an HTTP error, while no HTTP status means the request failed or timed out. Response time measures the server-to-response-headers round trip; it does not test browser rendering, page assets, sign-in, or app features.</> : 'The site check is a server-side HTTPS HEAD probe. It checks for an HTTP response, not whether a visitor’s browser can render every page.'} The browser exposes only rough device hints, not a full computer diagnostic. Cloudflare request totals are aggregates and do not identify individual viewers.</p>
+            <p className="website-data-footnote">Site check: the server sends an HTTPS HEAD request with an 8-second timeout and no page-body download. HTTP 2xx/3xx responses are marked responding; redirects are not followed. HTTP 4xx/5xx responses are server errors; no HTTP status means the request failed or timed out. Response time measures the server-to-response-headers round trip; it does not test browser rendering, page assets, sign-in, or app features. The browser exposes rough device hints, not a full computer diagnostic. Cloudflare request totals are aggregates and do not identify individual viewers.</p>
           </section>
 
           <div className="console-controls">
