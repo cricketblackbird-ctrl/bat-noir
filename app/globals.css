@@ -493,8 +493,41 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
 .health-incident { color: #ffbdc4 !important; }
 
 .health-caveat { border-top: 1px solid rgb(199 75 158 / 18%); padding-top: 8px; color: #a99bad; font-size: 11px; }
+.mail-sorter-workspace { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(230px, .85fr); gap: 10px; }
+.mail-sorter-card { display: flex; min-width: 0; flex-direction: column; gap: 9px; border: 1px solid rgb(199 75 158 / 32%); border-radius: 9px; padding: 12px; background: linear-gradient(145deg, rgb(38 20 43 / 72%), rgb(15 10 21 / 90%)); }
+.mail-sorter-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.mail-sorter-heading .section-kicker { margin: 0 0 3px; color: #bd9fc9; font-size: 9px; letter-spacing: .12em; }
+.mail-sorter-heading h3 { margin: 0; color: #f2e2ef; font-family: Georgia, serif; font-size: 17px; font-weight: 500; }
+.mail-sorter-state, .mail-sorter-count { border: 1px solid rgb(52 211 153 / 40%); border-radius: 999px; padding: 4px 8px; color: #6ee7b7; font-size: 10px; white-space: nowrap; }
+.mail-sorter-count { border-color: rgb(199 75 158 / 38%); color: #e7b9df; }
+.mail-sorter-label { display: block; color: #d9bfdd; font-size: 11px; font-weight: 600; }
+.mail-sorter-input { width: 100%; min-width: 0; border: 1px solid rgb(123 63 158 / 48%); border-radius: 6px; padding: 8px 9px; background: rgb(8 5 12 / 78%); color: #f4eaf2; font: inherit; font-size: 12px; }
+.mail-sorter-input::placeholder { color: #897994; }
+.mail-sorter-input:focus-visible { outline: 2px solid #d6a6d2; outline-offset: 2px; }
+.mail-sorter-note, .mail-sorter-empty, .mail-sorter-notice { margin: 0; color: #aa9cad; font-size: 10px; line-height: 1.45; }
+.mail-sorter-form, .mail-sorter-trust-form { display: grid; gap: 7px; }
+.mail-sorter-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.mail-sorter-body { min-height: 68px; resize: vertical; }
+.mail-sorter-button { min-height: 34px; border: 1px solid #a95c9f; border-radius: 6px; padding: 7px 10px; background: linear-gradient(110deg, #48235f, #7b3f72); color: #fff4fc; cursor: pointer; font-size: 11px; font-weight: 700; }
+.mail-sorter-button:hover { border-color: #e6a5d3; background: linear-gradient(110deg, #63307b, #a3488c); }
+.mail-sorter-queue { display: grid; max-height: 190px; gap: 6px; overflow-y: auto; }
+.mail-sorter-message { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px 8px; border-top: 1px solid rgb(123 63 158 / 20%); padding-top: 7px; }
+.mail-sorter-message > div { display: grid; min-width: 0; gap: 2px; }
+.mail-sorter-message strong, .mail-sorter-message > div span { overflow: hidden; color: #ead6e9; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.mail-sorter-message > div span { color: #a493ad; }
+.mail-sorter-message time { grid-column: 1; color: #82758b; font-size: 9px; }
+.mail-sorter-tag { grid-column: 2; grid-row: 1 / span 2; border: 1px solid rgb(214 166 210 / 38%); border-radius: 999px; padding: 3px 7px; color: #e7b9df; font-size: 9px; }
+.mail-sorter-tag.is-trusted { border-color: rgb(52 211 153 / 35%); color: #6ee7b7; }
+.mail-sorter-tag.is-reputation { border-color: rgb(251 191 36 / 42%); color: #fcd34d; }
+.mail-sorter-trust-list { display: grid; gap: 5px; max-height: 160px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.mail-sorter-trust-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid rgb(123 63 158 / 20%); padding-top: 6px; color: #d9bfdd; font-size: 10px; overflow-wrap: anywhere; }
+.mail-sorter-remove { flex: 0 0 auto; border: 0; padding: 4px; background: transparent; color: #c7a5c4; cursor: pointer; font-size: 9px; text-decoration: underline; }
+.mail-sorter-footer { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 3px; border-top: 1px solid #412850; padding-top: 10px; color: #b8a3c5; font-size: 11px; }
+.mail-sorter-footer span:last-child { color: #34d399; font-weight: 600; }
 
 @media (max-width: 760px) {
+  .mail-sorter-workspace { grid-template-columns: minmax(0, 1fr); }
+  .mail-sorter-footer { grid-column: auto; }
   .health-details { grid-template-columns: minmax(0, 1fr); }
 }
 
