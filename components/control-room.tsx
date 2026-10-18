@@ -1,15 +1,17 @@
 'use client'
 
 import { Shield } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { authClient } from '@/lib/auth-client'
 import { KeyChest } from '@/components/key-chest'
 import { ActivityArchivePanel } from '@/components/activity-archive'
 import { PlatformConsole } from '@/components/platform-console'
-import { SiteHealthPanel } from '@/components/site-health-panel'
 import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
+
+const SiteHealthPanel = dynamic(() => import('@/components/site-health-panel').then((module) => module.SiteHealthPanel), { ssr: false })
 
 type Fighter = {
   id: string

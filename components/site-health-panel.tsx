@@ -61,11 +61,10 @@ export function SiteHealthPanel() {
       <div className="panel-heading">
         <div><p className="section-kicker">LIVE WEBSITE STATUS</p><h2 id="site-health-heading">Website status</h2></div>
         <div className="health-actions">
-          <a className="text-button" href="https://montemader.com/" target="_blank" rel="noreferrer">Open website</a>
           <button className="text-button" type="button" onClick={() => void mutate()} disabled={isLoading || isValidating}>{isValidating ? 'Refreshing…' : 'Refresh from website'}</button>
         </div>
       </div>
-      <p className="health-description">Live response status and page metadata from montemader.com. Refresh checks the current webpage.</p>
+      <p className="health-description">Live response status and page metadata from the configured webpage.</p>
       {error ? (
         error instanceof HealthRequestError && error.status === 401 ? (
           <div className="health-auth-state" role="status">

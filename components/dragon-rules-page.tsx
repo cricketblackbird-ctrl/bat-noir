@@ -67,7 +67,7 @@ export function DragonRulesPage({ operator }: { operator: { name: string; isMm: 
         <section className="rules-intro" aria-labelledby="rules-title">
           <p className="section-kicker">MM · VERSIONED POLICY</p>
           <h2 id="rules-title">Rules &amp; reports</h2>
-          <p>One durable, append-only rules history for <strong>montemader.com</strong>. Add a rule to create a new revision; older versions stay available in Neon.</p>
+          <p>One durable, append-only rules history. Add a rule to create a new revision; older versions stay available in Neon.</p>
           <div className="rules-meta"><span><ShieldCheck aria-hidden="true" /> {operator.isMm ? 'MM can add rules' : 'Read-only account'}</span><span>{data?.rules ? `Revision ${data.rules.revision}` : 'Loading saved revision…'}</span></div>
           {data?.rules && <div className="rules-policy-flags" aria-label="Saved assignment policy"><span>Cooperation {data.rules.cooperativeAssignment ? 'on' : 'off'}</span><span>Ruach {data.rules.groundRuach ? 'grounded' : 'not grounded'}</span><span>Xena {data.rules.groundXena ? 'grounded' : 'not grounded'}</span></div>}
         </section>
