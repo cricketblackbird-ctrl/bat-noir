@@ -193,7 +193,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .strike-ack-right { right: 0; animation-name: strike-rise-right; }
 @keyframes strike-rise-left { 0% { opacity: 0; transform: translate(-8px, 15px) scale(.96); } 12% { opacity: 1; } 76% { opacity: 1; } 100% { opacity: 0; transform: translate(-16px, -32px) scale(1.02); } }
 @keyframes strike-rise-right { 0% { opacity: 0; transform: translate(8px, 15px) scale(.96); } 12% { opacity: 1; } 76% { opacity: 1; } 100% { opacity: 0; transform: translate(16px, -32px) scale(1.02); } }
-.signal-reading { margin: 6px 0 2px; color: #e6c9de; font-size: calc((12px) + 1pt); line-height: 1.35; }
+.signal-reading { margin: 6px 0 2px; color: #e6c9de; font-size: calc((12px) + 1pt); line-height: 1.35; overflow-wrap: anywhere; }
 .signal-reading span { color: #ce8ebf; font-size: calc((12px) + 1pt); letter-spacing: .06em; }
 .signal-age { margin: 0; color: #877992; font-size: calc((12px) + 1pt); }
 .fighter-hit-report { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 3px 8px; margin-top: 3px; }
@@ -453,8 +453,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .summary-number { font-size: calc((18px) + 1pt); }
   .control-grid { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1.08fr) minmax(0, .92fr); gap: 7px; }
   .fighter-panel { grid-column: 1 / -1; }
-  .fighter-list { flex-direction: row; }
-  .fighter-card { flex: 1 1 0; padding: 6px; }
+  .fighter-list { flex-direction: column; }
+  .fighter-card { flex: 0 0 auto; min-width: 0; min-height: 178px; padding: 8px; }
   .fighter-heading { align-items: flex-start; flex-direction: column; gap: 2px; }
   .fighter-heading h3 { font-size: calc((13px) + 1pt); }
   .status-dot { font-size: calc((13px) + 1pt); }
@@ -1217,7 +1217,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
   .heartbeat-readiness-heading .telemetry-refresh { width: 100%; }
 }
 
-.command-page { height: auto; min-height: 100dvh; overflow: visible; }
+.command-page { height: 100dvh; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; }
 .panel { overflow: visible; }
 .dashboard-nav { flex-wrap: wrap; overflow: visible; }
 .auth-screen { overflow: visible; }
