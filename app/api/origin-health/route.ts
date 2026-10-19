@@ -11,6 +11,25 @@ export const dynamic = 'force-dynamic'
 
 const responseHeaders = { 'Cache-Control': 'private, no-store' }
 const timeoutMs = 8_000
+const maxHtmlBytes = 256 * 1024
+
+function hasOriginVerificationMarker(html: string) {
+  for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const attributes = new Map<string, string>()
+    const attributePattern = /([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/g
+
+    for (const attribute of match[0].matchAll(attributePattern)) {
+      attributes.set(attribute[1].toLowerCase(), attribute[2] ?? attribute[3] ?? attribute[4] ?? '')
+    }
+
+    if (
+      attributes.get('name')?.toLowerCase() === 'cloudflare-bypass-verification' &&
+      attributes.get('content')?.toLowerCase() === 'active'
+    ) return true
+  }
+
+  return false
+}
 
 function isPublicIPv4(address: string) {
   if (isIP(address) !== 4) return false
@@ -65,7 +84,7 @@ function getOriginTarget(value: string) {
 }
 
 function probeOrigin(target: NonNullable<ReturnType<typeof getOriginTarget>>) {
-  return new Promise<{ statusCode: number; latencyMs: number }>((resolve, reject) => {
+  return new Promise<{ statusCode: number; latencyMs: number; markerFound: boolean }>((resolve, reject) => {
     const startedAt = performance.now()
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), timeoutMs)
@@ -73,26 +92,47 @@ function probeOrigin(target: NonNullable<ReturnType<typeof getOriginTarget>>) {
       hostname: target.hostname,
       port: 443,
       method: 'GET',
-      path: '/api/health',
+      path: '/',
       servername: target.servername,
       headers: {
         Host: target.hostHeader,
-        Accept: 'text/plain, application/json;q=0.9, */*;q=0.8',
+        Accept: 'text/html, application/xhtml+xml;q=0.9',
+        'Cache-Control': 'no-cache, no-store',
+        Pragma: 'no-cache',
       },
       signal: controller.signal,
     }, (response) => {
-      response.resume()
+      const chunks: Buffer[] = []
+      let totalBytes = 0
+      let settled = false
+
+      const fail = (error: Error) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeout)
+        reject(error)
+      }
+
+      response.on('data', (chunk: Buffer) => {
+        totalBytes += chunk.length
+        if (totalBytes > maxHtmlBytes) {
+          fail(new Error('Origin response exceeded the verification size limit.'))
+          req.destroy()
+          return
+        }
+        chunks.push(chunk)
+      })
       response.once('end', () => {
+        if (settled) return
+        settled = true
         clearTimeout(timeout)
         resolve({
           statusCode: response.statusCode ?? 502,
           latencyMs: Math.round(performance.now() - startedAt),
+          markerFound: hasOriginVerificationMarker(Buffer.concat(chunks).toString('utf8')),
         })
       })
-      response.once('error', (error) => {
-        clearTimeout(timeout)
-        reject(error)
-      })
+      response.once('error', fail)
     })
 
     req.once('error', (error) => {
@@ -121,9 +161,13 @@ export async function GET() {
   try {
     const result = await probeOrigin(originTarget)
     return NextResponse.json({
-      ok: result.statusCode >= 200 && result.statusCode < 300,
+      ok: result.statusCode >= 200 && result.statusCode < 300 && result.markerFound,
+      markerFound: result.markerFound,
       statusCode: result.statusCode,
       latencyMs: result.latencyMs,
+      error: result.statusCode >= 200 && result.statusCode < 300 && !result.markerFound
+        ? 'The origin responded, but the expected verification marker was not found in its HTML.'
+        : undefined,
     }, { headers: responseHeaders })
   } catch (error) {
     const timedOut = error instanceof Error && error.name === 'AbortError'

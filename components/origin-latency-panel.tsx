@@ -5,6 +5,7 @@ import { useState } from 'react'
 type ResultState = 'idle' | 'checking' | 'ok' | 'error'
 type ProbeResult = {
   ok?: boolean
+  markerFound?: boolean
   statusCode?: number | null
   latencyMs?: number | null
   error?: string
@@ -14,13 +15,13 @@ export function OriginLatencyPanel() {
   const [state, setState] = useState<ResultState>('idle')
   const [status, setStatus] = useState('Ready')
   const [latency, setLatency] = useState('—')
-  const [details, setDetails] = useState('The origin address or HTTPS tunnel hostname is stored in a server-side Vercel environment variable.')
+  const [details, setDetails] = useState('The authenticated server probe checks the configured origin for its verification marker.')
 
   async function checkOrigin() {
     setState('checking')
     setStatus('Checking…')
     setLatency('—')
-    setDetails('Connecting to the configured origin over HTTPS.')
+    setDetails('Connecting directly to the configured origin over HTTPS and checking its page marker.')
 
     try {
       const response = await fetch('/api/origin-health', {
@@ -41,17 +42,19 @@ export function OriginLatencyPanel() {
 
       if (result.ok && typeof result.latencyMs === 'number') {
         setState('ok')
-        setStatus('Origin responded')
+        setStatus('Origin marker verified')
         setLatency(`${result.latencyMs} ms`)
-        setDetails(`HTTPS · ${result.statusCode} · /api/health`)
+        setDetails(`HTTPS · HTTP ${result.statusCode} · verification marker found in /`)
         return
       }
 
       setState('error')
-      setStatus(result.statusCode ? 'Origin returned an error' : 'Origin unreachable')
+      setStatus(result.statusCode && result.statusCode >= 200 && result.statusCode < 300
+        ? 'Origin reached · marker missing'
+        : result.statusCode ? 'Origin returned an error' : 'Origin unreachable')
       setLatency(typeof result.latencyMs === 'number' ? `${result.latencyMs} ms` : '—')
       setDetails(result.statusCode
-        ? `HTTP ${result.statusCode} · /api/health`
+        ? `HTTP ${result.statusCode} · ${result.markerFound ? 'verification marker found' : 'expected marker not found in /'}`
         : result.error ?? 'Vercel could not reach the configured origin.')
     } catch (error) {
       setState('error')
@@ -65,11 +68,11 @@ export function OriginLatencyPanel() {
 
   return (
     <section className="origin-latency-panel" aria-labelledby="origin-latency-heading">
-      <h2 id="origin-latency-heading">Origin Latency Test</h2>
-      <p className="origin-latency-intro">Test the server response time for your configured origin health endpoint.</p>
+      <h2 id="origin-latency-heading">Origin Verification</h2>
+      <p className="origin-latency-intro">Measure the HTTPS response from the configured origin and check for its verification marker.</p>
       <div className="origin-latency-secret-note" role="note">
-        <strong>Origin IP or tunnel URL: stored securely in Vercel</strong>
-        <span>Set ORIGIN_IP to the raw public IPv4 address or an HTTPS tunnel hostname. The value is read only by the authenticated server route and never sent to your browser.</span>
+        <strong>Origin target is stored securely in Vercel</strong>
+        <span>ORIGIN_IP is read only by this authenticated server route and is never sent to your browser. For a raw IPv4 target, the server connects directly to that address and uses montemader.com for TLS and Host.</span>
       </div>
       <button className="origin-latency-button" type="button" onClick={checkOrigin} disabled={state === 'checking'}>
         {state === 'checking' ? 'Checking…' : 'Check Configured Origin'}
@@ -79,7 +82,7 @@ export function OriginLatencyPanel() {
         <div className="origin-latency-value">{latency}</div>
         <p>{details}</p>
       </section>
-      <p className="origin-latency-caveat">The check runs from Vercel over HTTPS to the configured public IPv4 address or tunnel hostname and requests /api/health. A raw IP requires a valid montemader.com TLS certificate; an HTTPS tunnel uses its own hostname certificate. Temporary tunnel URLs work only while the tunnel process is running. This does not change DNS, Cloudflare, or firewall settings.</p>
+      <p className="origin-latency-caveat">The check requests the origin homepage directly over HTTPS and looks for the expected meta marker. This verifies that the configured target serves that marker; the marker is not cryptographic proof or a security bypass. The probe does not change DNS, Cloudflare, or firewall settings.</p>
     </section>
   )
 }
