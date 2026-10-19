@@ -89,6 +89,10 @@
     .small { margin: 12px 0 0; font-size: 11px; }
     .error { color: var(--warn); }
     .privacy-note { border-left: 2px solid var(--purple); padding-left: 10px; }
+    .tunnel-policy { margin-top: 14px; border-left: 3px solid var(--pink); border-radius: 9px; padding: 12px 14px; background: rgb(9 5 13 / 72%); }
+    .tunnel-policy h3 { margin: 0; color: var(--text); font-size: 14px; }
+    .tunnel-policy p { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .tunnel-policy strong { color: var(--text); }
     .specs { display: grid; gap: 7px; margin: 12px 0; padding: 0; list-style: none; }
     .specs li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; background: var(--bg); }
     .specs span { color: var(--muted); font-size: 12px; }
@@ -186,6 +190,11 @@
         <section class="panel" aria-labelledby="sentinels-heading">
           <p class="kicker">From authenticated operations telemetry</p><h2 id="sentinels-heading">Ruach, Xena &amp; SuperBot listener status</h2>
           <ul class="list" id="sentinel-list" aria-live="polite" style="margin-top:12px"><li class="message">Waiting for listener telemetry…</li></ul>
+          <section class="tunnel-policy" aria-labelledby="ruach-tunnel-policy-heading">
+            <h3 id="ruach-tunnel-policy-heading">Ruach Guard · tunnel policy</h3>
+            <p><strong>Allow:</strong> explicitly authorized hosts and routes only. <strong>Deny:</strong> reject and close every other request; log the event and alert the operator.</p>
+            <p>No retaliation or action outside this service. This is the intended policy label and dashboard guidance; actual enforcement must be configured at the Cloudflare Tunnel, origin firewall, or WAF.</p>
+          </section>
         </section>
       </div>
     </section>
