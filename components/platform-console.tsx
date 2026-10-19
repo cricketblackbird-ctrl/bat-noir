@@ -386,7 +386,7 @@ export function PlatformConsole({ onOpenSecurityView }: { onOpenSecurityView: ()
               {(Object.entries(topicLabels) as [StreamTopic, string][]).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
             <button className="button button-primary live-capture-button" type="button" onClick={toggleRecording} disabled={topic === 'website' ? websiteLoading && !website : isLoading && !data}>
-              {isRecording ? 'Pause live stream' : 'Record live stream'}
+              {isRecording ? 'Pause snapshot recording' : 'Record health snapshots'}
             </button>
           </div>
           <p className="archive-inline-note" role="status">{archiveError ? 'Private archive unavailable · captures stay in this tab.' : `Private R2 archive · ${archiveData?.total ?? '…'} of 200 records. Filter choices and captured snapshots are saved to your account; snapshots include coarse connection hints, not visitor identities or browsing history.`}</p>
