@@ -1,7 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
-import { LockKeyhole, Network, Shield, Terminal } from 'lucide-react'
+import { LockKeyhole, Network, Shield } from 'lucide-react'
 import { DnsHistoryPanel } from '@/components/dns-history-panel'
 
 type FighterHeartbeat = {
@@ -125,24 +125,6 @@ export function CloudflareTelemetryPanel({ fighters }: { fighters: FighterHeartb
             <small>Aggregate security metrics only</small>
           </article>
         </div>
-
-        <section className="origin-diagnostics" aria-labelledby="origin-diagnostics-heading">
-          <header className="origin-diagnostics-heading">
-            <div className="origin-diagnostics-title">
-              <Terminal aria-hidden="true" />
-              <div>
-                <h4 id="origin-diagnostics-heading">Tunnel diagnostics</h4>
-                <p>No connector telemetry · not a live daemon log</p>
-              </div>
-            </div>
-          </header>
-          <div className="origin-diagnostics-log" role="group" aria-label="Tunnel diagnostic status">
-            <p><span>[INFO]</span> No Cloudflare Tunnel connector is reporting to this dashboard.</p>
-            <p><span>[INFO]</span> This dashboard runs on Vercel and does not host a persistent <code>cloudflared</code> daemon.</p>
-            <p><span>[WARN]</span> Origin IP visibility and inbound firewall rules cannot be verified here.</p>
-            <p><span>[DATA]</span> Cloudflare edge feed: {metrics ? 'aggregate metrics received; raw visitor IPs are not displayed.' : 'no current aggregate metrics available.'}</p>
-          </div>
-        </section>
 
         <p className="origin-isolation-caveat"><LockKeyhole aria-hidden="true" /> This status is informational—not proof that the origin is hidden. A separate persistent origin must run the tunnel and restrict direct access; no tunnel or firewall configuration was changed.</p>
       </section>

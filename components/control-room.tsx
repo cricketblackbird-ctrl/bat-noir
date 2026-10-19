@@ -59,6 +59,10 @@ type Operations = {
 }
 
 type DashboardView = 'dashboard' | 'links' | 'tester' | 'intel' | 'cloudflare'
+type SiteSecurityHealth = {
+  cloudflare: { available: true; metrics: { thresholdMet: boolean } } | { available: false }
+  activeIncident: { detectedAt: string; blockedCount: number } | null
+}
 const dashboardViews: DashboardView[] = ['dashboard', 'links', 'tester', 'intel', 'cloudflare']
 
 const fetcher = async (url: string) => {
@@ -230,6 +234,7 @@ function GuardianStatusWidget({ fighters, isLoading, hasError }: { fighters: Fig
 
 export function ControlRoom({ operator }: { operator: Operations['operator'] & { id: string } }) {
   const { data, error, mutate } = useSWR<Operations>('/api/operations', fetcher, { refreshInterval: HEARTBEAT_CONFIG.pollIntervalMs, revalidateOnFocus: true })
+  const { data: siteSecurity } = useSWR<SiteSecurityHealth>('/api/security/health', fetcher, { refreshInterval: 30_000, revalidateOnFocus: true })
   const [strategy, setStrategy] = useState<Strategy>('inspect_verify')
   const [formation, setFormation] = useState<Formation>('all_three')
   const [feedback, setFeedback] = useState('')
@@ -240,6 +245,9 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
   const isMounted = useRef(false)
   const stoppedAll = Boolean(data?.stops.stopAll)
   const guards = data?.fighters ?? []
+  const hasAttackSignal = Boolean(data?.activeAttack || siteSecurity?.activeIncident || (siteSecurity?.cloudflare.available && siteSecurity.cloudflare.metrics.thresholdMet))
+  const hasHeartbeatFailure = guards.some((fighter) => fighter.listenerStatus === 'STALE')
+  const isSecurityAlertActive = hasAttackSignal || hasHeartbeatFailure
   const recentSignals = useMemo(() => guards.filter((fighter) => fighter.signal).length, [guards])
 
   useEffect(() => {
@@ -327,7 +335,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
   }
 
   return (
-    <main className="command-page">
+    <main className={`command-page${isSecurityAlertActive ? ' is-security-alert-active' : ''}`}>
       <header className="topbar">
         <div className="brand-lockup">
           <h1 className="brand-name">MASTER CONTROL</h1>
@@ -341,6 +349,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           </button>
         </div>
       </header>
+      {isSecurityAlertActive && <p className="security-alarm-banner" role="alert" aria-live="assertive">{hasAttackSignal ? 'SECURITY ALERT · CLOUDFLARE THRESHOLD REACHED OR AUTHENTICATED ATTACK REPORT ACTIVE' : 'MONITORING ALERT · GUARDIAN HEARTBEAT FAILED'}</p>}
 
       <nav className="dashboard-nav" role="tablist" aria-label="Defense dashboard views">
         <button id="view-tab-dashboard" className={`view-tab${activeView === 'dashboard' ? ' is-active' : ''}`} type="button" role="tab" aria-selected={activeView === 'dashboard'} aria-controls="view-panel-dashboard" tabIndex={activeView === 'dashboard' ? 0 : -1} onClick={() => selectDashboardView('dashboard')} onKeyDown={(event) => handleDashboardTabKeyDown(event, 'dashboard')}>Dashboard</button>
@@ -393,7 +402,7 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
         </section>
 
         <section className="panel directives-panel" aria-labelledby="directives-heading">
-          <div className="panel-heading"><div><p className="section-kicker">MM · DEFENSIVE PLAYBOOK</p><h2 id="directives-heading">Issue a directive</h2></div><span className="panel-sigil" aria-hidden="true">✦</span></div>
+          <div className="panel-heading"><div><p className="section-kicker">MM �� DEFENSIVE PLAYBOOK</p><h2 id="directives-heading">Issue a directive</h2></div><span className="panel-sigil" aria-hidden="true">✦</span></div>
           {operator.isMm && <p className="directive-authorization">The authorized operator may direct designated responders with defensive actions for the configured site. Choose a response and assignment below; attack-report gates and emergency stops remain in force. Nothing is queued until you submit.</p>}
           <form className="directive-form" onSubmit={onRunbook}>
             <label className="control-label" htmlFor="strategy">Response</label>
