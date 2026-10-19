@@ -20,12 +20,12 @@ type Guardian = {
 
 const destinations: LinkTarget[] = [
   { id: 'shop', label: 'Shop', url: 'https://shopbboutique.co/vibe/montemader-ytsh', category: 'Store', accountMetrics: 'Authorization required' },
-  { id: 'patreon', label: 'Patreon', url: 'https://patreon.com/montemader', category: 'Creator', accountMetrics: 'Authorization required' },
+  { id: 'patreon', label: 'Patreon', url: 'https://www.patreon.com/montemader', category: 'Creator', accountMetrics: 'Authorization required' },
   { id: 'substack', label: 'Substack', url: 'https://substack.com/@montemader', category: 'Creator', accountMetrics: 'Not connected' },
-  { id: 'instagram', label: 'Instagram', url: 'https://instagram.com/montemader', category: 'Social', accountMetrics: 'Authorization required' },
-  { id: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/@montemader', category: 'Social', accountMetrics: 'Authorization required' },
-  { id: 'facebook', label: 'Facebook', url: 'https://facebook.com/montemader', category: 'Social', accountMetrics: 'Authorization required' },
-  { id: 'twloha', label: 'TWLOHA', url: 'https://give.twloha.com/MonteMader', category: 'Fundraising', accountMetrics: 'Not connected' },
+  { id: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/montemader', category: 'Social', accountMetrics: 'Authorization required' },
+  { id: 'tiktok', label: 'TikTok', url: 'https://www.tiktok.com/@montemader', category: 'Social', accountMetrics: 'Authorization required' },
+  { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/montemader', category: 'Social', accountMetrics: 'Authorization required' },
+  { id: 'twloha', label: 'TWLOHA', url: 'https://give.twloha.com/campaign/787241/landing', category: 'Fundraising', accountMetrics: 'Not connected' },
   { id: 'linktree', label: 'Linktree', url: 'https://linktr.ee/MonteMader', category: 'Directory', accountMetrics: 'Not connected' },
 ]
 
@@ -45,7 +45,7 @@ export function LinkHealthPanel({ guardians }: { guardians: Guardian[] }) {
         <div>
           <p className="section-kicker">PRIVATE LINK &amp; ACCOUNT HEALTH</p>
           <h2 id="link-health-heading">Your destinations</h2>
-          <p>Choose a destination to view its monitoring and account-connection status. These controls stay in this dashboard; they never open the external site.</p>
+          <p>Choose a destination to review its connection status, then open its public page directly. Monitoring and account metrics are labeled unavailable until a real integration is connected.</p>
         </div>
         <span className="link-health-status"><span aria-hidden="true" />External monitor not connected</span>
       </header>
@@ -75,7 +75,7 @@ export function LinkHealthPanel({ guardians }: { guardians: Guardian[] }) {
         </div>
 
         <dl className="link-health-metrics">
-          <div><dt>Public URL</dt><dd className="link-url">{selected.url}</dd></div>
+          <div><dt>Public URL</dt><dd className="link-url"><a href={selected.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${selected.label} in a new tab`}>{selected.url}<ExternalLink aria-hidden="true" /></a></dd></div>
           <div><dt>Last checked</dt><dd>Not available</dd></div>
           <div><dt>Response status</dt><dd>No external probe data</dd></div>
           <div><dt>Latency trend</dt><dd>No measurements yet</dd></div>
