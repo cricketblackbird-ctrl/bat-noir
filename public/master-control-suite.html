@@ -93,6 +93,11 @@
     .tunnel-policy h3 { margin: 0; color: var(--text); font-size: 14px; }
     .tunnel-policy p { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
     .tunnel-policy strong { color: var(--text); }
+    .sweep-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .sweep-grid h3 { margin-top: 0; }
+    .sweep-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .sweep-list li { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; background: var(--bg); color: var(--muted); font-size: 12px; }
+    .sweep-list strong { display: block; margin-bottom: 3px; color: var(--text); font-size: 12px; }
     .specs { display: grid; gap: 7px; margin: 12px 0; padding: 0; list-style: none; }
     .specs li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; background: var(--bg); }
     .specs span { color: var(--muted); font-size: 12px; }
@@ -103,7 +108,7 @@
     @media (max-width: 680px) {
       .shell { width: calc(100% - 20px); padding-top: 14px; }
       .topbar, .section-head { align-items: flex-start; flex-direction: column; }
-      .grid-2 { grid-template-columns: 1fr; }
+      .grid-2, .sweep-grid { grid-template-columns: 1fr; }
       .actions { flex-wrap: wrap; justify-content: flex-start; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -197,6 +202,60 @@
           </section>
         </section>
       </div>
+      <section class="panel" aria-labelledby="security-sweep-heading">
+        <p class="kicker">Live tunnel reachability · manual security reference</p>
+        <h2 id="security-sweep-heading">Security sweep</h2>
+        <p class="small">Live checks below are limited to telemetry this app can actually reach. The remaining items are manual checks for systems and property you own or administer.</p>
+        <section class="tunnel-policy" aria-labelledby="live-tunnel-heading">
+          <div class="section-head">
+            <div><p class="kicker">Authenticated · refreshes with live telemetry</p><h3 id="live-tunnel-heading">Configured origin / tunnel probe</h3></div>
+            <span class="status" id="tunnel-live-status" role="status">Waiting</span>
+          </div>
+          <div class="metrics" id="tunnel-live-metrics" aria-live="polite"><p class="message">Waiting for the authenticated probe…</p></div>
+          <p class="small" id="tunnel-live-details">The server checks the configured ORIGIN_IP over HTTPS and requests /api/health. When ORIGIN_IP is a tunnel hostname, this checks reachability through that tunnel.</p>
+          <p class="small">This endpoint does not enumerate remote processes, ports, DNS records, firewall rules, credentials, or physical surroundings. Those require separate authorized telemetry; no findings are inferred.</p>
+        </section>
+        <div class="sweep-grid">
+          <section aria-labelledby="sweep-code-heading">
+            <h3 id="sweep-code-heading">Local code &amp; access</h3>
+            <ul class="sweep-list">
+              <li><strong>Search for accidental secrets</strong>Use your code editor’s project-wide search to check for hardcoded IPs, API tokens, and passwords. Never put secret values in HTML, browser JavaScript, logs, or public issues.</li>
+              <li><strong>Check environment-file exclusions</strong>Confirm local <code>.env</code> files are excluded by <code>.gitignore</code>. Keep production values in server-side Vercel environment variables and review deployment logs before sharing them.</li>
+              <li><strong>Review Vercel access</strong>Enable MFA and review project/team members and their roles. Remove access only for people who no longer need it.</li>
+              <li><strong>Review Cloudflare credentials</strong>Use least-privilege API tokens. Revoke tokens that are confirmed unused or exposed; rotate a credential suspected compromised after checking which services depend on it.</li>
+              <li><strong>Audit server access</strong>Review active admin sessions and the origin’s SSH authorized keys. Keep only recognized keys and restrict SSH to a trusted network or access gateway where practical.</li>
+            </ul>
+          </section>
+          <section aria-labelledby="sweep-edge-heading">
+            <h3 id="sweep-edge-heading">DNS, tunnel &amp; origin</h3>
+            <ul class="sweep-list">
+              <li><strong>Review DNS record by record</strong>Use Cloudflare DNS to confirm web A/CNAME targets. Proxy only supported web records intended to use Cloudflare; keep MX and mail records DNS-only when required by the mail provider.</li>
+              <li><strong>Check stale and DNS-only hostnames</strong>Review subdomains you control and remove records that are no longer needed. A DNS-only web hostname can reveal its target; do not change mail or third-party records without confirming their purpose.</li>
+              <li><strong>Limit tunnel routes</strong>Expose only required hostnames and services, use a final catch-all deny/404 route, and log/alert on rejected requests. This page describes the policy; it does not configure the tunnel.</li>
+              <li><strong>Minimize origin exposure</strong>A Cloudflare Tunnel connector makes outbound connections. If you rely on the tunnel, do not expose origin web ports publicly unless separately required. For direct proxied origins, configure firewall rules for Cloudflare’s current published ranges and preserve a secure admin path.</li>
+              <li><strong>Restrict SSH and review logs</strong>Allow SSH only from a trusted fixed address or access gateway where feasible. Review authentication logs for patterns; isolated failed logins can be routine internet noise. Use Fail2Ban only when appropriate for the host and service.</li>
+            </ul>
+          </section>
+          <section aria-labelledby="sweep-tunnel-heading">
+            <h3 id="sweep-tunnel-heading">Authorized tunnel inventory</h3>
+            <ul class="sweep-list">
+              <li><strong>Inspect only systems you administer</strong>On Linux, <code>pgrep -af 'cloudflared|ngrok|ssh'</code> can list matching processes and <code>sudo ss -tulpn</code> can list listening sockets. On macOS, use Activity Monitor or <code>sudo lsof -nP -iTCP -sTCP:LISTEN</code>.</li>
+              <li><strong>Windows checks</strong>Use Task Manager’s Details tab to review processes. In an elevated Command Prompt, <code>netstat -ano | findstr LISTENING</code> lists listening ports and process IDs.</li>
+              <li><strong>Verify before acting</strong>Process names and open ports alone do not prove unauthorized access. Check the service configuration, owner, and provider account. If a service is confirmed unwanted, stop it through its service manager or provider controls—not a force-kill against an unknown process.</li>
+              <li><strong>Protect command output</strong>Process listings may contain usernames, paths, or arguments. Review locally; redact sensitive details before sharing.</li>
+            </ul>
+          </section>
+          <section aria-labelledby="sweep-device-heading">
+            <h3 id="sweep-device-heading">Device &amp; physical safety</h3>
+            <ul class="sweep-list">
+              <li><strong>Protect devices</strong>Use automatic screen locking, current security updates, MFA, and a private screen when viewing credentials.</li>
+              <li><strong>Use normal property checks</strong>Secure doors and windows with your usual routine; maintain lighting and alarms according to household needs. Do not enter drains, culverts, utility tunnels, or other confined spaces.</li>
+              <li><strong>Leave infrastructure to professionals</strong>Do not approach or investigate utility access points or suspected underground structures. Contact the utility, property manager, or local authorities from a safe location if there is a specific hazard; use official utility maps for permitted planning work only.</li>
+              <li><strong>Prioritize immediate safety</strong>Do not confront anyone. Move to a safe place and contact a trusted person or local emergency services if there is an immediate personal safety concern.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
     </section>
 
     <p class="small" id="last-updated" aria-live="polite">Live data refreshes automatically every 30 seconds.</p>
@@ -393,6 +452,47 @@
           : [listItem(data.available ? 'No aggregate insights are available.' : 'No live aggregate insight records are available.')]);
       }
 
+      async function fetchOriginStatus() {
+        const response = await fetch('/api/origin-health', {
+          method: 'GET',
+          cache: 'no-store',
+          credentials: 'same-origin',
+          headers: { Accept: 'application/json' },
+        });
+        const body = await response.json().catch(() => ({}));
+        return { ...body, apiStatus: response.status };
+      }
+
+      function renderOriginStatus(data) {
+        const metrics = [];
+        if (data.apiStatus === 401) {
+          setStatus('tunnel-live-status', 'Sign in required', 'offline');
+          metrics.push(metric('Probe', 'Authentication required'));
+          setMessage('tunnel-live-details', 'Sign in to request this authenticated check.');
+        } else if (data.apiStatus === 503) {
+          setStatus('tunnel-live-status', 'Not configured', 'offline');
+          metrics.push(metric('Probe', 'Origin not configured'));
+          setMessage('tunnel-live-details', data.error || 'Configure the server-side origin target before probing.');
+        } else if (data.ok && typeof data.latencyMs === 'number') {
+          setStatus('tunnel-live-status', 'Origin reachable', 'live');
+          metrics.push(
+            metric('Reachability', 'HTTPS responded'),
+            metric('Origin HTTP', data.statusCode ?? 'No response'),
+            metric('Latency', `${number(data.latencyMs)} ms`),
+          );
+          setMessage('tunnel-live-details', `Authenticated probe succeeded at ${dateTime(new Date().toISOString())}. If the configured origin is a tunnel hostname, the request traversed that tunnel.`);
+        } else {
+          setStatus('tunnel-live-status', 'Origin unreachable', 'offline');
+          metrics.push(
+            metric('Reachability', 'No successful response'),
+            metric('Origin HTTP', data.statusCode ?? 'No response'),
+            metric('Latency', typeof data.latencyMs === 'number' ? `${number(data.latencyMs)} ms` : 'Unavailable'),
+          );
+          setMessage('tunnel-live-details', data.error || `Origin check returned HTTP ${data.statusCode ?? data.apiStatus ?? 'unknown'}.`, true);
+        }
+        replaceChildren('tunnel-live-metrics', metrics);
+      }
+
       async function refresh() {
         if (isRefreshing) return;
         isRefreshing = true;
@@ -407,8 +507,9 @@
             getJSON('/api/security/health'),
             getJSON('/api/operations'),
             getJSON('/api/magic-dragons'),
+            fetchOriginStatus(),
           ]);
-          const [health, operations, magic] = results;
+          const [health, operations, magic, origin] = results;
 
           if (health.status === 'fulfilled') renderHealth(health.value);
           else {
@@ -436,6 +537,13 @@
 
           if (magic.status === 'fulfilled') renderMagicDragons(magic.value);
           else replaceChildren('country-list', [listItem(magic.reason?.message || 'Aggregate insight data unavailable.')]);
+
+          if (origin.status === 'fulfilled') renderOriginStatus(origin.value);
+          else {
+            setStatus('tunnel-live-status', 'Probe failed', 'offline');
+            replaceChildren('tunnel-live-metrics', [element('p', 'message error', 'The authenticated origin probe could not be reached.')]);
+            setMessage('tunnel-live-details', origin.reason?.message || 'Origin probe unavailable.', true);
+          }
 
           $('#last-updated').textContent = `Last checked ${dateTime(new Date().toISOString())}. Values come from authenticated application APIs.`;
         } finally {
