@@ -12,6 +12,7 @@ import { TelemetryPipelineCard } from '@/components/telemetry-pipeline-card'
 import { CloudflareTelemetryPanel } from '@/components/cloudflare-telemetry-panel'
 import { HeartbeatReadinessPanel } from '@/components/heartbeat-readiness-panel'
 import { LinkHealthPanel } from '@/components/link-health-panel'
+import { LeafPinMark } from '@/components/leaf-pin-mark'
 import { HEARTBEAT_CONFIG } from '@/lib/heartbeat-config'
 import { issueDefenseRunbook, issueStrike, setEmergencyStop, type FighterId, type Formation, type StopTarget, type Strategy } from '@/app/actions/operations'
 
@@ -367,7 +368,8 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           <div className="fighter-list">
             {guards.map((fighter) => (
               <article className={`fighter-card fighter-${fighter.id}`} key={fighter.id}>
-                <div className="fighter-topline"><div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? <Shield className="xena-shield-icon" aria-hidden="true" /> : 'S'}</div><div className="fighter-heading"><h3>{fighter.name}</h3><StatusDot stopped={fighter.stopped} listenerStatus={fighter.listenerStatus} heartbeatAgeMs={fighter.heartbeatAgeMs} /></div></div>
+                <div className="fighter-topline">
+                  <div className="fighter-glyph" aria-hidden="true">{fighter.id === 'ruach' ? 'R' : fighter.id === 'xena' ? <Shield className="xena-shield-icon" aria-hidden="true" /> : 'S'}</div><div className="fighter-heading"><h3 aria-label={fighter.name}><span className="guardian-name-letters" aria-hidden="true">{Array.from(fighter.name).map((letter, index) => <span className="guardian-name-letter" key={`${fighter.id}-${index}`}>{letter}</span>)}</span><span className="guardian-name-leaf" aria-hidden="true"><LeafPinMark /></span></h3><StatusDot stopped={fighter.stopped} listenerStatus={fighter.listenerStatus} heartbeatAgeMs={fighter.heartbeatAgeMs} /></div></div>
                 <p className="fighter-role">{fighter.role}</p>
                 {fighter.health === null ? <p className="health-reading">Waiting for authenticated health report</p> : <p className="health-reading"><span>{fighter.health}%</span> health · {fighter.hitsTaken}/{fighter.hitCapacity} hits</p>}
                 <p className="signal-reading">{fighter.signal ? <><span>{fighter.signal.confidence === 'heuristic' ? 'INTERPRETATION · ' : 'REPORT · '}</span>{fighter.signal.label}</> : 'No attack interpretation without an observed event.'}</p>
