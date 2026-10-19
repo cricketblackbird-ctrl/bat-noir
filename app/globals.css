@@ -139,23 +139,30 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .fighter-heading h3 { position: relative; display: inline-block; margin: 0; color: #f0dff0; font-family: Georgia, serif; font-size: calc((15px) + 1pt); font-weight: 400; }
 .guardian-name-letters { position: relative; z-index: 1; display: inline-flex; perspective: 260px; }
 .guardian-name-letter { display: inline-block; }
-.guardian-name-leaf { position: absolute; z-index: 2; top: 50%; left: 0; width: 14px; height: 14px; opacity: 0; pointer-events: none; animation: guardian-name-weave 8.4s ease-in-out infinite; }
-.guardian-name-leaf .brand-leaf-mark { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; filter: saturate(1.15) brightness(1.14) contrast(1.08); }
-.fighter-xena .guardian-name-leaf { animation-delay: -2.8s; }
-.fighter-superbot .guardian-name-leaf { animation-delay: -5.6s; }
+.guardian-name-leaf { position: absolute; z-index: 2; top: 50%; left: 0; width: 14px; height: 14px; opacity: 0; pointer-events: none; animation: guardian-name-weave 24s ease-in-out infinite; }
+.guardian-name-leaf .brand-leaf-mark { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; filter: url(#leaf-pin-sharpen) brightness(1.28) contrast(1.38) saturate(1.14) sepia(.12) drop-shadow(0 0 1px rgb(255 239 194 / 72%)); }
+.fighter-xena .guardian-name-leaf { animation-delay: -8s; }
+.fighter-superbot .guardian-name-leaf { animation-delay: -16s; }
 @keyframes guardian-name-weave {
-  0% { left: 0%; opacity: 0; transform: translate(-50%, -50%) rotate(-22deg) rotateY(0) scale(.68); }
-  7% { opacity: .78; }
-  18% { left: 18%; transform: translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
-  22% { left: 22%; transform: translate(-50%, -65%) rotate(-18deg) rotateY(180deg) scaleX(.9); }
-  38% { left: 38%; transform: translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
-  42% { left: 42%; transform: translate(-50%, -65%) rotate(-18deg) rotateY(180deg) scaleX(.9); }
-  58% { left: 58%; transform: translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
-  62% { left: 62%; transform: translate(-50%, -65%) rotate(-18deg) rotateY(180deg) scaleX(.9); }
-  78% { left: 78%; transform: translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
-  82% { left: 82%; transform: translate(-50%, -65%) rotate(-18deg) rotateY(180deg) scaleX(.9); }
-  94% { left: 100%; opacity: .78; transform: translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
-  100% { left: 100%; opacity: 0; transform: translate(-50%, -50%) rotate(18deg) rotateY(180deg) scale(.68); }
+  0% { left: 0%; opacity: 0; transform: perspective(260px) translate(-50%, -50%) rotate(-22deg) rotateY(0) scaleX(.04); }
+  4% { left: 0%; opacity: .08; transform: perspective(260px) translate(-50%, -50%) rotate(-18deg) rotateY(45deg) scaleX(.2); }
+  8% { left: 0%; opacity: .36; transform: perspective(260px) translate(-50%, -50%) rotate(-10deg) rotateY(100deg) scale(.5); }
+  12% { left: 0%; opacity: .78; transform: perspective(260px) translate(-50%, -50%) rotate(-4deg) rotateY(180deg) scale(.68); }
+  18% { left: 18%; transform: perspective(260px) translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
+  22% { left: 22%; transform: perspective(260px) translate(-50%, -65%) rotate(-18deg) rotateY(180deg) scaleX(.9); }
+  38% { left: 38%; transform: perspective(260px) translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
+  42% { left: 42%; transform: perspective(260px) translate(-50%, -65%) rotate(-18deg) rotateY(180deg) scaleX(.9); }
+  58% { left: 58%; transform: perspective(260px) translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
+  62% { left: 62%; transform: perspective(260px) translate(-50%, -65%) rotate(-18deg) rotateY(180deg) scaleX(.9); }
+  78% { left: 78%; transform: perspective(260px) translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
+  82% { left: 82%; transform: perspective(260px) translate(-50%, -65%) rotate(-18deg) rotateY(180deg) scaleX(.9); }
+  86% { left: 100%; opacity: .78; transform: perspective(260px) translate(-50%, 30%) rotate(16deg) rotateY(72deg) scaleX(.18); }
+  88% { left: 108%; opacity: .92; transform: perspective(260px) translate(-50%, -50%) rotate(90deg) rotateY(120deg) scale(.8); }
+  92% { left: 112%; opacity: 1; transform: perspective(260px) translate(-50%, -50%) rotate(360deg) rotateY(360deg) scale(6); }
+  96% { left: 112%; opacity: 1; transform: perspective(260px) translate(-50%, -50%) rotate(360deg) rotateY(360deg) scale(6); }
+  98% { left: 105%; opacity: .88; transform: perspective(260px) translate(-50%, -50%) rotate(350deg) rotateY(180deg) scale(2); }
+  99% { left: 100%; opacity: .42; transform: perspective(260px) translate(-50%, -50%) rotate(360deg) rotateY(90deg) scale(.35); }
+  100% { left: 96%; opacity: 0; transform: perspective(260px) translate(-50%, -50%) rotate(380deg) rotateY(90deg) scaleX(.04); }
 }
 @media (prefers-reduced-motion: reduce) {
   .guardian-name-leaf { animation: none; left: 50%; opacity: .42; transform: translate(-50%, -50%); }
