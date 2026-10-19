@@ -30,19 +30,53 @@ function isPublicIPv4(address: string) {
   )
 }
 
-function probeOrigin(address: string) {
+function getOriginTarget(value: string) {
+  if (isIP(value) === 4) {
+    if (!isPublicIPv4(value)) return null
+    return { hostname: value, servername: SITE_SCOPE, hostHeader: SITE_SCOPE }
+  }
+
+  try {
+    const url = new URL(value)
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.port ||
+      url.pathname !== '/' ||
+      url.search ||
+      url.hash ||
+      !url.hostname ||
+      url.hostname === 'localhost' ||
+      url.hostname.endsWith('.local')
+    ) return null
+
+    if (isIP(url.hostname) === 4 && !isPublicIPv4(url.hostname)) return null
+    if (isIP(url.hostname) === 6) return null
+
+    return {
+      hostname: url.hostname,
+      servername: isIP(url.hostname) ? SITE_SCOPE : url.hostname,
+      hostHeader: isIP(url.hostname) ? SITE_SCOPE : url.hostname,
+    }
+  } catch {
+    return null
+  }
+}
+
+function probeOrigin(target: NonNullable<ReturnType<typeof getOriginTarget>>) {
   return new Promise<{ statusCode: number; latencyMs: number }>((resolve, reject) => {
     const startedAt = performance.now()
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), timeoutMs)
     const req = request({
-      hostname: address,
+      hostname: target.hostname,
       port: 443,
       method: 'GET',
       path: '/api/health',
-      servername: SITE_SCOPE,
+      servername: target.servername,
       headers: {
-        Host: SITE_SCOPE,
+        Host: target.hostHeader,
         Accept: 'text/plain, application/json;q=0.9, */*;q=0.8',
       },
       signal: controller.signal,
@@ -75,16 +109,17 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: responseHeaders })
   }
 
-  const originIp = process.env.ORIGIN_IP?.trim()
-  if (!originIp || !isPublicIPv4(originIp)) {
+  const configuredOrigin = process.env.ORIGIN_IP?.trim()
+  const originTarget = configuredOrigin ? getOriginTarget(configuredOrigin) : null
+  if (!originTarget) {
     return NextResponse.json(
-      { error: 'ORIGIN_IP must be set to a public IPv4 address in the Vercel project environment.' },
+      { error: 'Set ORIGIN_IP in Vercel to a public IPv4 address or an HTTPS tunnel hostname, without a path.' },
       { status: 503, headers: responseHeaders },
     )
   }
 
   try {
-    const result = await probeOrigin(originIp)
+    const result = await probeOrigin(originTarget)
     return NextResponse.json({
       ok: result.statusCode >= 200 && result.statusCode < 300,
       statusCode: result.statusCode,

@@ -14,7 +14,7 @@ export function OriginLatencyPanel() {
   const [state, setState] = useState<ResultState>('idle')
   const [status, setStatus] = useState('Ready')
   const [latency, setLatency] = useState('—')
-  const [details, setDetails] = useState('The origin address is stored as a server-side Vercel environment variable.')
+  const [details, setDetails] = useState('The origin address or HTTPS tunnel hostname is stored in a server-side Vercel environment variable.')
 
   async function checkOrigin() {
     setState('checking')
@@ -68,8 +68,8 @@ export function OriginLatencyPanel() {
       <h2 id="origin-latency-heading">Origin Latency Test</h2>
       <p className="origin-latency-intro">Test the server response time for your configured origin health endpoint.</p>
       <div className="origin-latency-secret-note" role="note">
-        <strong>Origin IP: stored securely in Vercel</strong>
-        <span>ORIGIN_IP is only read by the authenticated server route and is never sent to your browser.</span>
+        <strong>Origin IP or tunnel URL: stored securely in Vercel</strong>
+        <span>Set ORIGIN_IP to the raw public IPv4 address or an HTTPS tunnel hostname. The value is read only by the authenticated server route and never sent to your browser.</span>
       </div>
       <button className="origin-latency-button" type="button" onClick={checkOrigin} disabled={state === 'checking'}>
         {state === 'checking' ? 'Checking…' : 'Check Configured Origin'}
@@ -79,7 +79,7 @@ export function OriginLatencyPanel() {
         <div className="origin-latency-value">{latency}</div>
         <p>{details}</p>
       </section>
-      <p className="origin-latency-caveat">The check runs from Vercel directly to the configured IPv4 address over HTTPS, using the site hostname for TLS verification. The origin must have a valid certificate for montemader.com and serve /api/health on port 443. This does not change DNS, Cloudflare, or firewall settings.</p>
+      <p className="origin-latency-caveat">The check runs from Vercel over HTTPS to the configured public IPv4 address or tunnel hostname and requests /api/health. A raw IP requires a valid montemader.com TLS certificate; an HTTPS tunnel uses its own hostname certificate. Temporary tunnel URLs work only while the tunnel process is running. This does not change DNS, Cloudflare, or firewall settings.</p>
     </section>
   )
 }
