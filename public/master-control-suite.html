@@ -212,9 +212,26 @@
             <span class="status" id="tunnel-live-status" role="status">Waiting</span>
           </div>
           <div class="metrics" id="tunnel-live-metrics" aria-live="polite"><p class="message">Waiting for the authenticated probe…</p></div>
-          <p class="small" id="tunnel-live-details">The server checks the configured ORIGIN_IP over HTTPS and requests /api/health. When ORIGIN_IP is a tunnel hostname, this checks reachability through that tunnel.</p>
+          <p class="small" id="tunnel-live-details">The server requests /api/health over HTTPS from the configured ORIGIN_IP target. Set it to the public HTTPS hostname routed through your Cloudflare Tunnel to measure reachability through that tunnel.</p>
+          <p class="small">This reports HTTPS request latency from the Vercel server—not ICMP ping or direct origin latency. A Vercel deployment hostname checks that deployment unless it is itself routed through the tunnel. Direct-origin latency would require a probe running on or near the origin; exposing a private origin solely to bypass the tunnel is not recommended.</p>
           <p class="small">This endpoint does not enumerate remote processes, ports, DNS records, firewall rules, credentials, or physical surroundings. Those require separate authorized telemetry; no findings are inferred.</p>
         </section>
+        <div class="sweep-grid" aria-label="Tunnel architecture notes">
+          <section aria-labelledby="encryption-boundary-heading">
+            <h3 id="encryption-boundary-heading">Encryption boundary</h3>
+            <ul class="sweep-list">
+              <li><strong>Public HTTPS through Cloudflare</strong>TLS for proxied web traffic typically terminates at Cloudflare’s edge so its services can process the request. Cloudflare Tunnel separately encrypts the connector-to-Cloudflare connection. That does not make the public HTTP request an opaque TCP pipe to your application.</li>
+              <li><strong>Origin TLS is a separate hop</strong>If cloudflared connects to your origin over HTTPS, configure and verify that origin TLS hop as well. Do not assume end-to-end client-to-origin encryption or compliance properties from enabling a tunnel alone.</li>
+            </ul>
+          </section>
+          <section aria-labelledby="connector-placement-heading">
+            <h3 id="connector-placement-heading">Connector placement</h3>
+            <ul class="sweep-list">
+              <li><strong>A separate connector host is optional</strong>A connector can run on a separate machine from an origin, but separation alone does not guarantee isolation.</li>
+              <li><strong>Constrain what it can reach</strong>Use network segmentation and firewall rules so a connector host can reach only the intended upstream service and port. The live probe shown here does not identify the connector’s host or inspect its network access.</li>
+            </ul>
+          </section>
+        </div>
         <div class="sweep-grid">
           <section aria-labelledby="sweep-code-heading">
             <h3 id="sweep-code-heading">Local code &amp; access</h3>
@@ -480,7 +497,7 @@
             metric('Origin HTTP', data.statusCode ?? 'No response'),
             metric('Latency', `${number(data.latencyMs)} ms`),
           );
-          setMessage('tunnel-live-details', `Authenticated probe succeeded at ${dateTime(new Date().toISOString())}. If the configured origin is a tunnel hostname, the request traversed that tunnel.`);
+          setMessage('tunnel-live-details', `HTTPS health request succeeded at ${dateTime(new Date().toISOString())}; latency is measured from Vercel. If ORIGIN_IP is the public hostname routed through your Cloudflare Tunnel, this request traversed that tunnel.`);
         } else {
           setStatus('tunnel-live-status', 'Origin unreachable', 'offline');
           metrics.push(
