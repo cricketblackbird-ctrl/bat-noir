@@ -859,7 +859,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
   .link-health-metrics { grid-template-columns: minmax(0, 1fr); }
   .link-detail-heading { flex-direction: column; }
 }
-.dashboard-view { display: flex; flex-direction: column; gap: 9px; }
+.dashboard-view { display: flex; flex-direction: column; gap: 16px; }
 .tester-view { display: flex; flex-direction: column; gap: 9px; }
 .intel-view { display: block; }
 .dashboard-grid, .intel-grid { grid-template-rows: auto; grid-auto-rows: minmax(240px, auto); flex: 0 0 auto; }
