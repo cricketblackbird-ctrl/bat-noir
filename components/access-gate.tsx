@@ -99,7 +99,6 @@ export function AccessGate({ allowInitialSignup, resetToken }: AccessGateProps) 
   const authTabs: { id: AccessMode; label: string }[] = [
     { id: 'sign-in', label: 'Sign in' },
     ...(allowInitialSignup ? [{ id: 'sign-up' as const, label: 'Create key' }] : []),
-    { id: 'forgot-password', label: 'Reset password' },
   ]
 
   function selectMode(nextMode: AccessMode) {
