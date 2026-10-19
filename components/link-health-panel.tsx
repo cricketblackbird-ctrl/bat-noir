@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Activity, Clock3, ExternalLink, ShieldCheck } from 'lucide-react'
+import { Activity, CircleAlert, Clock3, ExternalLink, ShieldCheck } from 'lucide-react'
 
 type LinkTarget = {
   id: string
@@ -47,6 +47,7 @@ export function LinkHealthPanel({ guardians }: { guardians: Guardian[] }) {
           <h2 id="link-health-heading">Your destinations</h2>
           <p>Choose a destination to view its monitoring and account-connection status. These controls stay in this dashboard; they never open the external site.</p>
         </div>
+        <span className="link-health-status"><span aria-hidden="true" />External monitor not connected</span>
       </header>
 
       <div className="link-destination-grid" role="group" aria-label="Choose a destination">
@@ -70,6 +71,7 @@ export function LinkHealthPanel({ guardians }: { guardians: Guardian[] }) {
             <p className="section-kicker">SELECTED DESTINATION</p>
             <h3 id="link-detail-heading">{selected.label}</h3>
           </div>
+          <span className="link-detail-unavailable"><CircleAlert aria-hidden="true" />Monitoring unavailable</span>
         </div>
 
         <dl className="link-health-metrics">

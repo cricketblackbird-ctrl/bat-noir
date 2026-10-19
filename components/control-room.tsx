@@ -474,7 +474,6 @@ export function ControlRoom({ operator }: { operator: Operations['operator'] & {
           />
           <CloudflareTelemetryPanel fighters={guards} />
         </section>
-
       </div>
 
       <footer className="heart-footer">
