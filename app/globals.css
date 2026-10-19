@@ -1217,7 +1217,7 @@ button:disabled { transform: none; box-shadow: none; filter: none; }
   .heartbeat-readiness-heading .telemetry-refresh { width: 100%; }
 }
 
-.command-page { height: auto; min-height: 100dvh; overflow: visible; }
+.command-page { height: 100dvh; min-height: 0; overflow-x: hidden; overflow-y: scroll; overscroll-behavior-y: contain; scrollbar-gutter: stable; }
 .fighter-list { flex: 0 0 auto; min-height: auto; overflow: visible; padding-right: 0; }
 .fighter-card { flex: 0 0 auto; min-height: 230px; overflow: visible; }
 .panel { overflow: visible; }
