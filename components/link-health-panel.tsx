@@ -98,7 +98,7 @@ export function LinkHealthPanel({ guardians }: { guardians: Guardian[] }) {
           <div className="link-note-icon"><Activity aria-hidden="true" /></div>
           <div>
             <h3 id="guardian-link-heading">Guardian readiness</h3>
-            <p>Authenticated heartbeats indicate listener availability only; they do not prove that a guardian checks these third-party destinations.</p>
+            <p>Ruach, Xena, and SuperBot are the three listeners assigned to this site. A fresh authenticated heartbeat confirms only that a listener reported in; it does not prove they are scanning or protecting your other platform accounts. External checks are not connected.</p>
             {guardians.length ? (
               <ul className="guardian-link-list">
                 {guardians.map((guardian) => (
